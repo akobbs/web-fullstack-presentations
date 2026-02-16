@@ -1,0 +1,620 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>TypeScript: розширені можливості</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 21</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script>const slides=["<h1>TypeScript: розширені можливості</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🧬 Generics — узагальнені типи: функції, інтерфейси, класи</li>\n<li>🧰 Utility types — вбудовані утиліти для трансформації типів</li>\n<li>🧩 Union, intersection та literal types</li>\n<li>🏷️ Discriminated unions та mapped types</li>\n<li>🔑 <code>keyof</code>, <code>typeof</code>, conditional та template literal types</li>\n<li>🛡️ Type guards та звуження типів</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🧬 Generics: навіщо потрібні?</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Generics</strong> (узагальнені типи) — механізм, що дозволяє створювати компоненти, які працюють з різними типами даних, зберігаючи при цьому повну типобезпеку.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Generics вирішують проблему дублювання коду — замість написання окремих функцій для кожного типу, ми створюємо одну універсальну.</p>\n<h2>❌ Проблема без generics</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Дублювання: окрема функція для кожного типу</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">getFirstNumber</span>(<span class=\"hljs-params\">arr: <span class=\"hljs-built_in\">number</span>[]</span>): <span class=\"hljs-built_in\">number</span> | <span class=\"hljs-literal\">undefined</span> {\n  <span class=\"hljs-keyword\">return</span> arr[<span class=\"hljs-number\">0</span>];\n}\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">getFirstString</span>(<span class=\"hljs-params\">arr: <span class=\"hljs-built_in\">string</span>[]</span>): <span class=\"hljs-built_in\">string</span> | <span class=\"hljs-literal\">undefined</span> {\n  <span class=\"hljs-keyword\">return</span> arr[<span class=\"hljs-number\">0</span>];\n}\n\n<span class=\"hljs-comment\">// Або втрата типу через any</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">getFirst</span>(<span class=\"hljs-params\">arr: <span class=\"hljs-built_in\">any</span>[]</span>): <span class=\"hljs-built_in\">any</span> {\n  <span class=\"hljs-keyword\">return</span> arr[<span class=\"hljs-number\">0</span>]; <span class=\"hljs-comment\">// 😰 Тип втрачено — TypeScript не допоможе!</span>\n}</code></pre><h2>✅ Рішення з generics</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Одна функція для будь-якого типу зі збереженням типобезпеки!</span>\n<span class=\"hljs-keyword\">function</span> getFirst&lt;T&gt;(<span class=\"hljs-attr\">arr</span>: T[]): T | <span class=\"hljs-literal\">undefined</span> {\n  <span class=\"hljs-keyword\">return</span> arr[<span class=\"hljs-number\">0</span>];\n}\n\ngetFirst&lt;<span class=\"hljs-built_in\">number</span>&gt;([<span class=\"hljs-number\">1</span>, <span class=\"hljs-number\">2</span>, <span class=\"hljs-number\">3</span>]);       <span class=\"hljs-comment\">// number | undefined</span>\ngetFirst&lt;<span class=\"hljs-built_in\">string</span>&gt;([<span class=\"hljs-string\">\"a\"</span>, <span class=\"hljs-string\">\"b\"</span>]);     <span class=\"hljs-comment\">// string | undefined</span>\n<span class=\"hljs-title function_\">getFirst</span>([<span class=\"hljs-literal\">true</span>, <span class=\"hljs-literal\">false</span>]);           <span class=\"hljs-comment\">// boolean | undefined (тип виведено автоматично)</span></code></pre><div class=\"tip\"><strong>💡 💡 Автоматичне виведення типів</strong> <p>TypeScript здатний автоматично визначити generic-параметр з аргументів функції. Явна вказівка <code>&lt;T&gt;</code> потрібна лише коли автоматичне виведення неможливе або неточне.</p>\n</div>\n\n","<h1>🧬 Generic-інтерфейси та обмеження</h1>\n<p><strong>Головна ідея:</strong> Generics можна застосовувати до інтерфейсів, типів та класів, а обмеження (<code>extends</code>) дозволяють звузити допустимі типи.</p>\n<h2>📦 Generic-інтерфейс для API</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 🎯 Наскрізний приклад: працюватимемо з User протягом лекції</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>;\n  <span class=\"hljs-attr\">name</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">email</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> | <span class=\"hljs-string\">\"editor\"</span> | <span class=\"hljs-string\">\"viewer\"</span>;\n}\n\n<span class=\"hljs-comment\">// 🔹 Generic-інтерфейс для типізованих API-відповідей</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">ApiResponse</span>&lt;T&gt; {\n  <span class=\"hljs-attr\">data</span>: T;\n  <span class=\"hljs-attr\">status</span>: <span class=\"hljs-built_in\">number</span>;\n  <span class=\"hljs-attr\">timestamp</span>: <span class=\"hljs-title class_\">Date</span>;\n}\n\n<span class=\"hljs-comment\">// Використання з різними типами</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">userResponse</span>: <span class=\"hljs-title class_\">ApiResponse</span>&lt;<span class=\"hljs-title class_\">User</span>&gt; = {\n  <span class=\"hljs-attr\">data</span>: { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"john@example.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> },\n  <span class=\"hljs-attr\">status</span>: <span class=\"hljs-number\">200</span>,\n  <span class=\"hljs-attr\">timestamp</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(),\n};\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">usersResponse</span>: <span class=\"hljs-title class_\">ApiResponse</span>&lt;<span class=\"hljs-title class_\">User</span>[]&gt; = {\n  <span class=\"hljs-attr\">data</span>: [{ <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"john@example.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> }],\n  <span class=\"hljs-attr\">status</span>: <span class=\"hljs-number\">200</span>,\n  <span class=\"hljs-attr\">timestamp</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(),\n};</code></pre><h2>🔒 Обмеження generics (<code>extends</code>)</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// T має містити властивість id</span>\n<span class=\"hljs-keyword\">function</span> findById&lt;T <span class=\"hljs-keyword\">extends</span> { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span> }&gt;(<span class=\"hljs-attr\">items</span>: T[], <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): T | <span class=\"hljs-literal\">undefined</span> {\n  <span class=\"hljs-keyword\">return</span> items.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">item</span> =&gt;</span> item.<span class=\"hljs-property\">id</span> === id);\n}\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">users</span>: <span class=\"hljs-title class_\">User</span>[] = [{ <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"j@mail.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"viewer\"</span> }];\n<span class=\"hljs-title function_\">findById</span>(users, <span class=\"hljs-number\">1</span>);  <span class=\"hljs-comment\">// ✅ User має id</span>\n<span class=\"hljs-comment\">// findById([\"a\", \"b\"], 1);  // ❌ string не має id — помилка компіляції</span></code></pre>","<h1>🧬 Generic-класи</h1>\n<p><strong>Головна ідея:</strong> Generic-класи дозволяють створювати універсальні структури даних та сервіси, що працюють з будь-якими типами.</p>\n<h2>📦 Приклад: типізований репозиторій</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Базовий інтерфейс для сутностей з id</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Entity</span> {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>;\n}\n\n<span class=\"hljs-comment\">// Generic-клас репозиторію</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Repository</span>&lt;T <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_\">Entity</span>&gt; {\n  <span class=\"hljs-keyword\">private</span> <span class=\"hljs-attr\">items</span>: T[] = [];\n\n  <span class=\"hljs-title function_\">add</span>(<span class=\"hljs-attr\">item</span>: T): <span class=\"hljs-built_in\">void</span> {\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">items</span>.<span class=\"hljs-title function_\">push</span>(item);\n  }\n\n  <span class=\"hljs-title function_\">findById</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): T | <span class=\"hljs-literal\">undefined</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">items</span>.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">item</span> =&gt;</span> item.<span class=\"hljs-property\">id</span> === id);\n  }\n\n  <span class=\"hljs-title function_\">getAll</span>(): T[] {\n    <span class=\"hljs-keyword\">return</span> [...<span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">items</span>];  <span class=\"hljs-comment\">// Повертаємо копію масиву</span>\n  }\n\n  <span class=\"hljs-title function_\">delete</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-built_in\">boolean</span> {\n    <span class=\"hljs-keyword\">const</span> index = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">items</span>.<span class=\"hljs-title function_\">findIndex</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">item</span> =&gt;</span> item.<span class=\"hljs-property\">id</span> === id);\n    <span class=\"hljs-keyword\">if</span> (index !== -<span class=\"hljs-number\">1</span>) {\n      <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">items</span>.<span class=\"hljs-title function_\">splice</span>(index, <span class=\"hljs-number\">1</span>);\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">true</span>;\n    }\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">false</span>;\n  }\n}\n\n<span class=\"hljs-comment\">// Використання з типом User</span>\n<span class=\"hljs-keyword\">const</span> userRepo = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Repository</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;();\nuserRepo.<span class=\"hljs-title function_\">add</span>({ <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"j@mail.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> });\n\n<span class=\"hljs-keyword\">const</span> foundUser = userRepo.<span class=\"hljs-title function_\">findById</span>(<span class=\"hljs-number\">1</span>);  <span class=\"hljs-comment\">// User | undefined</span></code></pre><h2>🔢 Кілька generic-параметрів та значення за замовчуванням</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Кілька параметрів типу</span>\n<span class=\"hljs-keyword\">function</span> merge&lt;T, U&gt;(<span class=\"hljs-attr\">obj1</span>: T, <span class=\"hljs-attr\">obj2</span>: U): T &amp; U {\n  <span class=\"hljs-keyword\">return</span> { ...obj1, ...obj2 };\n}\n\n<span class=\"hljs-keyword\">const</span> result = <span class=\"hljs-title function_\">merge</span>({ <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span> }, { <span class=\"hljs-attr\">age</span>: <span class=\"hljs-number\">30</span> });\n<span class=\"hljs-comment\">// Тип: { name: string } &amp; { age: number }</span>\n\n<span class=\"hljs-comment\">// Значення за замовчуванням для generic-параметра</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">PaginatedResponse</span>&lt;T, M = { <span class=\"hljs-attr\">total</span>: <span class=\"hljs-built_in\">number</span>; <span class=\"hljs-attr\">page</span>: <span class=\"hljs-built_in\">number</span> }&gt; {\n  <span class=\"hljs-attr\">items</span>: T[];\n  <span class=\"hljs-attr\">meta</span>: M;\n}\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UserPage</span> = <span class=\"hljs-title class_\">PaginatedResponse</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;;  <span class=\"hljs-comment\">// M = { total: number; page: number }</span></code></pre>","<h1>🧰 Utility Types: огляд</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Utility Types</strong> — вбудовані generic-типи TypeScript, що дозволяють створювати нові типи на основі існуючих шляхом трансформації їх властивостей.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Utility types усувають необхідність вручну описувати варіації одного й того ж типу — TypeScript робить це автоматично.</p>\n<h2>📊 Класифікація utility types</h2>\n\n<div class=\"mermaid\" data-source=\"graph TD\n    UT[🧰 Utility Types] --&gt; MOD[🔧 Модифікатори]\n    UT --&gt; SEL[🎯 Селектори]\n    UT --&gt; UNION[🔀 Робота з Union]\n    UT --&gt; FUNC[⚡ Типи функцій]\n    MOD --&gt; PART[&quot;Partial‹T›&quot;]\n    MOD --&gt; REQ[&quot;Required‹T›&quot;]\n    MOD --&gt; RO[&quot;Readonly‹T›&quot;]\n    SEL --&gt; PICK[&quot;Pick‹T, K›&quot;]\n    SEL --&gt; OMIT[&quot;Omit‹T, K›&quot;]\n    SEL --&gt; REC[&quot;Record‹K, V›&quot;]\n    UNION --&gt; EXCL[&quot;Exclude‹T, U›&quot;]\n    UNION --&gt; EXTR[&quot;Extract‹T, U›&quot;]\n    FUNC --&gt; RET[&quot;ReturnType‹T›&quot;]\n    FUNC --&gt; PARAMS[&quot;Parameters‹T›&quot;]\n    style UT fill:#fff9c4,stroke:#f9a825\n    style MOD fill:#e3f2fd,stroke:#1565c0\n    style SEL fill:#e8f5e9,stroke:#388e3c\n    style UNION fill:#fff3e0,stroke:#ef6c00\n    style FUNC fill:#f3e5f5,stroke:#7b1fa2\"><svg id=\"exp-1771265700159-5-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 1826.53125px;\" viewBox=\"0 0 1826.53125 260\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1771265700159-5-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1771265700159-5-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1771265700159-5-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1771265700159-5-0 .error-icon{fill:#552222;}#exp-1771265700159-5-0 .error-text{fill:#552222;stroke:#552222;}#exp-1771265700159-5-0 .edge-thickness-normal{stroke-width:1px;}#exp-1771265700159-5-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1771265700159-5-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1771265700159-5-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1771265700159-5-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1771265700159-5-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1771265700159-5-0 .marker{fill:#333333;stroke:#333333;}#exp-1771265700159-5-0 .marker.cross{stroke:#333333;}#exp-1771265700159-5-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1771265700159-5-0 p{margin:0;}#exp-1771265700159-5-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1771265700159-5-0 .cluster-label text{fill:#333;}#exp-1771265700159-5-0 .cluster-label span{color:#333;}#exp-1771265700159-5-0 .cluster-label span p{background-color:transparent;}#exp-1771265700159-5-0 .label text,#exp-1771265700159-5-0 span{fill:#333;color:#333;}#exp-1771265700159-5-0 .node rect,#exp-1771265700159-5-0 .node circle,#exp-1771265700159-5-0 .node ellipse,#exp-1771265700159-5-0 .node polygon,#exp-1771265700159-5-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1771265700159-5-0 .rough-node .label text,#exp-1771265700159-5-0 .node .label text,#exp-1771265700159-5-0 .image-shape .label,#exp-1771265700159-5-0 .icon-shape .label{text-anchor:middle;}#exp-1771265700159-5-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1771265700159-5-0 .rough-node .label,#exp-1771265700159-5-0 .node .label,#exp-1771265700159-5-0 .image-shape .label,#exp-1771265700159-5-0 .icon-shape .label{text-align:center;}#exp-1771265700159-5-0 .node.clickable{cursor:pointer;}#exp-1771265700159-5-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1771265700159-5-0 .arrowheadPath{fill:#333333;}#exp-1771265700159-5-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1771265700159-5-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1771265700159-5-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1771265700159-5-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1771265700159-5-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1771265700159-5-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1771265700159-5-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1771265700159-5-0 .cluster text{fill:#333;}#exp-1771265700159-5-0 .cluster span{color:#333;}#exp-1771265700159-5-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1771265700159-5-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1771265700159-5-0 rect.text{fill:none;stroke-width:0;}#exp-1771265700159-5-0 .icon-shape,#exp-1771265700159-5-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1771265700159-5-0 .icon-shape p,#exp-1771265700159-5-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1771265700159-5-0 .icon-shape rect,#exp-1771265700159-5-0 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1771265700159-5-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1771265700159-5-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1771265700159-5-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1771265700159-5-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771265700159-5-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771265700159-5-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1771265700159-5-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1771265700159-5-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771265700159-5-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M979.475,36.727L856.326,44.106C733.177,51.485,486.88,66.242,363.731,77.121C240.582,88,240.582,95,240.582,98.5L240.582,102\" id=\"L_UT_MOD_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UT_MOD_0\" data-points=\"W3sieCI6OTc5LjQ3NDYwOTM3NSwieSI6MzYuNzI2OTc0ODM5MDg3MTg0fSx7IngiOjI0MC41ODIwMzEyNSwieSI6ODF9LHsieCI6MjQwLjU4MjAzMTI1LCJ5IjoxMDZ9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M979.475,45.568L945.137,51.473C910.799,57.378,842.124,69.189,807.787,78.595C773.449,88,773.449,95,773.449,98.5L773.449,102\" id=\"L_UT_SEL_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UT_SEL_0\" data-points=\"W3sieCI6OTc5LjQ3NDYwOTM3NSwieSI6NDUuNTY3NjQ5NDU4MTA1MTE2fSx7IngiOjc3My40NDkyMTg3NSwieSI6ODF9LHsieCI6NzczLjQ0OTIxODc1LCJ5IjoxMDZ9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1137.256,52.534L1155.484,57.278C1173.712,62.023,1210.167,71.511,1228.395,79.756C1246.623,88,1246.623,95,1246.623,98.5L1246.623,102\" id=\"L_UT_UNION_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UT_UNION_0\" data-points=\"W3sieCI6MTEzNy4yNTU4NTkzNzUsInkiOjUyLjUzMzc1OTM4OTEzNTU4fSx7IngiOjEyNDYuNjIzMDQ2ODc1LCJ5Ijo4MX0seyJ4IjoxMjQ2LjYyMzA0Njg3NSwieSI6MTA2fV0=\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1137.256,38.635L1221.213,45.696C1305.169,52.757,1473.083,66.878,1557.039,77.439C1640.996,88,1640.996,95,1640.996,98.5L1640.996,102\" id=\"L_UT_FUNC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UT_FUNC_0\" data-points=\"W3sieCI6MTEzNy4yNTU4NTkzNzUsInkiOjM4LjYzNDgwMjQwMTU1Mjc2fSx7IngiOjE2NDAuOTk2MDkzNzUsInkiOjgxfSx7IngiOjE2NDAuOTk2MDkzNzUsInkiOjEwNn1d\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M154.895,154L140.018,158.167C125.142,162.333,95.389,170.667,80.513,178.333C65.637,186,65.637,193,65.637,196.5L65.637,200\" id=\"L_MOD_PART_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MOD_PART_0\" data-points=\"W3sieCI6MTU0Ljg5NDUzMTI1LCJ5IjoxNTR9LHsieCI6NjUuNjM2NzE4NzUsInkiOjE3OX0seyJ4Ijo2NS42MzY3MTg3NSwieSI6MjA0fV0=\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M240.582,154L240.582,158.167C240.582,162.333,240.582,170.667,240.582,178.333C240.582,186,240.582,193,240.582,196.5L240.582,200\" id=\"L_MOD_REQ_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MOD_REQ_0\" data-points=\"W3sieCI6MjQwLjU4MjAzMTI1LCJ5IjoxNTR9LHsieCI6MjQwLjU4MjAzMTI1LCJ5IjoxNzl9LHsieCI6MjQwLjU4MjAzMTI1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M329.559,153.508L345.639,157.757C361.72,162.005,393.882,170.503,409.962,178.251C426.043,186,426.043,193,426.043,196.5L426.043,200\" id=\"L_MOD_RO_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MOD_RO_0\" data-points=\"W3sieCI6MzI5LjU1ODU5Mzc1LCJ5IjoxNTMuNTA4MTkzMjY4NDYxMTh9LHsieCI6NDI2LjA0Mjk2ODc1LCJ5IjoxNzl9LHsieCI6NDI2LjA0Mjk2ODc1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M698.52,151.56L682.626,156.134C666.732,160.707,634.944,169.853,619.05,177.927C603.156,186,603.156,193,603.156,196.5L603.156,200\" id=\"L_SEL_PICK_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SEL_PICK_0\" data-points=\"W3sieCI6Njk4LjUxOTUzMTI1LCJ5IjoxNTEuNTYwMjI0Nzk2NDIxNn0seyJ4Ijo2MDMuMTU2MjUsInkiOjE3OX0seyJ4Ijo2MDMuMTU2MjUsInkiOjIwNH1d\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M773.449,154L773.449,158.167C773.449,162.333,773.449,170.667,773.449,178.333C773.449,186,773.449,193,773.449,196.5L773.449,200\" id=\"L_SEL_OMIT_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SEL_OMIT_0\" data-points=\"W3sieCI6NzczLjQ0OTIxODc1LCJ5IjoxNTR9LHsieCI6NzczLjQ0OTIxODc1LCJ5IjoxNzl9LHsieCI6NzczLjQ0OTIxODc1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M848.379,150.129L866.29,154.941C884.202,159.753,920.025,169.376,937.936,177.688C955.848,186,955.848,193,955.848,196.5L955.848,200\" id=\"L_SEL_REC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SEL_REC_0\" data-points=\"W3sieCI6ODQ4LjM3ODkwNjI1LCJ5IjoxNTAuMTI5MzA5OTc1NTg1NzN9LHsieCI6OTU1Ljg0NzY1NjI1LCJ5IjoxNzl9LHsieCI6OTU1Ljg0NzY1NjI1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1199.28,154L1191.061,158.167C1182.842,162.333,1166.403,170.667,1158.184,178.333C1149.965,186,1149.965,193,1149.965,196.5L1149.965,200\" id=\"L_UNION_EXCL_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UNION_EXCL_0\" data-points=\"W3sieCI6MTE5OS4yODAyNTM1MDc2NTMsInkiOjE1NH0seyJ4IjoxMTQ5Ljk2NDg0Mzc1LCJ5IjoxNzl9LHsieCI6MTE0OS45NjQ4NDM3NSwieSI6MjA0fV0=\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1293.966,154L1302.185,158.167C1310.404,162.333,1326.843,170.667,1335.062,178.333C1343.281,186,1343.281,193,1343.281,196.5L1343.281,200\" id=\"L_UNION_EXTR_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UNION_EXTR_0\" data-points=\"W3sieCI6MTI5My45NjU4NDAyNDIzNDcsInkiOjE1NH0seyJ4IjoxMzQzLjI4MTI1LCJ5IjoxNzl9LHsieCI6MTM0My4yODEyNSwieSI6MjA0fV0=\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1591.406,154L1582.797,158.167C1574.187,162.333,1556.969,170.667,1548.359,178.333C1539.75,186,1539.75,193,1539.75,196.5L1539.75,200\" id=\"L_FUNC_RET_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_FUNC_RET_0\" data-points=\"W3sieCI6MTU5MS40MDYxNzAyODA2MTIzLCJ5IjoxNTR9LHsieCI6MTUzOS43NSwieSI6MTc5fSx7IngiOjE1MzkuNzUsInkiOjIwNH1d\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M1690.586,154L1699.195,158.167C1707.805,162.333,1725.023,170.667,1733.633,178.333C1742.242,186,1742.242,193,1742.242,196.5L1742.242,200\" id=\"L_FUNC_PARAMS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_FUNC_PARAMS_0\" data-points=\"W3sieCI6MTY5MC41ODYwMTcyMTkzODc3LCJ5IjoxNTR9LHsieCI6MTc0Mi4yNDIxODc1LCJ5IjoxNzl9LHsieCI6MTc0Mi4yNDIxODc1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1771265700159-5-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UT_MOD_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UT_SEL_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UT_UNION_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UT_FUNC_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MOD_PART_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MOD_REQ_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MOD_RO_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_SEL_PICK_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_SEL_OMIT_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_SEL_REC_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UNION_EXCL_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_UNION_EXTR_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_FUNC_RET_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_FUNC_PARAMS_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-UT-0\" transform=\"translate(1058.365234375, 32)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-78.890625\" y=\"-24\" width=\"157.78125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-54.890625, -12)\"><rect></rect><foreignObject width=\"109.78125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🧰 Utility Types</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-MOD-1\" transform=\"translate(240.58203125, 130)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-88.9765625\" y=\"-24\" width=\"177.953125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-64.9765625, -12)\"><rect></rect><foreignObject width=\"129.953125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔧 Модифікатори</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-SEL-3\" transform=\"translate(773.44921875, 130)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-74.9296875\" y=\"-24\" width=\"149.859375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-50.9296875, -12)\"><rect></rect><foreignObject width=\"101.859375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎯 Селектори</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-UNION-5\" transform=\"translate(1246.623046875, 130)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-90.28515625\" y=\"-24\" width=\"180.5703125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-66.28515625, -12)\"><rect></rect><foreignObject width=\"132.5703125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔀 Робота з Union</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-FUNC-7\" transform=\"translate(1640.99609375, 130)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-84.69921875\" y=\"-24\" width=\"169.3984375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-60.69921875, -12)\"><rect></rect><foreignObject width=\"121.3984375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚡ Типи функцій</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-PART-9\" transform=\"translate(65.63671875, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-57.63671875\" y=\"-24\" width=\"115.2734375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-33.63671875, -12)\"><rect></rect><foreignObject width=\"67.2734375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Partial‹T›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-REQ-11\" transform=\"translate(240.58203125, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-67.30859375\" y=\"-24\" width=\"134.6171875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-43.30859375, -12)\"><rect></rect><foreignObject width=\"86.6171875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Required‹T›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-RO-13\" transform=\"translate(426.04296875, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-68.15234375\" y=\"-24\" width=\"136.3046875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-44.15234375, -12)\"><rect></rect><foreignObject width=\"88.3046875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Readonly‹T›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-PICK-15\" transform=\"translate(603.15625, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-58.9609375\" y=\"-24\" width=\"117.921875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-34.9609375, -12)\"><rect></rect><foreignObject width=\"69.921875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Pick‹T, K›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-OMIT-17\" transform=\"translate(773.44921875, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-61.33203125\" y=\"-24\" width=\"122.6640625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-37.33203125, -12)\"><rect></rect><foreignObject width=\"74.6640625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Omit‹T, K›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-REC-19\" transform=\"translate(955.84765625, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-71.06640625\" y=\"-24\" width=\"142.1328125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.06640625, -12)\"><rect></rect><foreignObject width=\"94.1328125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Record‹K, V›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-EXCL-21\" transform=\"translate(1149.96484375, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-73.05078125\" y=\"-24\" width=\"146.1015625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-49.05078125, -12)\"><rect></rect><foreignObject width=\"98.1015625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Exclude‹T, U›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-EXTR-23\" transform=\"translate(1343.28125, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-70.265625\" y=\"-24\" width=\"140.53125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-46.265625, -12)\"><rect></rect><foreignObject width=\"92.53125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Extract‹T, U›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-RET-25\" transform=\"translate(1539.75, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-76.203125\" y=\"-24\" width=\"152.40625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-52.203125, -12)\"><rect></rect><foreignObject width=\"104.40625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>ReturnType‹T›</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-PARAMS-27\" transform=\"translate(1742.2421875, 228)\"><rect class=\"basic label-container\" style=\"\" x=\"-76.2890625\" y=\"-24\" width=\"152.578125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-52.2890625, -12)\"><rect></rect><foreignObject width=\"104.578125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Parameters‹T›</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n","<h1>🔧 Utility Types: модифікатори</h1>\n<p><strong>Головна ідея:</strong> Модифікатори змінюють обов'язковість та мутабельність властивостей існуючого типу без ручного переписування інтерфейсу.</p>\n<h2>📋 <code>Partial&lt;T&gt;</code> — всі поля необов'язкові</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Нагадаємо наш тип User</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>;\n  <span class=\"hljs-attr\">name</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">email</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> | <span class=\"hljs-string\">\"editor\"</span> | <span class=\"hljs-string\">\"viewer\"</span>;\n}\n\n<span class=\"hljs-comment\">// Partial&lt;T&gt; — ідеально для PATCH-запитів (часткове оновлення)</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UpdateUserDto</span> = <span class=\"hljs-title class_\">Partial</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;;\n<span class=\"hljs-comment\">// { id?: number; name?: string; email?: string; role?: \"admin\" | \"editor\" | \"viewer\" }</span>\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">updateUser</span>(<span class=\"hljs-params\">currentUser: User, updates: Partial&lt;User&gt;</span>): <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-comment\">// Можна передати лише ті поля, що змінилися</span>\n  <span class=\"hljs-keyword\">return</span> { ...currentUser, ...updates };\n}\n\n<span class=\"hljs-title function_\">updateUser</span>(<span class=\"hljs-number\">1</span>, { <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"New Name\"</span> });           <span class=\"hljs-comment\">// ✅ Тільки name</span>\n<span class=\"hljs-title function_\">updateUser</span>(<span class=\"hljs-number\">1</span>, { <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"new@mail.com\"</span> });      <span class=\"hljs-comment\">// ✅ Тільки email</span></code></pre><h2>📋 <code>Required&lt;T&gt;</code> та <code>Readonly&lt;T&gt;</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Config</span> {\n  <span class=\"hljs-attr\">host</span>: <span class=\"hljs-built_in\">string</span>;\n  port?: <span class=\"hljs-built_in\">number</span>;      <span class=\"hljs-comment\">// Необов'язковий</span>\n  debug?: <span class=\"hljs-built_in\">boolean</span>;    <span class=\"hljs-comment\">// Необов'язковий</span>\n}\n\n<span class=\"hljs-comment\">// Required&lt;T&gt; — робить ВСІ поля обов'язковими</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">StrictConfig</span> = <span class=\"hljs-title class_\">Required</span>&lt;<span class=\"hljs-title class_\">Config</span>&gt;;\n<span class=\"hljs-comment\">// { host: string; port: number; debug: boolean }</span>\n\n<span class=\"hljs-comment\">// Readonly&lt;T&gt; — забороняє зміну властивостей</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">FrozenUser</span> = <span class=\"hljs-title class_\">Readonly</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;;\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">admin</span>: <span class=\"hljs-title class_\">FrozenUser</span> = { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"Admin\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"a@b.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> };\n<span class=\"hljs-comment\">// admin.name = \"Hacker\";  // ❌ Cannot assign to 'name' — read-only property</span></code></pre><div class=\"warning\"><strong>⚠️ ⚠️ Shallow Readonly</strong> <p><code>Readonly&lt;T&gt;</code> забезпечує лише <strong>поверхневу</strong> незмінність. Вкладені об'єкти залишаються мутабельними!</p>\n</div>\n\n","<h1>🎯 Utility Types: селектори</h1>\n<p><strong>Головна ідея:</strong> Селектори дозволяють обирати або виключати підмножину властивостей існуючого типу.</p>\n<h2>✂️ <code>Pick&lt;T, K&gt;</code> — вибрати поля</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Вибираємо лише потрібні поля для відображення у списку</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UserPreview</span> = <span class=\"hljs-title class_\">Pick</span>&lt;<span class=\"hljs-title class_\">User</span>, <span class=\"hljs-string\">\"id\"</span> | <span class=\"hljs-string\">\"name\"</span>&gt;;\n<span class=\"hljs-comment\">// { id: number; name: string }</span>\n\n<span class=\"hljs-comment\">// Практичний приклад: компонент списку користувачів</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">UserListItem</span>(<span class=\"hljs-params\">user: UserPreview</span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`<span class=\"hljs-subst\">${user.id}</span>: <span class=\"hljs-subst\">${user.name}</span>`</span>;\n}</code></pre><h2>✂️ <code>Omit&lt;T, K&gt;</code> — виключити поля</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Тип для створення користувача — без id (генерується сервером)</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">CreateUserDto</span> = <span class=\"hljs-title class_\">Omit</span>&lt;<span class=\"hljs-title class_\">User</span>, <span class=\"hljs-string\">\"id\"</span>&gt;;\n<span class=\"hljs-comment\">// { name: string; email: string; role: \"admin\" | \"editor\" | \"viewer\" }</span>\n\n<span class=\"hljs-comment\">// Публічний профіль — без службових полів</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">PublicProfile</span> = <span class=\"hljs-title class_\">Omit</span>&lt;<span class=\"hljs-title class_\">User</span>, <span class=\"hljs-string\">\"id\"</span> | <span class=\"hljs-string\">\"role\"</span>&gt;;\n<span class=\"hljs-comment\">// { name: string; email: string }</span></code></pre><h2>📝 <code>Record&lt;K, V&gt;</code> — словник</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Record — створює тип \"словник\" з ключами K та значеннями V</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UserRole</span> = <span class=\"hljs-title class_\">User</span>[<span class=\"hljs-string\">\"role\"</span>];  <span class=\"hljs-comment\">// \"admin\" | \"editor\" | \"viewer\"</span>\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">rolePermissions</span>: <span class=\"hljs-title class_\">Record</span>&lt;<span class=\"hljs-title class_\">UserRole</span>, <span class=\"hljs-built_in\">string</span>[]&gt; = {\n  <span class=\"hljs-attr\">admin</span>:  [<span class=\"hljs-string\">\"read\"</span>, <span class=\"hljs-string\">\"write\"</span>, <span class=\"hljs-string\">\"delete\"</span>, <span class=\"hljs-string\">\"manage_users\"</span>],\n  <span class=\"hljs-attr\">editor</span>: [<span class=\"hljs-string\">\"read\"</span>, <span class=\"hljs-string\">\"write\"</span>],\n  <span class=\"hljs-attr\">viewer</span>: [<span class=\"hljs-string\">\"read\"</span>],\n};\n\n<span class=\"hljs-comment\">// Record для індексованих колекцій</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UsersById</span> = <span class=\"hljs-title class_\">Record</span>&lt;<span class=\"hljs-built_in\">number</span>, <span class=\"hljs-title class_\">User</span>&gt;;\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">users</span>: <span class=\"hljs-title class_\">UsersById</span> = {\n  <span class=\"hljs-number\">1</span>: { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"j@mail.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> },\n  <span class=\"hljs-number\">2</span>: { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">2</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"Jane\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"jane@mail.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"viewer\"</span> },\n};</code></pre>","<h1>🔀 Utility Types: робота з Union</h1>\n<p><strong>Головна ідея:</strong> <code>Exclude</code> та <code>Extract</code> фільтрують члени union type за умовою — виключають або залишають лише ті, що відповідають заданому типу.</p>\n<h2>🚫 <code>Exclude&lt;T, U&gt;</code> — виключити з union</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UserRole</span> = <span class=\"hljs-string\">\"admin\"</span> | <span class=\"hljs-string\">\"editor\"</span> | <span class=\"hljs-string\">\"viewer\"</span>;\n\n<span class=\"hljs-comment\">// Виключаємо admin — залишаємо ролі для звичайних користувачів</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">RegularRole</span> = <span class=\"hljs-title class_\">Exclude</span>&lt;<span class=\"hljs-title class_\">UserRole</span>, <span class=\"hljs-string\">\"admin\"</span>&gt;;\n<span class=\"hljs-comment\">// \"editor\" | \"viewer\"</span>\n\n<span class=\"hljs-comment\">// Виключаємо кілька значень</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">ViewerOnly</span> = <span class=\"hljs-title class_\">Exclude</span>&lt;<span class=\"hljs-title class_\">UserRole</span>, <span class=\"hljs-string\">\"admin\"</span> | <span class=\"hljs-string\">\"editor\"</span>&gt;;\n<span class=\"hljs-comment\">// \"viewer\"</span>\n\n<span class=\"hljs-comment\">// Практичний приклад: видалення null/undefined (так працює вбудований NonNullable&lt;T&gt;)</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">AllTypes</span> = <span class=\"hljs-built_in\">string</span> | <span class=\"hljs-built_in\">number</span> | <span class=\"hljs-built_in\">boolean</span> | <span class=\"hljs-literal\">null</span> | <span class=\"hljs-literal\">undefined</span>;\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">NotNull</span> = <span class=\"hljs-title class_\">Exclude</span>&lt;<span class=\"hljs-title class_\">AllTypes</span>, <span class=\"hljs-literal\">null</span> | <span class=\"hljs-literal\">undefined</span>&gt;;\n<span class=\"hljs-comment\">// string | number | boolean</span></code></pre><h2>✅ <code>Extract&lt;T, U&gt;</code> — залишити лише відповідні</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Залишаємо тільки admin</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">AdminOnly</span> = <span class=\"hljs-title class_\">Extract</span>&lt;<span class=\"hljs-title class_\">UserRole</span>, <span class=\"hljs-string\">\"admin\"</span>&gt;;\n<span class=\"hljs-comment\">// \"admin\"</span>\n\n<span class=\"hljs-comment\">// Практичний приклад: витягнути лише рядкові типи</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Mixed</span> = <span class=\"hljs-built_in\">string</span> | <span class=\"hljs-built_in\">number</span> | (<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-built_in\">void</span>) | <span class=\"hljs-built_in\">boolean</span>;\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">OnlyStrings</span> = <span class=\"hljs-title class_\">Extract</span>&lt;<span class=\"hljs-title class_\">Mixed</span>, <span class=\"hljs-built_in\">string</span>&gt;;  <span class=\"hljs-comment\">// string</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">OnlyFunctions</span> = <span class=\"hljs-title class_\">Extract</span>&lt;<span class=\"hljs-title class_\">Mixed</span>, <span class=\"hljs-title class_\">Function</span>&gt;;  <span class=\"hljs-comment\">// () =&gt; void</span></code></pre><h2>⚡ <code>ReturnType&lt;T&gt;</code> та <code>Parameters&lt;T&gt;</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">createUser</span>(<span class=\"hljs-params\">name: <span class=\"hljs-built_in\">string</span>, email: <span class=\"hljs-built_in\">string</span>, role: UserRole</span>): <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-keyword\">return</span> { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Date</span>.<span class=\"hljs-title function_\">now</span>(), name, email, role };\n}\n\n<span class=\"hljs-comment\">// Отримати тип, що повертає функція</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">NewUser</span> = <span class=\"hljs-title class_\">ReturnType</span>&lt;<span class=\"hljs-keyword\">typeof</span> createUser&gt;;  <span class=\"hljs-comment\">// User</span>\n\n<span class=\"hljs-comment\">// Отримати типи параметрів як tuple</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">CreateUserParams</span> = <span class=\"hljs-title class_\">Parameters</span>&lt;<span class=\"hljs-keyword\">typeof</span> createUser&gt;;\n<span class=\"hljs-comment\">// [name: string, email: string, role: UserRole]</span></code></pre>","<h1>🧩 Union та Intersection Types</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Union type</strong> (<code>A | B</code>) — тип, що може бути <strong>одним з</strong> перелічених типів.<br><strong>Intersection type</strong> (<code>A &amp; B</code>) — тип, що <strong>поєднує</strong> всі властивості перелічених типів.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Union обмежує \"або A, або B\", intersection вимагає \"і A, і B одночасно\".</p>\n<h2>🔀 Union Types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Union примітивів</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-variable constant_\">ID</span> = <span class=\"hljs-built_in\">string</span> | <span class=\"hljs-built_in\">number</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">formatId</span>(<span class=\"hljs-params\">id: ID</span>): <span class=\"hljs-built_in\">string</span> {\n  <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-keyword\">typeof</span> id === <span class=\"hljs-string\">\"string\"</span>) {\n    <span class=\"hljs-keyword\">return</span> id.<span class=\"hljs-title function_\">toUpperCase</span>();\n  }\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`#<span class=\"hljs-subst\">${id}</span>`</span>;\n}\n\n<span class=\"hljs-title function_\">formatId</span>(<span class=\"hljs-string\">\"abc-123\"</span>);  <span class=\"hljs-comment\">// \"ABC-123\"</span>\n<span class=\"hljs-title function_\">formatId</span>(<span class=\"hljs-number\">42</span>);          <span class=\"hljs-comment\">// \"#42\"</span></code></pre><h2>🔗 Intersection Types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Композиція типів через intersection</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Timestamped</span> {\n  <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-title class_\">Date</span>;\n  <span class=\"hljs-attr\">updatedAt</span>: <span class=\"hljs-title class_\">Date</span>;\n}\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">SoftDeletable</span> {\n  <span class=\"hljs-attr\">deletedAt</span>: <span class=\"hljs-title class_\">Date</span> | <span class=\"hljs-literal\">null</span>;\n}\n\n<span class=\"hljs-comment\">// User з усіма властивостями: User + Timestamped + SoftDeletable</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">FullUser</span> = <span class=\"hljs-title class_\">User</span> &amp; <span class=\"hljs-title class_\">Timestamped</span> &amp; <span class=\"hljs-title class_\">SoftDeletable</span>;\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">fullUser</span>: <span class=\"hljs-title class_\">FullUser</span> = {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>,\n  <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>,\n  <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"j@mail.com\"</span>,\n  <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span>,\n  <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(),\n  <span class=\"hljs-attr\">updatedAt</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(),\n  <span class=\"hljs-attr\">deletedAt</span>: <span class=\"hljs-literal\">null</span>,\n};</code></pre><div class=\"tip\"><strong>💡 💡 Коли що використовувати?</strong> <p><strong>Union</strong> — коли значення може бути одним із варіантів (статуси, ID різних форматів, результат операції).<br><strong>Intersection</strong> — коли потрібно скомбінувати кілька незалежних \"міксинів\" в один тип (timestamps, soft delete, audit fields).</p>\n</div>\n\n","<h1>🏷️ Literal Types та Discriminated Unions</h1>\n<p><strong>Головна ідея:</strong> Literal types обмежують значення конкретними константами, а discriminated unions використовують спільну властивість-дискримінант для автоматичного звуження типу.</p>\n<h2>🔤 Literal Types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Рядкові літерали — вже бачили в User.role</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Direction</span> = <span class=\"hljs-string\">\"up\"</span> | <span class=\"hljs-string\">\"down\"</span> | <span class=\"hljs-string\">\"left\"</span> | <span class=\"hljs-string\">\"right\"</span>;\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">HttpMethod</span> = <span class=\"hljs-string\">\"GET\"</span> | <span class=\"hljs-string\">\"POST\"</span> | <span class=\"hljs-string\">\"PUT\"</span> | <span class=\"hljs-string\">\"DELETE\"</span>;\n\n<span class=\"hljs-comment\">// Числові літерали</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">DiceRoll</span> = <span class=\"hljs-number\">1</span> | <span class=\"hljs-number\">2</span> | <span class=\"hljs-number\">3</span> | <span class=\"hljs-number\">4</span> | <span class=\"hljs-number\">5</span> | <span class=\"hljs-number\">6</span>;\n\n<span class=\"hljs-comment\">// Константа як literal type</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-variable constant_\">API_VERSION</span> = <span class=\"hljs-string\">\"v1\"</span> <span class=\"hljs-keyword\">as</span> <span class=\"hljs-keyword\">const</span>;  <span class=\"hljs-comment\">// тип: \"v1\", не string</span></code></pre><h2>🎯 Discriminated Unions</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Спільна властивість-дискримінант: \"status\"</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">LoadingState</span>  { <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"loading\"</span>; }\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">SuccessState</span>  { <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"success\"</span>; <span class=\"hljs-attr\">users</span>: <span class=\"hljs-title class_\">User</span>[]; }\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">ErrorState</span>    { <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"error\"</span>; <span class=\"hljs-attr\">message</span>: <span class=\"hljs-built_in\">string</span>; }\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">FetchState</span> = <span class=\"hljs-title class_\">LoadingState</span> | <span class=\"hljs-title class_\">SuccessState</span> | <span class=\"hljs-title class_\">ErrorState</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">renderUsers</span>(<span class=\"hljs-params\">state: FetchState</span>): <span class=\"hljs-built_in\">string</span> {\n  <span class=\"hljs-keyword\">switch</span> (state.<span class=\"hljs-property\">status</span>) {\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"loading\"</span>:\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">\"⏳ Завантаження...\"</span>;\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"success\"</span>:\n      <span class=\"hljs-comment\">// ✅ TypeScript знає: state — SuccessState, має users</span>\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`✅ Знайдено <span class=\"hljs-subst\">${state.users.length}</span> користувачів`</span>;\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"error\"</span>:\n      <span class=\"hljs-comment\">// ✅ TypeScript знає: state — ErrorState, має message</span>\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`❌ Помилка: <span class=\"hljs-subst\">${state.message}</span>`</span>;\n  }\n}</code></pre><div class=\"tip\"><strong>💡 💡 Де використовуються?</strong> <p>Discriminated unions — стандарт для: Redux actions, стану HTTP-запитів, FSM (скінченних автоматів), WebSocket-повідомлень, Result/Either патернів.</p>\n</div>\n\n","<h1>🗺️ Mapped Types</h1>\n<p><strong>Головна ідея:</strong> Mapped types трансформують кожну властивість існуючого типу за заданим правилом, дозволяючи програмно генерувати нові типи.</p>\n<h2>🔄 Синтаксис mapped types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Базовий синтаксис: [K in keyof T]</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Optional</span>&lt;T&gt; = {\n  [K <span class=\"hljs-keyword\">in</span> keyof T]?: T[K];  <span class=\"hljs-comment\">// Кожна властивість стає optional</span>\n};\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Nullable</span>&lt;T&gt; = {\n  [K <span class=\"hljs-keyword\">in</span> keyof T]: T[K] | <span class=\"hljs-literal\">null</span>;  <span class=\"hljs-comment\">// Кожна властивість може бути null</span>\n};\n\n<span class=\"hljs-comment\">// Застосування до User</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">NullableUser</span> = <span class=\"hljs-title class_\">Nullable</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;;\n<span class=\"hljs-comment\">// { id: number | null; name: string | null; email: string | null; role: ... | null }</span></code></pre><h2>🔧 Модифікатори в mapped types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Додати readonly до всіх полів</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Immutable</span>&lt;T&gt; = {\n  <span class=\"hljs-keyword\">readonly</span> [K <span class=\"hljs-keyword\">in</span> keyof T]: T[K];\n};\n\n<span class=\"hljs-comment\">// Видалити optional (-)</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Concrete</span>&lt;T&gt; = {\n  [K <span class=\"hljs-keyword\">in</span> keyof T]-?: T[K];  <span class=\"hljs-comment\">// -? видаляє необов'язковість</span>\n};\n\n<span class=\"hljs-comment\">// Видалити readonly (-)</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Mutable</span>&lt;T&gt; = {\n  -<span class=\"hljs-keyword\">readonly</span> [K <span class=\"hljs-keyword\">in</span> keyof T]: T[K];\n};</code></pre><div class=\"note\"><strong>📝 🔍 Під капотом Utility Types</strong> <p>Вбудовані <code>Partial&lt;T&gt;</code>, <code>Required&lt;T&gt;</code>, <code>Readonly&lt;T&gt;</code> — це mapped types:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Partial</span>&lt;T&gt;  = { [K <span class=\"hljs-keyword\">in</span> keyof T]?: T[K] };\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Required</span>&lt;T&gt; = { [K <span class=\"hljs-keyword\">in</span> keyof T]-?: T[K] };\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Readonly</span>&lt;T&gt; = { <span class=\"hljs-keyword\">readonly</span> [K <span class=\"hljs-keyword\">in</span> keyof T]: T[K] };</code></pre></div>\n\n","<h1>🔑 <code>keyof</code>, <code>typeof</code> та Template Literal Types</h1>\n<p><strong>Головна ідея:</strong> Оператори <code>keyof</code> та <code>typeof</code> витягують типи з існуючих структур, а template literal types дозволяють програмно конструювати рядкові типи.</p>\n<h2>🔑 <code>keyof</code> — отримання union ключів</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">UserKeys</span> = keyof <span class=\"hljs-title class_\">User</span>;  <span class=\"hljs-comment\">// \"id\" | \"name\" | \"email\" | \"role\"</span>\n\n<span class=\"hljs-comment\">// Типобезпечний доступ до властивостей</span>\n<span class=\"hljs-keyword\">function</span> getProperty&lt;T, K <span class=\"hljs-keyword\">extends</span> keyof T&gt;(<span class=\"hljs-attr\">obj</span>: T, <span class=\"hljs-attr\">key</span>: K): T[K] {\n  <span class=\"hljs-keyword\">return</span> obj[key];\n}\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">user</span>: <span class=\"hljs-title class_\">User</span> = { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"John\"</span>, <span class=\"hljs-attr\">email</span>: <span class=\"hljs-string\">\"j@mail.com\"</span>, <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"admin\"</span> };\n<span class=\"hljs-title function_\">getProperty</span>(user, <span class=\"hljs-string\">\"name\"</span>);   <span class=\"hljs-comment\">// ✅ string</span>\n<span class=\"hljs-title function_\">getProperty</span>(user, <span class=\"hljs-string\">\"role\"</span>);   <span class=\"hljs-comment\">// ✅ \"admin\" | \"editor\" | \"viewer\"</span>\n<span class=\"hljs-comment\">// getProperty(user, \"phone\");  // ❌ Помилка: \"phone\" не є ключем User</span></code></pre><h2>🔍 <code>typeof</code> — тип зі значення</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">const</span> defaultUser = {\n  <span class=\"hljs-attr\">name</span>: <span class=\"hljs-string\">\"Guest\"</span>,\n  <span class=\"hljs-attr\">role</span>: <span class=\"hljs-string\">\"viewer\"</span> <span class=\"hljs-keyword\">as</span> <span class=\"hljs-keyword\">const</span>,\n};\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">DefaultUser</span> = <span class=\"hljs-keyword\">typeof</span> defaultUser;\n<span class=\"hljs-comment\">// { name: string; role: \"viewer\" }</span>\n\n<span class=\"hljs-comment\">// Комбінація keyof + typeof</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">DefaultUserKeys</span> = keyof <span class=\"hljs-keyword\">typeof</span> defaultUser;  <span class=\"hljs-comment\">// \"name\" | \"role\"</span></code></pre><h2>📝 Template Literal Types</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">HttpMethod</span> = <span class=\"hljs-string\">\"get\"</span> | <span class=\"hljs-string\">\"post\"</span> | <span class=\"hljs-string\">\"put\"</span> | <span class=\"hljs-string\">\"delete\"</span>;\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Endpoint</span> = <span class=\"hljs-string\">\"users\"</span> | <span class=\"hljs-string\">\"posts\"</span>;\n\n<span class=\"hljs-comment\">// Автоматична генерація всіх комбінацій</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">ApiRoute</span> = <span class=\"hljs-string\">`/<span class=\"hljs-subst\">${Endpoint}</span>`</span>;           <span class=\"hljs-comment\">// \"/users\" | \"/posts\"</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">ApiMethod</span> = <span class=\"hljs-string\">`<span class=\"hljs-subst\">${HttpMethod}</span>:<span class=\"hljs-subst\">${ApiRoute}</span>`</span>;\n<span class=\"hljs-comment\">// \"get:/users\" | \"get:/posts\" | \"post:/users\" | \"post:/posts\" | ...</span>\n\n<span class=\"hljs-comment\">// Практичний приклад: CSS-властивості</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Side</span> = <span class=\"hljs-string\">\"Top\"</span> | <span class=\"hljs-string\">\"Right\"</span> | <span class=\"hljs-string\">\"Bottom\"</span> | <span class=\"hljs-string\">\"Left\"</span>;\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">MarginProperty</span> = <span class=\"hljs-string\">`margin<span class=\"hljs-subst\">${Side}</span>`</span>;\n<span class=\"hljs-comment\">// \"marginTop\" | \"marginRight\" | \"marginBottom\" | \"marginLeft\"</span></code></pre>","<h1>❓ Conditional Types</h1>\n<p><strong>Головна ідея:</strong> Conditional types обирають тип за умовою, подібно до тернарного оператора, але на рівні типів.</p>\n<h2>📋 Синтаксис <code>T extends U ? X : Y</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Якщо T є підтипом string — повертаємо \"yes\", інакше \"no\"</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">IsString</span>&lt;T&gt; = T <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-built_in\">string</span> ? <span class=\"hljs-string\">\"yes\"</span> : <span class=\"hljs-string\">\"no\"</span>;\n\n<span class=\"hljs-keyword\">type</span> A = <span class=\"hljs-title class_\">IsString</span>&lt;<span class=\"hljs-built_in\">string</span>&gt;;   <span class=\"hljs-comment\">// \"yes\"</span>\n<span class=\"hljs-keyword\">type</span> B = <span class=\"hljs-title class_\">IsString</span>&lt;<span class=\"hljs-built_in\">number</span>&gt;;   <span class=\"hljs-comment\">// \"no\"</span>\n<span class=\"hljs-keyword\">type</span> C = <span class=\"hljs-title class_\">IsString</span>&lt;<span class=\"hljs-string\">\"hello\"</span>&gt;;  <span class=\"hljs-comment\">// \"yes\" (literal — підтип string)</span></code></pre><h2>🔍 Ключове слово <code>infer</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// infer дозволяє \"витягнути\" частину типу</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">ElementType</span>&lt;T&gt; = T <span class=\"hljs-keyword\">extends</span> (infer E)[] ? E : <span class=\"hljs-built_in\">never</span>;\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">NumEl</span> = <span class=\"hljs-title class_\">ElementType</span>&lt;<span class=\"hljs-built_in\">number</span>[]&gt;;   <span class=\"hljs-comment\">// number</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">StrEl</span> = <span class=\"hljs-title class_\">ElementType</span>&lt;<span class=\"hljs-built_in\">string</span>[]&gt;;   <span class=\"hljs-comment\">// string</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">None</span>  = <span class=\"hljs-title class_\">ElementType</span>&lt;<span class=\"hljs-built_in\">boolean</span>&gt;;    <span class=\"hljs-comment\">// never (не масив)</span>\n\n<span class=\"hljs-comment\">// Практичний приклад: тип елемента Promise</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">Unwrap</span>&lt;T&gt; = T <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_\">Promise</span>&lt;infer U&gt; ? U : T;\n\n<span class=\"hljs-keyword\">type</span> A = <span class=\"hljs-title class_\">Unwrap</span>&lt;<span class=\"hljs-title class_\">Promise</span>&lt;<span class=\"hljs-title class_\">User</span>&gt;&gt;;  <span class=\"hljs-comment\">// User</span>\n<span class=\"hljs-keyword\">type</span> B = <span class=\"hljs-title class_\">Unwrap</span>&lt;<span class=\"hljs-built_in\">string</span>&gt;;          <span class=\"hljs-comment\">// string (не Promise — повертаємо як є)</span></code></pre><div class=\"warning\"><strong>⚠️ ⚠️ Рівень складності</strong> <p>Conditional types з <code>infer</code> — просунута тема. На практиці частіше використовують готові utility types (<code>ReturnType</code>, <code>Parameters</code>), які побудовані на conditional types.</p>\n</div>\n\n","<h1>🛡️ Type Guards: вбудовані оператори</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Type Guard</strong> — вираз, що виконує перевірку під час виконання та дозволяє TypeScript автоматично звузити тип змінної у відповідному блоці коду.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> TypeScript аналізує control flow — після перевірки в <code>if</code> компілятор \"знає\" точний тип.</p>\n<h2>🔍 <code>typeof</code> — для примітивів</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">processValue</span>(<span class=\"hljs-params\">value: <span class=\"hljs-built_in\">string</span> | <span class=\"hljs-built_in\">number</span> | <span class=\"hljs-built_in\">boolean</span></span>) {\n  <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-keyword\">typeof</span> value === <span class=\"hljs-string\">\"string\"</span>) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(value.<span class=\"hljs-title function_\">toUpperCase</span>());  <span class=\"hljs-comment\">// ✅ string</span>\n  } <span class=\"hljs-keyword\">else</span> <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-keyword\">typeof</span> value === <span class=\"hljs-string\">\"number\"</span>) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(value.<span class=\"hljs-title function_\">toFixed</span>(<span class=\"hljs-number\">2</span>));     <span class=\"hljs-comment\">// ✅ number</span>\n  } <span class=\"hljs-keyword\">else</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(value ? <span class=\"hljs-string\">\"yes\"</span> : <span class=\"hljs-string\">\"no\"</span>); <span class=\"hljs-comment\">// ✅ boolean</span>\n  }\n}</code></pre><h2>🏛️ <code>instanceof</code> — для класів</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">ApiError</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">public</span> code: <span class=\"hljs-built_in\">number</span>, <span class=\"hljs-keyword\">public</span> message: <span class=\"hljs-built_in\">string</span></span>) {}\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">NetworkError</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">public</span> url: <span class=\"hljs-built_in\">string</span></span>) {}\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">handleError</span>(<span class=\"hljs-params\">err: ApiError | NetworkError</span>) {\n  <span class=\"hljs-keyword\">if</span> (err <span class=\"hljs-keyword\">instanceof</span> <span class=\"hljs-title class_\">ApiError</span>) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`API [<span class=\"hljs-subst\">${err.code}</span>]: <span class=\"hljs-subst\">${err.message}</span>`</span>);  <span class=\"hljs-comment\">// ✅ ApiError</span>\n  } <span class=\"hljs-keyword\">else</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`Network error: <span class=\"hljs-subst\">${err.url}</span>`</span>);          <span class=\"hljs-comment\">// ✅ NetworkError</span>\n  }\n}</code></pre><h2>🔎 <code>in</code> — перевірка властивості</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">processState</span>(<span class=\"hljs-params\">state: FetchState</span>) {\n  <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-string\">\"users\"</span> <span class=\"hljs-keyword\">in</span> state) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(state.<span class=\"hljs-property\">users</span>.<span class=\"hljs-property\">length</span>);  <span class=\"hljs-comment\">// ✅ SuccessState</span>\n  } <span class=\"hljs-keyword\">else</span> <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-string\">\"message\"</span> <span class=\"hljs-keyword\">in</span> state) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(state.<span class=\"hljs-property\">message</span>);       <span class=\"hljs-comment\">// ✅ ErrorState</span>\n  }\n}</code></pre>","<h1>🛡️ Користувацькі Type Guards та Exhaustive Check</h1>\n<p><strong>Головна ідея:</strong> Предикат <code>is</code> дозволяє винести складну логіку перевірки у функцію, а <code>never</code> гарантує обробку всіх варіантів union.</p>\n<h2>✍️ Предикат <code>is</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Функція-guard з предикатом: повертає boolean, але звужує тип</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">isSuccessState</span>(<span class=\"hljs-params\">state: FetchState</span>): state is <span class=\"hljs-title class_\">SuccessState</span> {\n  <span class=\"hljs-keyword\">return</span> state.<span class=\"hljs-property\">status</span> === <span class=\"hljs-string\">\"success\"</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">showUsers</span>(<span class=\"hljs-params\">state: FetchState</span>) {\n  <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-title function_\">isSuccessState</span>(state)) {\n    <span class=\"hljs-comment\">// ✅ TypeScript знає: state — SuccessState</span>\n    state.<span class=\"hljs-property\">users</span>.<span class=\"hljs-title function_\">forEach</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">u</span> =&gt;</span> <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(u.<span class=\"hljs-property\">name</span>));\n  }\n}\n\n<span class=\"hljs-comment\">// Ще приклад: перевірка на User</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">isUser</span>(<span class=\"hljs-params\">value: <span class=\"hljs-built_in\">unknown</span></span>): value is <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"hljs-keyword\">typeof</span> value === <span class=\"hljs-string\">\"object\"</span> &amp;&amp;\n    value !== <span class=\"hljs-literal\">null</span> &amp;&amp;\n    <span class=\"hljs-string\">\"id\"</span> <span class=\"hljs-keyword\">in</span> value &amp;&amp;\n    <span class=\"hljs-string\">\"name\"</span> <span class=\"hljs-keyword\">in</span> value &amp;&amp;\n    <span class=\"hljs-string\">\"email\"</span> <span class=\"hljs-keyword\">in</span> value\n  );\n}</code></pre><h2>🚫 Exhaustive Check з <code>never</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">handleState</span>(<span class=\"hljs-params\">state: FetchState</span>): <span class=\"hljs-built_in\">string</span> {\n  <span class=\"hljs-keyword\">switch</span> (state.<span class=\"hljs-property\">status</span>) {\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"loading\"</span>:\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">\"⏳\"</span>;\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"success\"</span>:\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`✅ <span class=\"hljs-subst\">${state.users.length}</span>`</span>;\n    <span class=\"hljs-keyword\">case</span> <span class=\"hljs-string\">\"error\"</span>:\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`❌ <span class=\"hljs-subst\">${state.message}</span>`</span>;\n    <span class=\"hljs-attr\">default</span>:\n      <span class=\"hljs-comment\">// Якщо додати новий status і забути case — помилка компіляції!</span>\n      <span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">_exhaustive</span>: <span class=\"hljs-built_in\">never</span> = state;\n      <span class=\"hljs-keyword\">return</span> _exhaustive;\n  }\n}</code></pre><div class=\"warning\"><strong>⚠️ 🔥 Чому це критично?</strong> <p>Якщо в <code>FetchState</code> з'явиться новий варіант (наприклад, <code>\"retrying\"</code>), TypeScript видасть помилку: <code>Type '{ status: \"retrying\" }' is not assignable to type 'never'</code>. Це гарантує, що ви не забудете обробити новий випадок!</p>\n</div>\n\n","<h1>🧬 Assertion Functions</h1>\n<p><strong>Головна ідея:</strong> Assertion functions не повертають значення — вони або кидають помилку, або TypeScript звужує тип у коді після виклику.</p>\n<h2>📋 Синтаксис <code>asserts</code></h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">assertIsUser</span>(<span class=\"hljs-params\">value: <span class=\"hljs-built_in\">unknown</span></span>): asserts value is <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-keyword\">if</span> (!<span class=\"hljs-title function_\">isUser</span>(value)) {\n    <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">\"Value is not a valid User\"</span>);\n  }\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">processApiResponse</span>(<span class=\"hljs-params\">data: <span class=\"hljs-built_in\">unknown</span></span>) {\n  <span class=\"hljs-title function_\">assertIsUser</span>(data);\n  <span class=\"hljs-comment\">// ✅ Після assertion TypeScript знає: data — User</span>\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`Hello, <span class=\"hljs-subst\">${data.name}</span>!`</span>);\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`Role: <span class=\"hljs-subst\">${data.role}</span>`</span>);\n}</code></pre><h2>🔍 Type Guard (<code>is</code>) vs Assertion (<code>asserts</code>)</h2>\n<table>\n<thead>\n<tr>\n<th>Аспект</th>\n<th>Type Guard (<code>is</code>)</th>\n<th>Assertion (<code>asserts</code>)</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Повертає</td>\n<td><code>boolean</code></td>\n<td><code>void</code> (або кидає помилку)</td>\n</tr>\n<tr>\n<td>Використання</td>\n<td><code>if (isUser(x)) { ... }</code></td>\n<td><code>assertIsUser(x); ...</code></td>\n</tr>\n<tr>\n<td>Контроль потоку</td>\n<td>Розгалуження (if/else)</td>\n<td>Лінійний код після assertion</td>\n</tr>\n<tr>\n<td>Коли обрати</td>\n<td>Коли обидва варіанти валідні</td>\n<td>Коли невалідне — це помилка</td>\n</tr>\n</tbody></table>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Type Guard: обробляємо обидва випадки</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">withGuard</span>(<span class=\"hljs-params\">data: <span class=\"hljs-built_in\">unknown</span></span>) {\n  <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-title function_\">isUser</span>(data)) {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(data.<span class=\"hljs-property\">name</span>);   <span class=\"hljs-comment\">// User</span>\n  } <span class=\"hljs-keyword\">else</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Not a user\"</span>); <span class=\"hljs-comment\">// unknown</span>\n  }\n}\n\n<span class=\"hljs-comment\">// Assertion: далі код тільки для User</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">withAssertion</span>(<span class=\"hljs-params\">data: <span class=\"hljs-built_in\">unknown</span></span>) {\n  <span class=\"hljs-title function_\">assertIsUser</span>(data);         <span class=\"hljs-comment\">// кидає Error якщо не User</span>\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(data.<span class=\"hljs-property\">name</span>);     <span class=\"hljs-comment\">// User — гарантовано</span>\n}</code></pre>","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ 📌 Підсумок лекції</strong> <ol>\n<li><p>🧬 <strong>Generics</strong> (функції, інтерфейси, класи) забезпечують перевикористання коду зі збереженням типобезпеки — один компонент замість десятків дублікатів</p>\n</li>\n<li><p>🧰 <strong>Utility types</strong> (<code>Partial</code>, <code>Required</code>, <code>Readonly</code>, <code>Pick</code>, <code>Omit</code>, <code>Record</code>, <code>Exclude</code>, <code>Extract</code>) трансформують існуючі типи без ручного переписування</p>\n</li>\n<li><p>🧩 <strong>Union</strong> (<code>|</code>) моделює \"один з варіантів\", <strong>Intersection</strong> (<code>&amp;</code>) комбінує типи; <strong>Literal types</strong> обмежують значення константами</p>\n</li>\n<li><p>🏷️ <strong>Discriminated unions</strong> зі спільним дискримінантом — стандартний патерн для станів, подій, actions</p>\n</li>\n<li><p>🗺️ <strong>Mapped types</strong> програмно трансформують кожну властивість типу — на них побудовані <code>Partial</code>, <code>Readonly</code> тощо</p>\n</li>\n<li><p>🛡️ <strong>Type guards</strong> (<code>typeof</code>, <code>instanceof</code>, <code>in</code>, предикат <code>is</code>) звужують типи; <strong>exhaustive check</strong> з <code>never</code> гарантує обробку всіх варіантів</p>\n</li>\n<li><p>🧬 <strong>Assertion functions</strong> (<code>asserts</code>) — альтернатива guards для валідації на межі системи</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Яку проблему вирішують generics? Чому <code>any</code> не є альтернативою?</p>\n</li>\n<li><p>🤔 Напишіть generic-клас <code>Stack&lt;T&gt;</code> з методами <code>push</code>, <code>pop</code>, <code>peek</code>. Які обмеження можна додати до <code>T</code>?</p>\n</li>\n<li><p>🤔 Чим відрізняються <code>Partial&lt;T&gt;</code> та <code>Required&lt;T&gt;</code>? Наведіть практичний приклад для кожного.</p>\n</li>\n<li><p>🤔 Коли використовувати <code>Pick</code>, а коли <code>Omit</code>? Як обрати?</p>\n</li>\n<li><p>🤔 Поясніть різницю між <code>Exclude&lt;T, U&gt;</code> та <code>Extract&lt;T, U&gt;</code> на прикладі union type.</p>\n</li>\n<li><p>🤔 Що таке discriminated union? Яку роль відіграє властивість-дискримінант?</p>\n</li>\n<li><p>🤔 Перелічіть способи звуження типів. Коли використовувати предикат <code>is</code>, а коли <code>asserts</code>?</p>\n</li>\n<li><p>🤔 Як exhaustive check з типом <code>never</code> захищає від помилок при розширенні union?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Узагальнений тип</td>\n<td>Generic</td>\n<td>Параметризований тип для створення універсальних компонентів</td>\n</tr>\n<tr>\n<td>Утилітний тип</td>\n<td>Utility Type</td>\n<td>Вбудований generic для трансформації існуючих типів</td>\n</tr>\n<tr>\n<td>Тип-об'єднання</td>\n<td>Union Type</td>\n<td>Тип, що допускає одне з кількох значень (<code>A | B</code>)</td>\n</tr>\n<tr>\n<td>Тип-перетин</td>\n<td>Intersection Type</td>\n<td>Тип, що поєднує властивості кількох типів (<code>A &amp; B</code>)</td>\n</tr>\n<tr>\n<td>Літеральний тип</td>\n<td>Literal Type</td>\n<td>Тип, обмежений конкретним значенням</td>\n</tr>\n<tr>\n<td>Розмічене об'єднання</td>\n<td>Discriminated Union</td>\n<td>Union зі спільним дискримінантом для автоматичного звуження</td>\n</tr>\n<tr>\n<td>Зіставлений тип</td>\n<td>Mapped Type</td>\n<td>Тип, утворений трансформацією кожної властивості вихідного типу</td>\n</tr>\n<tr>\n<td>Умовний тип</td>\n<td>Conditional Type</td>\n<td>Тип, що обирається за умовою (<code>T extends U ? X : Y</code>)</td>\n</tr>\n<tr>\n<td>Захисник типу</td>\n<td>Type Guard</td>\n<td>Вираз, що звужує тип у блоці коду</td>\n</tr>\n<tr>\n<td>Вичерпна перевірка</td>\n<td>Exhaustive Check</td>\n<td>Патерн з <code>never</code> для гарантії обробки всіх варіантів union</td>\n</tr>\n<tr>\n<td>Функція-твердження</td>\n<td>Assertion Function</td>\n<td>Функція, що кидає помилку або звужує тип після виклику</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>TS</td>\n<td>TypeScript</td>\n<td>TypeScript</td>\n</tr>\n<tr>\n<td>DTO</td>\n<td>Data Transfer Object</td>\n<td>Об'єкт передачі даних</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>CRUD</td>\n<td>Create, Read, Update, Delete</td>\n<td>Створення, читання, оновлення, видалення</td>\n</tr>\n<tr>\n<td>FSM</td>\n<td>Finite State Machine</td>\n<td>Скінченний автомат</td>\n</tr>\n<tr>\n<td>OOP</td>\n<td>Object-Oriented Programming</td>\n<td>Об'єктно-орієнтоване програмування</td>\n</tr>\n<tr>\n<td>DRY</td>\n<td>Don't Repeat Yourself</td>\n<td>Принцип уникнення дублювання коду</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
