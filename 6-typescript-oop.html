@@ -1,0 +1,622 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>TypeScript: ООП та декоратори</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#m-1771439770591-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#m-1771439770591-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#m-1771439770591-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#m-1771439770591-0 .error-icon{fill:#552222;}#m-1771439770591-0 .error-text{fill:#552222;stroke:#552222;}#m-1771439770591-0 .edge-thickness-normal{stroke-width:1px;}#m-1771439770591-0 .edge-thickness-thick{stroke-width:3.5px;}#m-1771439770591-0 .edge-pattern-solid{stroke-dasharray:0;}#m-1771439770591-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#m-1771439770591-0 .edge-pattern-dashed{stroke-dasharray:3;}#m-1771439770591-0 .edge-pattern-dotted{stroke-dasharray:2;}#m-1771439770591-0 .marker{fill:#333333;stroke:#333333;}#m-1771439770591-0 .marker.cross{stroke:#333333;}#m-1771439770591-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;}#m-1771439770591-0 p{margin:0;}#m-1771439770591-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}
+#m-1771439784359-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#m-1771439784359-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#m-1771439784359-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#m-1771439784359-0 .error-icon{fill:#552222;}#m-1771439784359-0 .error-text{fill:#552222;stroke:#552222;}#m-1771439784359-0 .edge-thickness-normal{stroke-width:1px;}#m-1771439784359-0 .edge-thickness-thick{stroke-width:3.5px;}#m-1771439784359-0 .edge-pattern-solid{stroke-dasharray:0;}#m-1771439784359-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#m-1771439784359-0 .edge-pattern-dashed{stroke-dasharray:3;}#m-1771439784359-0 .edge-pattern-dotted{stroke-dasharray:2;}#m-1771439784359-0 .marker{fill:#333333;stroke:#333333;}#m-1771439784359-0 .marker.cross{stroke:#333333;}#m-1771439784359-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;}#m-1771439784359-0 p{margin:0;}#m-1771439784359-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 18</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script>const slides=["<h1>TypeScript: ООП та декоратори</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🏗️ Класи в TypeScript</li>\n<li>🔐 Модифікатори доступу</li>\n<li>🧬 Наслідування та поліморфізм</li>\n<li>🎨 Абстрактні класи та інтерфейси</li>\n<li>🪄 Декоратори</li>\n<li>💻 Практика: ООП у дії</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🏗️ Класи в TypeScript</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Клас</strong> — шаблон для створення об'єктів, що інкапсулює дані (властивості) та поведінку (методи) в єдину структуру.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> TypeScript розширює класи JavaScript статичною типізацією, модифікаторами доступу та скороченим синтаксисом ініціалізації через параметри конструктора.</p>\n<h2>📝 Оголошення класу</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-attr\">name</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">age</span>: <span class=\"hljs-built_in\">number</span>;\n\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">name: <span class=\"hljs-built_in\">string</span>, age: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">name</span> = name;\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">age</span> = age;\n  }\n\n  <span class=\"hljs-title function_\">greet</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`Привіт, мене звати <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.name}</span>!`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> user = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">User</span>(<span class=\"hljs-string\">\"Олексій\"</span>, <span class=\"hljs-number\">25</span>);\n<span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(user.<span class=\"hljs-title function_\">greet</span>()); <span class=\"hljs-comment\">// \"Привіт, мене звати Олексій!\"</span></code></pre><div class=\"tip\"><strong>💡 Parameter Properties (скорочений синтаксис)</strong> <p>TypeScript дозволяє оголосити та ініціалізувати властивості прямо в параметрах конструктора — це значно скорочує код:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ Еквівалентно попередньому прикладу</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">User</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">public</span> name: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-keyword\">public</span> age: <span class=\"hljs-built_in\">number</span></span>) {}\n}</code></pre></div>\n\n","<h1>🏗️ Статичні члени та аксесори</h1>\n<p><strong>Головна ідея:</strong> Статичні члени належать самому класу, а не екземплярам. Геттери та сеттери дозволяють контролювати доступ до властивостей.</p>\n<h2>⚡ Статичні властивості та методи</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">MathHelper</span> {\n  <span class=\"hljs-keyword\">static</span> <span class=\"hljs-variable constant_\">PI</span> = <span class=\"hljs-number\">3.14159</span>;\n\n  <span class=\"hljs-keyword\">static</span> <span class=\"hljs-title function_\">circleArea</span>(<span class=\"hljs-attr\">radius</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-built_in\">number</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title class_\">MathHelper</span>.<span class=\"hljs-property\">PI</span> * radius ** <span class=\"hljs-number\">2</span>;\n  }\n}\n\n<span class=\"hljs-comment\">// Виклик без створення екземпляра</span>\n<span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-title class_\">MathHelper</span>.<span class=\"hljs-property\">PI</span>);              <span class=\"hljs-comment\">// 3.14159</span>\n<span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-title class_\">MathHelper</span>.<span class=\"hljs-title function_\">circleArea</span>(<span class=\"hljs-number\">10</span>));  <span class=\"hljs-comment\">// 314.159</span></code></pre><h2>🔄 Геттери та сеттери (<code>get</code> / <code>set</code>)</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Temperature</span> {\n  <span class=\"hljs-keyword\">private</span> <span class=\"hljs-attr\">_celsius</span>: <span class=\"hljs-built_in\">number</span>;\n\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">celsius: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_celsius</span> = celsius;\n  }\n\n  <span class=\"hljs-keyword\">get</span> <span class=\"hljs-title function_\">fahrenheit</span>(): <span class=\"hljs-built_in\">number</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_celsius</span> * <span class=\"hljs-number\">9</span> / <span class=\"hljs-number\">5</span> + <span class=\"hljs-number\">32</span>;\n  }\n\n  <span class=\"hljs-keyword\">set</span> <span class=\"hljs-title function_\">fahrenheit</span>(<span class=\"hljs-params\">value: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-keyword\">if</span> (value &lt; -<span class=\"hljs-number\">459.67</span>) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">\"Нижче абсолютного нуля!\"</span>);\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_celsius</span> = (value - <span class=\"hljs-number\">32</span>) * <span class=\"hljs-number\">5</span> / <span class=\"hljs-number\">9</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> temp = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Temperature</span>(<span class=\"hljs-number\">100</span>);\n<span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(temp.<span class=\"hljs-property\">fahrenheit</span>); <span class=\"hljs-comment\">// 212 (виклик як властивість, не метод)</span>\ntemp.<span class=\"hljs-property\">fahrenheit</span> = <span class=\"hljs-number\">32</span>;         <span class=\"hljs-comment\">// Встановлення через сеттер</span></code></pre><div class=\"note\"><strong>📝 Навіщо геттери та сеттери?</strong> <p>Вони дозволяють додати <strong>валідацію</strong>, <strong>обчислення</strong> або <strong>логування</strong> при зверненні до властивостей, зберігаючи зовнішній інтерфейс простим.</p>\n</div>\n\n","<h1>🔐 Модифікатори доступу</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Модифікатори доступу</strong> (Access Modifiers) — ключові слова, що визначають рівень видимості властивостей та методів класу.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Модифікатори реалізують принцип <strong>інкапсуляції</strong> — приховування внутрішньої реалізації та надання контрольованого доступу.</p>\n<h2>📊 Порівняння модифікаторів</h2>\n<table>\n<thead>\n<tr>\n<th>Модифікатор</th>\n<th>Всередині класу</th>\n<th>Нащадки</th>\n<th>Ззовні</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>public</code> ✅</td>\n<td>✅ Так</td>\n<td>✅ Так</td>\n<td>✅ Так</td>\n</tr>\n<tr>\n<td><code>protected</code> 🛡️</td>\n<td>✅ Так</td>\n<td>✅ Так</td>\n<td>❌ Ні</td>\n</tr>\n<tr>\n<td><code>private</code> 🔒</td>\n<td>✅ Так</td>\n<td>❌ Ні</td>\n<td>❌ Ні</td>\n</tr>\n<tr>\n<td><code>readonly</code> 📌</td>\n<td>Лише читання після ініціалізації</td>\n<td></td>\n<td></td>\n</tr>\n</tbody></table>\n<div class=\"note\"><strong>📝 Значення за замовчуванням</strong> <p>Якщо модифікатор не вказано — властивість або метод є <strong><code>public</code></strong>. Модифікатор <code>readonly</code> можна ініціалізувати лише при оголошенні або в <strong>конструкторі</strong> — після цього значення змінити неможливо. <code>readonly</code> комбінується з іншими модифікаторами: <code>private readonly</code>, <code>protected readonly</code>.</p>\n</div>\n\n\n\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">BankAccount</span> {\n  <span class=\"hljs-keyword\">public</span> <span class=\"hljs-attr\">owner</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-keyword\">protected</span> <span class=\"hljs-attr\">accountNumber</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-keyword\">private</span> <span class=\"hljs-attr\">_balance</span>: <span class=\"hljs-built_in\">number</span>;\n  <span class=\"hljs-keyword\">readonly</span> <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-title class_\">Date</span>;\n\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">owner: <span class=\"hljs-built_in\">string</span>, accountNumber: <span class=\"hljs-built_in\">string</span>, balance: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">owner</span> = owner;\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">accountNumber</span> = accountNumber;\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_balance</span> = balance;\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">createdAt</span> = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>();\n  }\n\n  <span class=\"hljs-keyword\">public</span> <span class=\"hljs-title function_\">deposit</span>(<span class=\"hljs-attr\">amount</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-built_in\">void</span> {\n    <span class=\"hljs-keyword\">if</span> (amount &lt;= <span class=\"hljs-number\">0</span>) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">\"Сума має бути додатною\"</span>);\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_balance</span> += amount;\n  }\n\n  <span class=\"hljs-keyword\">public</span> <span class=\"hljs-title function_\">getBalance</span>(): <span class=\"hljs-built_in\">number</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">_balance</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> account = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">BankAccount</span>(<span class=\"hljs-string\">\"Іван\"</span>, <span class=\"hljs-string\">\"UA123\"</span>, <span class=\"hljs-number\">1000</span>);\naccount.<span class=\"hljs-property\">owner</span>;         <span class=\"hljs-comment\">// ✅ \"Іван\" — public</span>\naccount.<span class=\"hljs-title function_\">getBalance</span>();  <span class=\"hljs-comment\">// ✅ 1000</span>\naccount.<span class=\"hljs-property\">_balance</span>;      <span class=\"hljs-comment\">// ❌ Помилка: private</span>\naccount.<span class=\"hljs-property\">accountNumber</span>; <span class=\"hljs-comment\">// ❌ Помилка: protected</span>\naccount.<span class=\"hljs-property\">createdAt</span> = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(); <span class=\"hljs-comment\">// ❌ Помилка: readonly</span></code></pre><h2>🛡️ <code>protected</code> в дії — доступ у нащадках</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">SavingsAccount</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">BankAccount</span> {\n  <span class=\"hljs-title function_\">getMaskedNumber</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-comment\">// ✅ protected — доступний у нащадку</span>\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`****<span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.accountNumber.slice(-<span class=\"hljs-number\">4</span>)}</span>`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> savings = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">SavingsAccount</span>(<span class=\"hljs-string\">\"Олена\"</span>, <span class=\"hljs-string\">\"UA9876543210\"</span>, <span class=\"hljs-number\">5000</span>);\nsavings.<span class=\"hljs-title function_\">getMaskedNumber</span>();  <span class=\"hljs-comment\">// ✅ \"****3210\"</span>\nsavings.<span class=\"hljs-property\">accountNumber</span>;      <span class=\"hljs-comment\">// ❌ Помилка: protected — ззовні недоступний</span></code></pre>","<h1>🔐 Приватні поля: TypeScript vs ES2022</h1>\n<p><strong>Головна ідея:</strong> TypeScript <code>private</code> — це перевірка на етапі компіляції, а ES2022 <code>#field</code> — справжня приватність на рівні JavaScript engine (V8, SpiderMonkey тощо).</p>\n<h2>⚖️ Порівняння</h2>\n<table>\n<thead>\n<tr>\n<th>Характеристика</th>\n<th><code>private</code> (TypeScript)</th>\n<th><code>#field</code> (ES2022)</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Перевірка</td>\n<td>⏱️ Під час компіляції</td>\n<td>🏃 Під час виконання</td>\n</tr>\n<tr>\n<td>Доступ через <code>(obj as any)</code></td>\n<td>⚠️ Можливий (обхід)</td>\n<td>❌ Неможливий</td>\n</tr>\n<tr>\n<td>Підтримка</td>\n<td>TypeScript</td>\n<td>TypeScript + JavaScript</td>\n</tr>\n<tr>\n<td>Використання в <code>#</code></td>\n<td><code>this.field</code></td>\n<td><code>this.#field</code></td>\n</tr>\n</tbody></table>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Secret</span> {\n  <span class=\"hljs-comment\">// TypeScript private — перевірка лише при компіляції</span>\n  <span class=\"hljs-keyword\">private</span> tsSecret = <span class=\"hljs-string\">\"можна обійти\"</span>;\n\n  <span class=\"hljs-comment\">// ES2022 private — справжня приватність</span>\n  #realSecret = <span class=\"hljs-string\">\"неможливо отримати ззовні\"</span>;\n\n  <span class=\"hljs-title function_\">reveal</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`<span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.tsSecret}</span> | <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.#realSecret}</span>`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> s = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Secret</span>();\n(s <span class=\"hljs-keyword\">as</span> <span class=\"hljs-built_in\">any</span>).<span class=\"hljs-property\">tsSecret</span>;   <span class=\"hljs-comment\">// ⚠️ \"можна обійти\" — працює!</span>\n(s <span class=\"hljs-keyword\">as</span> <span class=\"hljs-built_in\">any</span>).#realSecret; <span class=\"hljs-comment\">// ❌ SyntaxError</span></code></pre><div class=\"tip\"><strong>💡 Що обрати?</strong> <p>У більшості проектів на TypeScript використовують <code>private</code> — цього достатньо для типобезпечного коду. Поля <code>#field</code> корисні для бібліотек, де потрібна гарантована приватність навіть у JavaScript.</p>\n</div>\n\n","<h1>🧬 Наслідування</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Наслідування</strong> — механізм, що дозволяє створювати нові класи на основі існуючих, перевикористовуючи та розширюючи їхню функціональність.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Ключове слово <code>extends</code> створює відношення \"є\" (is-a) між класами. Нащадок наслідує всі <code>public</code> та <code>protected</code> члени батьківського класу.</p>\n<h2>🔗 Базове наслідування</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Animal</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">public</span> name: <span class=\"hljs-built_in\">string</span></span>) {}\n\n  <span class=\"hljs-title function_\">move</span>(<span class=\"hljs-attr\">distance</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`<span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.name}</span> перемістився на <span class=\"hljs-subst\">${distance}</span> м.`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Dog</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">Animal</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">name: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-keyword\">public</span> breed: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-variable language_\">super</span>(name); <span class=\"hljs-comment\">// 🔑 Обов'язковий виклик батьківського конструктора</span>\n  }\n\n  <span class=\"hljs-title function_\">bark</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`<span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.name}</span> гавкає! 🐕`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">const</span> dog = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Dog</span>(<span class=\"hljs-string\">\"Рекс\"</span>, <span class=\"hljs-string\">\"Вівчарка\"</span>);\ndog.<span class=\"hljs-title function_\">move</span>(<span class=\"hljs-number\">10</span>);  <span class=\"hljs-comment\">// \"Рекс перемістився на 10 м.\" (наслідований метод)</span>\ndog.<span class=\"hljs-title function_\">bark</span>();    <span class=\"hljs-comment\">// \"Рекс гавкає! 🐕\" (власний метод)</span></code></pre><div class=\"warning\"><strong>⚠️ Важливо</strong> <p>Виклик <code>super()</code> у конструкторі нащадка є <strong>обов'язковим</strong> і має бути <strong>першим рядком</strong> перед зверненням до <code>this</code>.</p>\n</div>\n\n","<h1>🔀 Поліморфізм</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Поліморфізм</strong> — здатність об'єктів різних класів реагувати на однаковий виклик методу по-різному.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Перевизначення методів (method overriding) дозволяє нащадкам змінювати поведінку батьківських методів, зберігаючи єдиний інтерфейс.</p>\n<h2>🎭 Method Overriding</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">abstract</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Shape</span> {\n  <span class=\"hljs-keyword\">abstract</span> <span class=\"hljs-title function_\">area</span>(): <span class=\"hljs-built_in\">number</span>; <span class=\"hljs-comment\">// 🔒 Кожен нащадок ЗОБОВ'ЯЗАНИЙ реалізувати</span>\n\n  <span class=\"hljs-title function_\">describe</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`Фігура з площею <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.area().toFixed(<span class=\"hljs-number\">2</span>)}</span>`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Circle</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">Shape</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> radius: <span class=\"hljs-built_in\">number</span></span>) { <span class=\"hljs-variable language_\">super</span>(); }\n\n  <span class=\"hljs-keyword\">override</span> <span class=\"hljs-title function_\">area</span>(): <span class=\"hljs-built_in\">number</span> {  <span class=\"hljs-comment\">// ✅ Ключове слово override (TS 4.3+)</span>\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title class_\">Math</span>.<span class=\"hljs-property\">PI</span> * <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">radius</span> ** <span class=\"hljs-number\">2</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">Rectangle</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">Shape</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> width: <span class=\"hljs-built_in\">number</span>, <span class=\"hljs-keyword\">private</span> height: <span class=\"hljs-built_in\">number</span></span>) { <span class=\"hljs-variable language_\">super</span>(); }\n\n  <span class=\"hljs-keyword\">override</span> <span class=\"hljs-title function_\">area</span>(): <span class=\"hljs-built_in\">number</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">width</span> * <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">height</span>;\n  }\n}\n\n<span class=\"hljs-comment\">// 🎯 Поліморфізм в дії — функція працює з БУДЬ-ЯКОЮ фігурою</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">printArea</span>(<span class=\"hljs-params\">shape: Shape</span>): <span class=\"hljs-built_in\">void</span> {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`Площа: <span class=\"hljs-subst\">${shape.area().toFixed(<span class=\"hljs-number\">2</span>)}</span>`</span>);\n}\n\n<span class=\"hljs-title function_\">printArea</span>(<span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Circle</span>(<span class=\"hljs-number\">5</span>));        <span class=\"hljs-comment\">// \"Площа: 78.54\"</span>\n<span class=\"hljs-title function_\">printArea</span>(<span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Rectangle</span>(<span class=\"hljs-number\">4</span>, <span class=\"hljs-number\">6</span>)); <span class=\"hljs-comment\">// \"Площа: 24.00\"</span></code></pre><div class=\"tip\"><strong>💡 Ключове слово override</strong> <p>Починаючи з TypeScript 4.3, рекомендовано використовувати <code>override</code> при перевизначенні методів. Це допомагає компілятору перевірити, що метод дійсно існує в батьківському класі, та запобігає друкарським помилкам. Увімкніть <code>\"noImplicitOverride\": true</code> у <code>tsconfig.json</code>, щоб TypeScript вимагав <code>override</code> обов'язково.</p>\n</div>\n\n","<h1>🎨 Абстрактні класи</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Абстрактний клас</strong> — клас, який не може бути інстанційований напряму. Він слугує базовим шаблоном і може містити як реалізовані методи, так і абстрактні (без реалізації).</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Абстрактні класи визначають <strong>контракт</strong> — набір методів, які кожен нащадок зобов'язаний реалізувати.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">abstract</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">PaymentProcessor</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">protected</span> amount: <span class=\"hljs-built_in\">number</span></span>) {}\n\n  <span class=\"hljs-comment\">// 🔒 Абстрактний метод — НЕМАЄ реалізації</span>\n  <span class=\"hljs-keyword\">abstract</span> <span class=\"hljs-title function_\">processPayment</span>(): <span class=\"hljs-title class_\">Promise</span>&lt;<span class=\"hljs-built_in\">boolean</span>&gt;;\n\n  <span class=\"hljs-comment\">// ✅ Звичайний метод — є реалізація</span>\n  <span class=\"hljs-title function_\">getReceipt</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">`Оплата на суму <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.amount}</span> грн`</span>;\n  }\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">CardPayment</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">PaymentProcessor</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">amount: <span class=\"hljs-built_in\">number</span>, <span class=\"hljs-keyword\">private</span> cardNumber: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-variable language_\">super</span>(amount);\n  }\n\n  <span class=\"hljs-comment\">// 📌 Обов'язкова реалізація абстрактного методу</span>\n  <span class=\"hljs-keyword\">async</span> <span class=\"hljs-title function_\">processPayment</span>(): <span class=\"hljs-title class_\">Promise</span>&lt;<span class=\"hljs-built_in\">boolean</span>&gt; {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`💳 Оплата картою <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.cardNumber}</span>`</span>);\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">true</span>;\n  }\n}\n\n<span class=\"hljs-comment\">// const p = new PaymentProcessor(100); // ❌ Помилка: абстрактний клас!</span>\n<span class=\"hljs-keyword\">const</span> card = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">CardPayment</span>(<span class=\"hljs-number\">500</span>, <span class=\"hljs-string\">\"4111-XXXX\"</span>);\ncard.<span class=\"hljs-title function_\">processPayment</span>(); <span class=\"hljs-comment\">// ✅ \"💳 Оплата картою 4111-XXXX\"</span>\ncard.<span class=\"hljs-title function_\">getReceipt</span>();     <span class=\"hljs-comment\">// ✅ \"Оплата на суму 500 грн\"</span></code></pre>","<h1>🎨 Абстрактні класи vs Інтерфейси</h1>\n<p><strong>Головна ідея:</strong> Інтерфейси визначають лише <strong>форму</strong> (контракт), а абстрактні класи можуть надавати <strong>часткову реалізацію</strong>. Клас може реалізувати багато інтерфейсів, але наслідувати лише один клас.</p>\n<h2>⚖️ Порівняння</h2>\n<table>\n<thead>\n<tr>\n<th>Критерій</th>\n<th><code>abstract class</code></th>\n<th><code>interface</code></th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Реалізація методів</td>\n<td>✅ Може мати</td>\n<td>❌ Лише сигнатури</td>\n</tr>\n<tr>\n<td>Властивості з значеннями</td>\n<td>✅ Може мати</td>\n<td>❌ Лише оголошення</td>\n</tr>\n<tr>\n<td>Множинне наслідування</td>\n<td>❌ Лише один клас</td>\n<td>✅ Кілька інтерфейсів</td>\n</tr>\n<tr>\n<td>Конструктор</td>\n<td>✅ Може мати</td>\n<td>❌ Не має</td>\n</tr>\n<tr>\n<td>Скомпільований JS-код</td>\n<td>✅ Існує у runtime</td>\n<td>❌ Зникає після компіляції</td>\n</tr>\n</tbody></table>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Інтерфейс — чистий контракт</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Serializable</span> {\n  <span class=\"hljs-title function_\">serialize</span>(): <span class=\"hljs-built_in\">string</span>;\n}\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Loggable</span> {\n  <span class=\"hljs-title function_\">log</span>(): <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-comment\">// Базовий клас з спільною логікою</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">BaseResponse</span> {\n  <span class=\"hljs-keyword\">readonly</span> timestamp = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>();\n}\n\n<span class=\"hljs-comment\">// ✅ Клас може одночасно extends один клас та implements кілька інтерфейсів</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">ApiResponse</span> <span class=\"hljs-keyword\">extends</span> <span class=\"hljs-title class_ inherited__\">BaseResponse</span> <span class=\"hljs-keyword\">implements</span> <span class=\"hljs-title class_\">Serializable</span>, <span class=\"hljs-title class_\">Loggable</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">public</span> data: <span class=\"hljs-built_in\">unknown</span>, <span class=\"hljs-keyword\">public</span> status: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-variable language_\">super</span>();\n  }\n\n  <span class=\"hljs-title function_\">serialize</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>({\n      <span class=\"hljs-attr\">data</span>: <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">data</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">status</span>, <span class=\"hljs-attr\">timestamp</span>: <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">timestamp</span>,\n    });\n  }\n\n  <span class=\"hljs-title function_\">log</span>(): <span class=\"hljs-built_in\">void</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`[<span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.status}</span>] <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.serialize()}</span>`</span>);\n  }\n}</code></pre><div class=\"note\"><strong>📝 <code>extends</code> vs <code>implements</code></strong> <p>🔹 <code>extends</code> — <strong>наслідування</strong>: клас отримує реалізацію від батька (дані + поведінку)<br>🔹 <code>implements</code> — <strong>контракт</strong>: клас зобов'язується мати певні методи/властивості, але пише реалізацію самостійно<br>🔹 Можна комбінувати: <code>class A extends B implements C, D</code></p>\n</div>\n\n","<h1>🏛️ Принципи ООП: підсумок</h1>\n<p><strong>Головна ідея:</strong> Чотири фундаментальні принципи ООП формують основу проєктування стійких та масштабованих застосунків.</p>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    subgraph Інкапсуляція\n        ENC1[&quot;🔐 Приховування деталей реалізації&quot;]\n        ENC2[&quot;🔐 Модифікатори доступу&quot;]\n    end\n    subgraph Наслідування\n        INH1[&quot;🧬 Перевикористання коду&quot;]\n        INH2[&quot;🧬 extends, super&quot;]\n    end\n    subgraph Поліморфізм\n        POL1[&quot;🔀 Єдиний інтерфейс, різна поведінка&quot;]\n        POL2[&quot;🔀 Method overriding&quot;]\n    end\n    subgraph Абстракція\n        ABS1[&quot;🎨 Виділення суттєвого&quot;]\n        ABS2[&quot;🎨 abstract class, interface&quot;]\n    end\"><svg id=\"exp-1771440546408-10-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 627.328125px;\" viewBox=\"0 0 627.328125 730\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1771440546408-10-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1771440546408-10-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1771440546408-10-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1771440546408-10-0 .error-icon{fill:#552222;}#exp-1771440546408-10-0 .error-text{fill:#552222;stroke:#552222;}#exp-1771440546408-10-0 .edge-thickness-normal{stroke-width:1px;}#exp-1771440546408-10-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1771440546408-10-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1771440546408-10-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1771440546408-10-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1771440546408-10-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1771440546408-10-0 .marker{fill:#333333;stroke:#333333;}#exp-1771440546408-10-0 .marker.cross{stroke:#333333;}#exp-1771440546408-10-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1771440546408-10-0 p{margin:0;}#exp-1771440546408-10-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1771440546408-10-0 .cluster-label text{fill:#333;}#exp-1771440546408-10-0 .cluster-label span{color:#333;}#exp-1771440546408-10-0 .cluster-label span p{background-color:transparent;}#exp-1771440546408-10-0 .label text,#exp-1771440546408-10-0 span{fill:#333;color:#333;}#exp-1771440546408-10-0 .node rect,#exp-1771440546408-10-0 .node circle,#exp-1771440546408-10-0 .node ellipse,#exp-1771440546408-10-0 .node polygon,#exp-1771440546408-10-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1771440546408-10-0 .rough-node .label text,#exp-1771440546408-10-0 .node .label text,#exp-1771440546408-10-0 .image-shape .label,#exp-1771440546408-10-0 .icon-shape .label{text-anchor:middle;}#exp-1771440546408-10-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1771440546408-10-0 .rough-node .label,#exp-1771440546408-10-0 .node .label,#exp-1771440546408-10-0 .image-shape .label,#exp-1771440546408-10-0 .icon-shape .label{text-align:center;}#exp-1771440546408-10-0 .node.clickable{cursor:pointer;}#exp-1771440546408-10-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1771440546408-10-0 .arrowheadPath{fill:#333333;}#exp-1771440546408-10-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1771440546408-10-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1771440546408-10-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1771440546408-10-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1771440546408-10-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1771440546408-10-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1771440546408-10-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1771440546408-10-0 .cluster text{fill:#333;}#exp-1771440546408-10-0 .cluster span{color:#333;}#exp-1771440546408-10-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1771440546408-10-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1771440546408-10-0 rect.text{fill:none;stroke-width:0;}#exp-1771440546408-10-0 .icon-shape,#exp-1771440546408-10-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1771440546408-10-0 .icon-shape p,#exp-1771440546408-10-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1771440546408-10-0 .icon-shape rect,#exp-1771440546408-10-0 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1771440546408-10-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1771440546408-10-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1771440546408-10-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1771440546408-10-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771440546408-10-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771440546408-10-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1771440546408-10-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1771440546408-10-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1771440546408-10-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"root\" transform=\"translate(12.26953125, 0)\"><g class=\"clusters\"><g class=\"cluster \" id=\"Абстракція\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"586.7890625\" height=\"123\"></rect><g class=\"cluster-label \" transform=\"translate(259.421875, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Абстракція</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-ABS1-6\" transform=\"translate(155.234375, 69.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-112.234375\" y=\"-24\" width=\"224.46875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-88.234375, -12)\"><rect></rect><foreignObject width=\"176.46875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎨 Виділення суттєвого</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-ABS2-7\" transform=\"translate(438.62890625, 69.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-121.16015625\" y=\"-24\" width=\"242.3203125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-97.16015625, -12)\"><rect></rect><foreignObject width=\"194.3203125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎨 abstract class, interface</p></span></div></foreignObject></g></g></g></g><g class=\"root\" transform=\"translate(21.2578125, 173)\"><g class=\"clusters\"><g class=\"cluster \" id=\"Поліморфізм\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"568.8125\" height=\"147\"></rect><g class=\"cluster-label \" transform=\"translate(242.75, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Поліморфізм</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-POL1-4\" transform=\"translate(167, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>🔀 Єдиний інтерфейс, різна поведінка</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-POL2-5\" transform=\"translate(441.40625, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-100.40625\" y=\"-24\" width=\"200.8125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-76.40625, -12)\"><rect></rect><foreignObject width=\"152.8125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔀 Method overriding</p></span></div></foreignObject></g></g></g></g><g class=\"root\" transform=\"translate(33.98046875, 370)\"><g class=\"clusters\"><g class=\"cluster \" id=\"Наслідування\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"543.3671875\" height=\"147\"></rect><g class=\"cluster-label \" transform=\"translate(227.83984375, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Наслідування</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-INH1-2\" transform=\"translate(167, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>🧬 Перевикористання коду</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-INH2-3\" transform=\"translate(428.68359375, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-87.68359375\" y=\"-24\" width=\"175.3671875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-63.68359375, -12)\"><rect></rect><foreignObject width=\"127.3671875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🧬 extends, super</p></span></div></foreignObject></g></g></g></g><g class=\"root\" transform=\"translate(0, 567)\"><g class=\"clusters\"><g class=\"cluster \" id=\"Інкапсуляція\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"611.328125\" height=\"147\"></rect><g class=\"cluster-label \" transform=\"translate(266.23046875, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Інкапсуляція</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-ENC1-0\" transform=\"translate(167, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>🔐 Приховування деталей реалізації</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-ENC2-1\" transform=\"translate(462.6640625, 81.5)\"><rect class=\"basic label-container\" style=\"\" x=\"-121.6640625\" y=\"-24\" width=\"243.328125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-97.6640625, -12)\"><rect></rect><foreignObject width=\"195.328125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔐 Модифікатори доступу</p></span></div></foreignObject></g></g></g></g></g></g></g></svg></div>\n<div class=\"tip\"><strong>💡 Практична порада</strong> <p>При проєктуванні класів дотримуйтесь принципу <strong>найменших привілеїв</strong>: робіть все <code>private</code> за замовчуванням, відкриваючи <code>protected</code> або <code>public</code> лише за необхідності.</p>\n</div>\n\n","<h1>🪄 Декоратори: концепція та налаштування</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Декоратор</strong> — спеціальна функція, яка додає або змінює поведінку класу, методу, властивості чи параметра без зміни їхнього вихідного коду. Це реалізація патерну <strong>Decorator</strong> з GoF.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Декоратори дозволяють додавати функціональність <strong>декларативно</strong> — через анотації <code>@decorator</code>, замість ручної модифікації коду.</p>\n<h2>⚙️ Увімкнення декораторів</h2>\n<pre><code class=\"language-json hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tsconfig.json</span>\n<span class=\"hljs-punctuation\">{</span>\n  <span class=\"hljs-attr\">\"compilerOptions\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">{</span>\n    <span class=\"hljs-attr\">\"experimentalDecorators\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-literal\"><span class=\"hljs-keyword\">true</span></span><span class=\"hljs-punctuation\">,</span>\n    <span class=\"hljs-attr\">\"emitDecoratorMetadata\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-literal\"><span class=\"hljs-keyword\">true</span></span>\n  <span class=\"hljs-punctuation\">}</span>\n<span class=\"hljs-punctuation\">}</span></code></pre><h2>🎯 Типи декораторів</h2>\n<table>\n<thead>\n<tr>\n<th>Тип</th>\n<th>Приклади з Nest.js</th>\n<th>Що отримує</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>🏗️ Класу</td>\n<td><code>@Controller</code>, <code>@Module</code></td>\n<td>Конструктор класу</td>\n</tr>\n<tr>\n<td>⚙️ Методу</td>\n<td><code>@Get</code>, <code>@Post</code></td>\n<td>target, key, descriptor</td>\n</tr>\n<tr>\n<td>📦 Властивості</td>\n<td><code>@Column</code></td>\n<td>target, key</td>\n</tr>\n<tr>\n<td>📋 Параметра</td>\n<td><code>@Body</code>, <code>@Param</code></td>\n<td>target, methodName, paramIndex</td>\n</tr>\n</tbody></table>\n<div class=\"warning\"><strong>⚠️ Два режими декораторів у TypeScript</strong> <p>TypeScript підтримує <strong>два</strong> різних синтаксиси декораторів:</p>\n<ul>\n<li><strong>Legacy</strong> (<code>experimentalDecorators: true</code>) — використовується в Nest.js, Angular та більшості існуючих фреймворків. Саме його ми розглядаємо на цій лекції.</li>\n<li><strong>TC39 Stage 3</strong> (підтримка з TS 5.0+) — новий стандарт ECMAScript з іншим API. Поки що більшість фреймворків ще не мігрували на нього.</li>\n</ul>\n</div>\n\n","<h1>🪄 Декоратори: як це працює</h1>\n<p><strong>Головна ідея:</strong> На практиці ми <strong>використовуємо</strong> готові декоратори з фреймворків, а не пишемо власні. Але розуміння механізму допомагає читати код та документацію.</p>\n<h2>🔍 Що відбувається під капотом?</h2>\n<p>Декоратор — це звичайна функція. Запис <code>@Something</code> — це просто виклик функції, яка отримує те, до чого вона застосована.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 1️⃣ Простий декоратор — функція, що приймає клас</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">LogCreation</span>(<span class=\"hljs-params\">constructor: <span class=\"hljs-built_in\">Function</span></span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`📋 Зареєстровано клас: <span class=\"hljs-subst\">${constructor.name}</span>`</span>);\n}\n\n<span class=\"hljs-meta\">@LogCreation</span>     <span class=\"hljs-comment\">// ← те саме що: LogCreation(UserService)</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">UserService</span> {}\n<span class=\"hljs-comment\">// 📋 Зареєстровано клас: UserService</span></code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 2️⃣ Фабрика декораторів — функція, що ПОВЕРТАЄ декоратор</span>\n<span class=\"hljs-comment\">//    Це дозволяє передавати параметри</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Entity</span>(<span class=\"hljs-params\">tableName: <span class=\"hljs-built_in\">string</span></span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-keyword\">function</span> (<span class=\"hljs-params\">constructor: <span class=\"hljs-built_in\">Function</span></span>) {\n    (constructor <span class=\"hljs-keyword\">as</span> <span class=\"hljs-built_in\">any</span>).<span class=\"hljs-property\">tableName</span> = tableName;\n  };\n}\n\n<span class=\"hljs-meta\">@Entity</span>(<span class=\"hljs-string\">\"users\"</span>) <span class=\"hljs-comment\">// ← те саме що: Entity(\"users\")(User)</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">User</span> {}</code></pre><h2>🧩 Як читати декоратори у фреймворках</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"users\"</span>)     <span class=\"hljs-comment\">// \"Цей клас — контролер з префіксом /users\"</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">UsersController</span> {\n\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">\":id\"</span>)            <span class=\"hljs-comment\">// \"Цей метод обробляє GET /users/:id\"</span>\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\">\n    <span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span>  <span class=\"hljs-comment\">// \"Візьми параметр id з URL\"</span>\n  </span>) { ... }\n}</code></pre><div class=\"tip\"><strong>💡 Головне правило</strong> <p>Читайте <code>@Декоратор()</code> як <strong>анотацію-інструкцію</strong> для фреймворку: \"цей клас є...\", \"цей метод обробляє...\", \"цей параметр бери з...\". Фреймворк сам знає, що робити з цією інформацією.</p>\n</div>\n\n","<h1>💻 Практика: ООП у дії</h1>\n<p><strong>Головна ідея:</strong> Подивимося, як принципи ООП працюють разом на простому прикладі сповіщень.</p>\n<h2>📬 Система сповіщень</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 1️⃣ АБСТРАКЦІЯ — визначаємо контракт: \"що повинен вміти будь-який сповіщувач\"</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Notifier</span> {\n  <span class=\"hljs-title function_\">send</span>(<span class=\"hljs-attr\">to</span>: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-attr\">message</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-comment\">// 2️⃣ ІНКАПСУЛЯЦІЯ — кожен клас приховує деталі реалізації</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">EmailNotifier</span> <span class=\"hljs-keyword\">implements</span> <span class=\"hljs-title class_\">Notifier</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> smtpServer: <span class=\"hljs-built_in\">string</span></span>) {} <span class=\"hljs-comment\">// private — деталь реалізації</span>\n\n  <span class=\"hljs-title function_\">send</span>(<span class=\"hljs-attr\">to</span>: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-attr\">message</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-built_in\">void</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`📧 Email → <span class=\"hljs-subst\">${to}</span>: \"<span class=\"hljs-subst\">${message}</span>\" через <span class=\"hljs-subst\">${<span class=\"hljs-variable language_\">this</span>.smtpServer}</span>`</span>);\n  }\n}\n\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">SmsNotifier</span> <span class=\"hljs-keyword\">implements</span> <span class=\"hljs-title class_\">Notifier</span> {\n  <span class=\"hljs-title function_\">send</span>(<span class=\"hljs-attr\">to</span>: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-attr\">message</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-built_in\">void</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`📱 SMS → <span class=\"hljs-subst\">${to}</span>: \"<span class=\"hljs-subst\">${message}</span>\"`</span>);\n  }\n}\n\n<span class=\"hljs-comment\">// 3️⃣ ПОЛІМОРФІЗМ — функція працює з БУДЬ-ЯКИМ сповіщувачем</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">notifyAll</span>(<span class=\"hljs-params\">notifiers: Notifier[], to: <span class=\"hljs-built_in\">string</span>, message: <span class=\"hljs-built_in\">string</span></span>): <span class=\"hljs-built_in\">void</span> {\n  <span class=\"hljs-keyword\">for</span> (<span class=\"hljs-keyword\">const</span> notifier <span class=\"hljs-keyword\">of</span> notifiers) {\n    notifier.<span class=\"hljs-title function_\">send</span>(to, message); <span class=\"hljs-comment\">// Кожен клас реагує по-своєму</span>\n  }\n}\n\n<span class=\"hljs-comment\">// Використання</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">channels</span>: <span class=\"hljs-title class_\">Notifier</span>[] = [\n  <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">EmailNotifier</span>(<span class=\"hljs-string\">\"smtp.gmail.com\"</span>),\n  <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">SmsNotifier</span>(),\n];\n\n<span class=\"hljs-title function_\">notifyAll</span>(channels, <span class=\"hljs-string\">\"user@example.com\"</span>, <span class=\"hljs-string\">\"Ваше замовлення відправлено!\"</span>);\n<span class=\"hljs-comment\">// 📧 Email → user@example.com: \"Ваше замовлення відправлено!\" через smtp.gmail.com</span>\n<span class=\"hljs-comment\">// 📱 SMS → user@example.com: \"Ваше замовлення відправлено!\"</span></code></pre><div class=\"tip\"><strong>💡 Чому це зручно?</strong> <p>Щоб додати новий канал (наприклад, Telegram), достатньо створити клас <code>TelegramNotifier implements Notifier</code> — жоден існуючий код змінювати не потрібно. Це і є <strong>розширюваність</strong> через ООП.</p>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Класи в TypeScript</strong> 🏗️ — оголошення, конструктори, parameter properties, статичні члени, геттери/сеттери</p>\n</li>\n<li><p><strong>Модифікатори доступу</strong> 🔐 — <code>public</code> (за замовчуванням), <code>private</code>, <code>protected</code>, <code>readonly</code> реалізують інкапсуляцію; TypeScript <code>private</code> vs ES2022 <code>#field</code></p>\n</li>\n<li><p><strong>Наслідування</strong> 🧬 — <code>extends</code> та <code>super()</code> для перевикористання коду; <code>override</code> для безпечного перевизначення методів</p>\n</li>\n<li><p><strong>Поліморфізм</strong> 🔀 — різна реалізація одного інтерфейсу дозволяє писати гнучкий та розширюваний код</p>\n</li>\n<li><p><strong>Абстрактні класи vs інтерфейси</strong> 🎨 — <code>abstract class</code> для спільної логіки, <code>interface</code> для чистих контрактів; <code>extends</code> vs <code>implements</code></p>\n</li>\n<li><p><strong>Декоратори</strong> 🪄 — анотації <code>@decorator</code>, які використовуються фреймворками для конфігурації класів, методів та параметрів</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Що таке parameter properties і як вони спрощують код конструктора?</p>\n</li>\n<li><p>🤔 Яка різниця між <code>private</code>, <code>protected</code> та <code>public</code>? Який модифікатор застосовується за замовчуванням?</p>\n</li>\n<li><p>🤔 Де можна ініціалізувати <code>readonly</code> властивість? Чим TypeScript <code>private</code> відрізняється від ES2022 <code>#field</code>?</p>\n</li>\n<li><p>🤔 Яка різниця між <code>extends</code> та <code>implements</code>? Чи можна їх комбінувати?</p>\n</li>\n<li><p>🤔 Коли обрати <code>abstract class</code>, а коли <code>interface</code>? Наведіть приклад.</p>\n</li>\n<li><p>🤔 Що таке декоратор? Чим відрізняється простий декоратор від фабрики декораторів?</p>\n</li>\n<li><p>🤔 Як читати декоратори у фреймворках? Що означає запис <code>@Controller(\"users\")</code>?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Клас</td>\n<td>Class</td>\n<td>Шаблон для створення об'єктів з властивостями та методами</td>\n</tr>\n<tr>\n<td>Конструктор</td>\n<td>Constructor</td>\n<td>Спеціальний метод, що викликається при створенні екземпляра</td>\n</tr>\n<tr>\n<td>Інкапсуляція</td>\n<td>Encapsulation</td>\n<td>Приховування внутрішньої реалізації за публічним інтерфейсом</td>\n</tr>\n<tr>\n<td>Наслідування</td>\n<td>Inheritance</td>\n<td>Механізм створення класу на основі існуючого</td>\n</tr>\n<tr>\n<td>Поліморфізм</td>\n<td>Polymorphism</td>\n<td>Здатність об'єктів різних класів по-різному реагувати на один виклик</td>\n</tr>\n<tr>\n<td>Абстрактний клас</td>\n<td>Abstract class</td>\n<td>Клас-шаблон, що не може бути інстанційований напряму</td>\n</tr>\n<tr>\n<td>Інтерфейс</td>\n<td>Interface</td>\n<td>Контракт, що визначає структуру об'єкта без реалізації</td>\n</tr>\n<tr>\n<td>Декоратор</td>\n<td>Decorator</td>\n<td>Функція, що модифікує поведінку класу, методу або властивості</td>\n</tr>\n<tr>\n<td>Фабрика декораторів</td>\n<td>Decorator factory</td>\n<td>Функція, що повертає декоратор, дозволяючи передавати параметри</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>ООП</td>\n<td>Об'єктно-орієнтоване програмування</td>\n<td>Object-Oriented Programming</td>\n</tr>\n<tr>\n<td>GoF</td>\n<td>Gang of Four</td>\n<td>\"Банда чотирьох\" (автори Design Patterns)</td>\n</tr>\n<tr>\n<td>TC39</td>\n<td>Technical Committee 39</td>\n<td>Технічний комітет 39 (стандарт ECMAScript)</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
