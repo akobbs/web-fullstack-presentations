@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>React: форми та валідація</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 18</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>React: форми та валідація</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🎛️ Controlled vs Uncontrolled компоненти</li>\n<li>🖊️ Обробка подій у формах та типізація</li>\n<li>✅ Валідація на чистому React</li>\n<li>📚 React Hook Form — зручна робота з формами</li>\n<li>🛡️ Zod — валідація через схеми</li>\n<li>🔗 Інтеграція React Hook Form + Zod</li>\n<li>🧩 Повний приклад: форма задачі (Task Manager)</li>\n</ol>\n","<h1>🎛️ Controlled компоненти</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Controlled компонент</strong> — елемент форми, значення якого повністю контролюється через React-стан. Кожна зміна поля оновлює <code>state</code>, і React перерендерить компонент з новим значенням.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> React є єдиним \"джерелом правди\" для даних форми. Що в <code>state</code> — те й на екрані.</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useState } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskTitleInput</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// Стан — єдине джерело правди для значення поля</span>\n  <span class=\"hljs-keyword\">const</span> [title, setTitle] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"\"</span>);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      {/* value прив'язаний до стану, onChange — оновлює стан */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n        <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"text\"</span>\n        <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{title}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setTitle(e.target.value)}\n        placeholder=\"Введіть назву задачі\"\n      /&gt;\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>Поточне значення: \"{title}\"<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre><h2>🔄 Як це працює крок за кроком</h2>\n<ol>\n<li>🖊️ Користувач вводить символ у поле</li>\n<li>🔔 Спрацьовує подія <code>onChange</code></li>\n<li>📦 Викликається <code>setTitle</code> з новим значенням</li>\n<li>⚙️ React перерендерює компонент з оновленим станом</li>\n<li>🔁 <code>input</code> отримує нове <code>value</code> зі стану</li>\n<li>🖥️ Браузер відображає оновлений текст</li>\n</ol>\n<div class=\"tip\"><strong>💡 Повний контроль</strong> <p>Controlled підхід дає можливість у будь-який момент читати, валідувати або трансформувати значення: наприклад, автоматично переводити у верхній регістр або обмежувати довжину рядка.</p>\n</div>\n\n\n\n\n\n<div class=\"danger\"><strong>🚫 Типова помилка початківців</strong> <p>Якщо вказати <code>value</code> без <code>onChange</code> — поле стане <strong>read-only</strong>: користувач не зможе нічого ввести, а React видасть попередження у консолі. Завжди вказуйте обидва атрибути разом.</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Read-only поле — введення заблоковано</span>\n&lt;input <span class=\"hljs-keyword\">type</span>=<span class=\"hljs-string\">\"text\"</span> value={title} /&gt;\n\n</code><p><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ Правильно — value + onChange разом&lt;input type=\"text\" value={title} onChange={(e) =&gt; setTitle(e.target.value)} /&gt;</span></code></p></pre></div><p></p>\n","<h1>🔓 Uncontrolled компоненти</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Uncontrolled компонент</strong> — елемент форми, значення якого зберігається у самому DOM, а не в React-стані. Доступ до значення — через <code>ref</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Uncontrolled підхід — простіший, але дає менший контроль. Значення читається лише \"на вимогу\", а не при кожній зміні.</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useRef } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">QuickTaskForm</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// ref вказує на DOM-елемент, не на стан React</span>\n  <span class=\"hljs-keyword\">const</span> titleRef = useRef&lt;<span class=\"hljs-title class_\">HTMLInputElement</span>&gt;(<span class=\"hljs-literal\">null</span>);\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = (<span class=\"hljs-params\"></span>) =&gt; {\n    <span class=\"hljs-comment\">// Значення читається безпосередньо з DOM при submit</span>\n    <span class=\"hljs-keyword\">const</span> title = titleRef.<span class=\"hljs-property\">current</span>?.<span class=\"hljs-property\">value</span> ?? <span class=\"hljs-string\">\"\"</span>;\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Нова задача:\"</span>, title);\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      {/* defaultValue — початкове значення, але DOM керує полем */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n        <span class=\"hljs-attr\">ref</span>=<span class=\"hljs-string\">{titleRef}</span>\n        <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"text\"</span>\n        <span class=\"hljs-attr\">defaultValue</span>=<span class=\"hljs-string\">\"Нова задача\"</span>\n        <span class=\"hljs-attr\">placeholder</span>=<span class=\"hljs-string\">\"Назва задачі\"</span>\n      /&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{handleSubmit}</span>&gt;</span>Додати<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre><h2>🆚 Порівняння: Controlled vs Uncontrolled</h2>\n<table>\n<thead>\n<tr>\n<th>Аспект</th>\n<th>Controlled</th>\n<th>Uncontrolled</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Джерело правди</td>\n<td>React state</td>\n<td>DOM</td>\n</tr>\n<tr>\n<td>Доступ до значення</td>\n<td>Завжди (через state)</td>\n<td>Лише при читанні через ref</td>\n</tr>\n<tr>\n<td>Валідація в реальному часі</td>\n<td>✅ Легко</td>\n<td>❌ Складно</td>\n</tr>\n<tr>\n<td>Трансформація вводу</td>\n<td>✅ Легко</td>\n<td>❌ Складно</td>\n</tr>\n<tr>\n<td>Кількість перерендерів</td>\n<td>Більше</td>\n<td>Менше</td>\n</tr>\n<tr>\n<td>Рекомендація для складних форм</td>\n<td>✅ Так</td>\n<td>❌ Ні</td>\n</tr>\n</tbody></table>\n<div class=\"warning\"><strong>⚠️ Коли обирати Uncontrolled?</strong> <p>Uncontrolled виправданий лише для простих, ізольованих форм без валідації — наприклад, єдине поле пошуку, де результат потрібен лише при натисканні кнопки.</p>\n</div>\n\n","<h1>🖊️ Обробка подій та типізація</h1>\n<p><strong>Головна ідея:</strong> React-події — це обгортки над нативними подіями браузера. TypeScript вимагає явно вказувати тип події для безпечного доступу до властивостей <code>target</code>.</p>\n<h2>📝 Типізація подій</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Для текстового поля — React.ChangeEvent&lt;HTMLInputElement&gt;</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleTitleChange</span> = (<span class=\"hljs-params\">e: React.ChangeEvent&lt;HTMLInputElement&gt;</span>) =&gt; {\n  <span class=\"hljs-title function_\">setTitle</span>(e.<span class=\"hljs-property\">target</span>.<span class=\"hljs-property\">value</span>); <span class=\"hljs-comment\">// e.target тут точно є HTMLInputElement</span>\n};\n\n<span class=\"hljs-comment\">// Для textarea — React.ChangeEvent&lt;HTMLTextAreaElement&gt;</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleDescChange</span> = (<span class=\"hljs-params\">e: React.ChangeEvent&lt;HTMLTextAreaElement&gt;</span>) =&gt; {\n  <span class=\"hljs-title function_\">setDescription</span>(e.<span class=\"hljs-property\">target</span>.<span class=\"hljs-property\">value</span>);\n};\n\n<span class=\"hljs-comment\">// Для select — React.ChangeEvent&lt;HTMLSelectElement&gt;</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleStatusChange</span> = (<span class=\"hljs-params\">e: React.ChangeEvent&lt;HTMLSelectElement&gt;</span>) =&gt; {\n  <span class=\"hljs-title function_\">setStatus</span>(e.<span class=\"hljs-property\">target</span>.<span class=\"hljs-property\">value</span> <span class=\"hljs-keyword\">as</span> <span class=\"hljs-title class_\">Task</span>[<span class=\"hljs-string\">\"status\"</span>]);\n};\n\n<span class=\"hljs-comment\">// Для форми при submit — React.FormEvent&lt;HTMLFormElement&gt;</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = (<span class=\"hljs-params\">e: React.FormEvent&lt;HTMLFormElement&gt;</span>) =&gt; {\n  e.<span class=\"hljs-title function_\">preventDefault</span>(); <span class=\"hljs-comment\">// ❗ Зупиняємо перезавантаження сторінки</span>\n  <span class=\"hljs-comment\">// ... обробка даних форми</span>\n};</code></pre><h2>💻 Різні типи полів у одній формі</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [title, setTitle] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"\"</span>);\n  <span class=\"hljs-keyword\">const</span> [priority, setPriority] = useState&lt;<span class=\"hljs-title class_\">Task</span>[<span class=\"hljs-string\">\"priority\"</span>]&gt;(<span class=\"hljs-string\">\"medium\"</span>);\n  <span class=\"hljs-keyword\">const</span> [isDone, setIsDone] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">false</span>);\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = (<span class=\"hljs-params\">e: React.FormEvent&lt;HTMLFormElement&gt;</span>) =&gt; {\n    e.<span class=\"hljs-title function_\">preventDefault</span>();\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Дані:\"</span>, { title, priority, isDone });\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit}</span>&gt;</span>\n      {/* Текстове поле */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n        <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"text\"</span>\n        <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{title}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setTitle(e.target.value)}\n      /&gt;\n\n      {/* Випадаючий список */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span>\n        <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{priority}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setPriority(e.target.value as Task[\"priority\"])}\n      &gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"low\"</span>&gt;</span>🟢 Низький<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"medium\"</span>&gt;</span>🟡 Середній<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"high\"</span>&gt;</span>🔴 Високий<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n\n      {/* Чекбокс — читаємо e.target.checked, а не e.target.value */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n        <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"checkbox\"</span>\n        <span class=\"hljs-attr\">checked</span>=<span class=\"hljs-string\">{isDone}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setIsDone(e.target.checked)}\n      /&gt;\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span>&gt;</span>Зберегти<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>✅ Валідація на чистому React</h1>\n<p><strong>Головна ідея:</strong> Базова валідація реалізується вручну через стан для помилок. Це підходить для простих форм, але швидко стає громіздким при зростанні кількості полів.</p>\n<h2>🔧 Управління станом помилок</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [title, setTitle] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"\"</span>);\n  <span class=\"hljs-keyword\">const</span> [description, setDescription] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"\"</span>);\n  <span class=\"hljs-comment\">// Стан помилок — окремий об'єкт для кожного поля</span>\n  <span class=\"hljs-keyword\">const</span> [errors, setErrors] = useState&lt;<span class=\"hljs-title class_\">Record</span>&lt;<span class=\"hljs-built_in\">string</span>, <span class=\"hljs-built_in\">string</span>&gt;&gt;({});\n\n  <span class=\"hljs-keyword\">const</span> validate = (): <span class=\"hljs-function\"><span class=\"hljs-params\">boolean</span> =&gt;</span> {\n    <span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">newErrors</span>: <span class=\"hljs-title class_\">Record</span>&lt;<span class=\"hljs-built_in\">string</span>, <span class=\"hljs-built_in\">string</span>&gt; = {};\n\n    <span class=\"hljs-keyword\">if</span> (!title.<span class=\"hljs-title function_\">trim</span>()) {\n      newErrors.<span class=\"hljs-property\">title</span> = <span class=\"hljs-string\">\"Назва задачі є обов'язковою\"</span>;\n    } <span class=\"hljs-keyword\">else</span> <span class=\"hljs-keyword\">if</span> (title.<span class=\"hljs-title function_\">trim</span>().<span class=\"hljs-property\">length</span> &lt; <span class=\"hljs-number\">3</span>) {\n      newErrors.<span class=\"hljs-property\">title</span> = <span class=\"hljs-string\">\"Назва має містити щонайменше 3 символи\"</span>;\n    } <span class=\"hljs-keyword\">else</span> <span class=\"hljs-keyword\">if</span> (title.<span class=\"hljs-title function_\">trim</span>().<span class=\"hljs-property\">length</span> &gt; <span class=\"hljs-number\">100</span>) {\n      newErrors.<span class=\"hljs-property\">title</span> = <span class=\"hljs-string\">\"Назва не може перевищувати 100 символів\"</span>;\n    }\n\n    <span class=\"hljs-keyword\">if</span> (description.<span class=\"hljs-property\">length</span> &gt; <span class=\"hljs-number\">500</span>) {\n      newErrors.<span class=\"hljs-property\">description</span> = <span class=\"hljs-string\">\"Опис не може перевищувати 500 символів\"</span>;\n    }\n\n    <span class=\"hljs-title function_\">setErrors</span>(newErrors);\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title class_\">Object</span>.<span class=\"hljs-title function_\">keys</span>(newErrors).<span class=\"hljs-property\">length</span> === <span class=\"hljs-number\">0</span>; <span class=\"hljs-comment\">// true якщо немає помилок</span>\n  };\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = (<span class=\"hljs-params\">e: React.FormEvent&lt;HTMLFormElement&gt;</span>) =&gt; {\n    e.<span class=\"hljs-title function_\">preventDefault</span>();\n    <span class=\"hljs-keyword\">if</span> (<span class=\"hljs-title function_\">validate</span>()) {\n      <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Форма валідна, відправляємо дані:\"</span>, { title, description });\n    }\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n          <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"text\"</span>\n          <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{title}</span>\n          <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setTitle(e.target.value)}\n          placeholder=\"Назва задачі\"\n          style={{ borderColor: errors.title ? \"red\" : undefined }}\n        /&gt;\n        {/* Відображення помилки під полем */}\n        {errors.title &amp;&amp; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">style</span>=<span class=\"hljs-string\">{{</span> <span class=\"hljs-attr\">color:</span> \"<span class=\"hljs-attr\">red</span>\" }}&gt;</span>{errors.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">textarea</span>\n          <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{description}</span>\n          <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setDescription(e.target.value)}\n        /&gt;\n        {errors.description &amp;&amp; (\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">style</span>=<span class=\"hljs-string\">{{</span> <span class=\"hljs-attr\">color:</span> \"<span class=\"hljs-attr\">red</span>\" }}&gt;</span>{errors.description}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n        )}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span>&gt;</span>Додати задачу<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"warning\"><strong>⚠️ Проблеми ручної валідації</strong> <p>Для форми з 5+ полів: окремий <code>useState</code> для кожного поля, окремий об'єкт помилок, велика функція <code>validate()</code>, JSX з відображенням кожної помилки. Все це важко підтримувати й тестувати.</p>\n</div>\n\n","<h1>📚 React Hook Form — мотивація та встановлення</h1>\n<p><strong>Головна ідея:</strong> React Hook Form вирішує три ключові проблеми ручного підходу: менше коду, менше перерендерів, вбудована система помилок.</p>\n<h2>📊 Кількість коду: до та після</h2>\n<p><strong>🔴 Ручний підхід</strong> (форма з 5 полів, ~100 рядків):</p>\n<ul>\n<li>5 <code>useState</code> для значень полів (~10 рядків)</li>\n<li>1 <code>useState</code> для помилок (~3 рядки)</li>\n<li>Функція <code>validate()</code> (~40 рядків)</li>\n<li>5 обробників <code>onChange</code> (~15 рядків)</li>\n<li>JSX з відображенням помилок (~30 рядків)</li>\n</ul>\n<p><strong>✅ React Hook Form</strong> (та сама форма, ~25 рядків):</p>\n<ul>\n<li><code>useForm()</code> + деструктуризація (~5 рядків)</li>\n<li><code>register()</code> для кожного поля (~5 рядків у JSX)</li>\n<li>Правила валідації всередині <code>register()</code> (~15 рядків)</li>\n</ul>\n<h2>⚡ Мінімум перерендерів</h2>\n<table>\n<thead>\n<tr>\n<th></th>\n<th>Ручний підхід</th>\n<th>React Hook Form</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>При введенні символу</td>\n<td>🔴 Рендер всього компонента</td>\n<td>✅ Без рендеру</td>\n</tr>\n<tr>\n<td>При появі помилки</td>\n<td>🔴 Рендер</td>\n<td>🔴 Рендер</td>\n</tr>\n<tr>\n<td>При submit</td>\n<td>🔴 Рендер</td>\n<td>🔴 Рендер</td>\n</tr>\n</tbody></table>\n<p>RHF зберігає значення полів через DOM-ref, а не у React-стані — тому введення тексту не викликає перерендер компонента.</p>\n<h2>🛠️ Встановлення</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install react-hook-form</code></pre>","<h1>📚 React Hook Form — базове використання</h1>\n<div class=\"info\"><strong>ℹ️ Ключові поняття</strong> <p><strong><code>useForm()</code></strong> — хук, що повертає всі інструменти для роботи з формою. <strong><code>register()</code></strong> — реєструє поле, підключає валідацію. <strong><code>handleSubmit()</code></strong> — обгортка для submit, що спочатку валідує форму. <strong><code>formState.errors</code></strong> — об'єкт з помилками по кожному полю.</p>\n</div>\n\n\n\n\n\n<div class=\"tip\"><strong>💡 Режим валідації (mode)</strong> <p>За замовчуванням RHF валідує лише при натисканні кнопки submit (<code>mode: \"onSubmit\"</code>). Щоб отримати валідацію у реальному часі, передайте <code>mode: \"onChange\"</code> або <code>mode: \"onBlur\"</code> (перевірка при виході з поля):</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">const</span> {\n  register,\n  handleSubmit,\n  <span class=\"hljs-attr\">formState</span>: { errors },\n} = useForm&lt;<span class=\"hljs-title class_\">TaskFormData</span>&gt;({\n  <span class=\"hljs-attr\">mode</span>: <span class=\"hljs-string\">\"onBlur\"</span>, <span class=\"hljs-comment\">// Валідуємо коли користувач покидає поле</span>\n});</code></pre></div>\n\n\n\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useForm } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-hook-form\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskFormData</span> {\n  <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">description</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-string\">\"low\"</span> | <span class=\"hljs-string\">\"medium\"</span> | <span class=\"hljs-string\">\"high\"</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> {\n    register, <span class=\"hljs-comment\">// Реєстрація поля</span>\n    handleSubmit, <span class=\"hljs-comment\">// Обробник submit з вбудованою валідацією</span>\n    <span class=\"hljs-attr\">formState</span>: { errors }, <span class=\"hljs-comment\">// Об'єкт помилок</span>\n  } = useForm&lt;<span class=\"hljs-title class_\">TaskFormData</span>&gt;();\n\n  <span class=\"hljs-comment\">// Функція викликається ТІЛЬКИ якщо форма пройшла валідацію</span>\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">onSubmit</span> = (<span class=\"hljs-params\">data: TaskFormData</span>) =&gt; {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"✅ Дані форми:\"</span>, data);\n    <span class=\"hljs-comment\">// { title: \"...\", description: \"...\", priority: \"medium\" }</span>\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit(onSubmit)}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n          // <span class=\"hljs-attr\">register</span>() <span class=\"hljs-attr\">повертає</span> { <span class=\"hljs-attr\">ref</span>, <span class=\"hljs-attr\">name</span>, <span class=\"hljs-attr\">onChange</span>, <span class=\"hljs-attr\">onBlur</span> } <span class=\"hljs-attr\">для</span> <span class=\"hljs-attr\">поля</span>\n          {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">title</span>\", {\n            <span class=\"hljs-attr\">required:</span> \"<span class=\"hljs-attr\">Назва</span> <span class=\"hljs-attr\">є</span> <span class=\"hljs-attr\">обов</span>'<span class=\"hljs-attr\">язковою</span>\",\n            <span class=\"hljs-attr\">minLength:</span> { <span class=\"hljs-attr\">value:</span> <span class=\"hljs-attr\">3</span>, <span class=\"hljs-attr\">message:</span> \"<span class=\"hljs-attr\">Мінімум</span> <span class=\"hljs-attr\">3</span> <span class=\"hljs-attr\">символи</span>\" },\n            <span class=\"hljs-attr\">maxLength:</span> { <span class=\"hljs-attr\">value:</span> <span class=\"hljs-attr\">100</span>, <span class=\"hljs-attr\">message:</span> \"<span class=\"hljs-attr\">Максимум</span> <span class=\"hljs-attr\">100</span> <span class=\"hljs-attr\">символів</span>\" },\n          })}\n          <span class=\"hljs-attr\">placeholder</span>=<span class=\"hljs-string\">\"Назва задачі\"</span>\n        /&gt;</span>\n        {/* errors.title?.message — безпечний доступ до повідомлення */}\n        {errors.title &amp;&amp; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span>&gt;</span>{errors.title.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span>&gt;</span>Додати задачу<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>📚 React Hook Form — defaultValues, reset та formState</h1>\n<p><strong>Головна ідея:</strong> <code>defaultValues</code> задає початкові значення форми — це критично для форм <strong>редагування</strong> існуючих даних. <code>reset()</code> повертає форму до початкового стану.</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskFormProps</span> {\n  task?: <span class=\"hljs-title class_\">Task</span>; <span class=\"hljs-comment\">// Якщо task передано — це форма редагування</span>\n  <span class=\"hljs-attr\">onSave</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">data: TaskFormData</span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\">{ task, onSave }: TaskFormProps</span>) {\n  <span class=\"hljs-keyword\">const</span> {\n    register,\n    handleSubmit,\n    reset,\n    <span class=\"hljs-attr\">formState</span>: { errors, isSubmitting, isDirty },\n  } = useForm&lt;<span class=\"hljs-title class_\">TaskFormData</span>&gt;({\n    <span class=\"hljs-comment\">// Якщо task є — заповнюємо форму його даними</span>\n    <span class=\"hljs-attr\">defaultValues</span>: {\n      <span class=\"hljs-attr\">title</span>: task?.<span class=\"hljs-property\">title</span> ?? <span class=\"hljs-string\">\"\"</span>,\n      <span class=\"hljs-attr\">description</span>: task?.<span class=\"hljs-property\">description</span> ?? <span class=\"hljs-string\">\"\"</span>,\n      <span class=\"hljs-attr\">priority</span>: task?.<span class=\"hljs-property\">priority</span> ?? <span class=\"hljs-string\">\"medium\"</span>,\n    },\n  });\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">onSubmit</span> = <span class=\"hljs-keyword\">async</span> (<span class=\"hljs-params\">data: TaskFormData</span>) =&gt; {\n    <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">onSave</span>(data);\n    <span class=\"hljs-title function_\">reset</span>(); <span class=\"hljs-comment\">// Скидаємо форму після успішного збереження</span>\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit(onSubmit)}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">title</span>\", { <span class=\"hljs-attr\">required:</span> \"<span class=\"hljs-attr\">Обов</span>'<span class=\"hljs-attr\">язкове</span> <span class=\"hljs-attr\">поле</span>\" })} /&gt;</span>\n      {errors.title &amp;&amp; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span>&gt;</span>{errors.title.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>}\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">textarea</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">description</span>\")} /&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">priority</span>\")}&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"low\"</span>&gt;</span>🟢 Низький<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"medium\"</span>&gt;</span>🟡 Середній<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"high\"</span>&gt;</span>🔴 Високий<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n\n      {/* isSubmitting — true під час виконання async onSubmit */}\n      {/* isDirty — true якщо форма змінена відносно defaultValues */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span> <span class=\"hljs-attr\">disabled</span>=<span class=\"hljs-string\">{isSubmitting</span> || !<span class=\"hljs-attr\">isDirty</span>}&gt;</span>\n        {isSubmitting ? \"⏳ Збереження...\" : \"💾 Зберегти\"}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"note\"><strong>📝 Чому кнопка спочатку заблокована?</strong> <p><code>isDirty</code> стає <code>true</code> лише коли користувач змінив хоча б одне поле відносно <code>defaultValues</code>. Для <strong>форми створення</strong> кнопка буде заблокована до першого введення — це очікувана і корректна поведінка. Для <strong>форми редагування</strong> — кнопка стане активною лише після внесення змін, що захищає від випадкового повторного збереження.</p>\n</div>\n\n","<h1>🛡️ Zod — опис схем даних</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Zod</strong> — бібліотека для валідації даних, спроектована з урахуванням TypeScript. Схема описує форму та правила для даних. З неї Zod автоматично виводить TypeScript-тип через <code>z.infer&lt;&gt;</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Схема Zod є одночасно <strong>валідатором</strong> і <strong>джерелом TypeScript-типу</strong>. Один раз описали правила — отримали і валідацію, і типи.</p>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install zod @hookform/resolvers</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { z } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"zod\"</span>;\n\n<span class=\"hljs-keyword\">const</span> taskSchema = z.<span class=\"hljs-title function_\">object</span>({\n  <span class=\"hljs-attr\">title</span>: z\n    .<span class=\"hljs-title function_\">string</span>()\n    .<span class=\"hljs-title function_\">min</span>(<span class=\"hljs-number\">3</span>, <span class=\"hljs-string\">\"Мінімум 3 символи\"</span>)\n    .<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">100</span>, <span class=\"hljs-string\">\"Максимум 100 символів\"</span>),\n\n  <span class=\"hljs-attr\">description</span>: z.<span class=\"hljs-title function_\">string</span>().<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">500</span>, <span class=\"hljs-string\">\"Максимум 500 символів\"</span>).<span class=\"hljs-title function_\">optional</span>(), <span class=\"hljs-comment\">// Поле необов'язкове</span>\n\n  <span class=\"hljs-attr\">priority</span>: z.<span class=\"hljs-title function_\">enum</span>([<span class=\"hljs-string\">\"low\"</span>, <span class=\"hljs-string\">\"medium\"</span>, <span class=\"hljs-string\">\"high\"</span>], {\n    <span class=\"hljs-attr\">errorMap</span>: <span class=\"hljs-function\">() =&gt;</span> ({ <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Оберіть пріоритет\"</span> }),\n  }),\n});\n\n<span class=\"hljs-comment\">// 🎉 TypeScript-тип виводиться автоматично зі схеми!</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">TaskFormData</span> = z.<span class=\"hljs-property\">infer</span>&lt;<span class=\"hljs-keyword\">typeof</span> taskSchema&gt;;\n<span class=\"hljs-comment\">// Еквівалентно ручному написанню:</span>\n<span class=\"hljs-comment\">// type TaskFormData = {</span>\n<span class=\"hljs-comment\">//   title: string;</span>\n<span class=\"hljs-comment\">//   description?: string | undefined;</span>\n<span class=\"hljs-comment\">//   priority: \"low\" | \"medium\" | \"high\";</span>\n<span class=\"hljs-comment\">// }</span></code></pre><div class=\"tip\"><strong>💡 Перевага Zod</strong> <p>Без Zod потрібно окремо підтримувати TypeScript-інтерфейс і логіку валідації — вони легко розходяться. Zod об'єднує їх в одне місце: змінили схему — тип автоматично оновився.</p>\n</div>\n\n","<h1>🔗 Інтеграція React Hook Form + Zod</h1>\n<p><strong>Головна ідея:</strong> <code>zodResolver</code> з пакету <code>@hookform/resolvers</code> є сполучною ланкою між React Hook Form і Zod. Форма делегує всю валідацію схемі Zod.</p>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useForm } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-hook-form\"</span>;\n<span class=\"hljs-keyword\">import</span> { zodResolver } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@hookform/resolvers/zod\"</span>;\n<span class=\"hljs-keyword\">import</span> { z } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"zod\"</span>;\n\n<span class=\"hljs-comment\">// 1️⃣ Описуємо схему валідації</span>\n<span class=\"hljs-keyword\">const</span> taskSchema = z.<span class=\"hljs-title function_\">object</span>({\n  <span class=\"hljs-attr\">title</span>: z\n    .<span class=\"hljs-title function_\">string</span>()\n    .<span class=\"hljs-title function_\">min</span>(<span class=\"hljs-number\">3</span>, <span class=\"hljs-string\">\"Мінімум 3 символи\"</span>)\n    .<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">100</span>, <span class=\"hljs-string\">\"Максимум 100 символів\"</span>),\n  <span class=\"hljs-attr\">description</span>: z.<span class=\"hljs-title function_\">string</span>().<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">500</span>, <span class=\"hljs-string\">\"Максимум 500 символів\"</span>).<span class=\"hljs-title function_\">optional</span>(),\n  <span class=\"hljs-attr\">priority</span>: z.<span class=\"hljs-title function_\">enum</span>([<span class=\"hljs-string\">\"low\"</span>, <span class=\"hljs-string\">\"medium\"</span>, <span class=\"hljs-string\">\"high\"</span>]),\n  <span class=\"hljs-attr\">status</span>: z.<span class=\"hljs-title function_\">enum</span>([<span class=\"hljs-string\">\"todo\"</span>, <span class=\"hljs-string\">\"in-progress\"</span>, <span class=\"hljs-string\">\"done\"</span>]),\n});\n\n<span class=\"hljs-comment\">// 2️⃣ Виводимо тип зі схеми — більше ніяких дублювань!</span>\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">TaskFormData</span> = z.<span class=\"hljs-property\">infer</span>&lt;<span class=\"hljs-keyword\">typeof</span> taskSchema&gt;;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\">{ onSubmit }: { onSubmit: (data: TaskFormData) =&gt; <span class=\"hljs-built_in\">void</span> }</span>) {\n  <span class=\"hljs-keyword\">const</span> {\n    register,\n    handleSubmit,\n    <span class=\"hljs-attr\">formState</span>: { errors },\n  } = useForm&lt;<span class=\"hljs-title class_\">TaskFormData</span>&gt;({\n    <span class=\"hljs-comment\">// 3️⃣ zodResolver передає дані через схему перед кожним submit</span>\n    <span class=\"hljs-attr\">resolver</span>: <span class=\"hljs-title function_\">zodResolver</span>(taskSchema),\n    <span class=\"hljs-attr\">defaultValues</span>: { <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-string\">\"medium\"</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"todo\"</span> },\n  });\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit(onSubmit)}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"title\"</span>&gt;</span>Назва задачі *<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"title\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">title</span>\")} <span class=\"hljs-attr\">placeholder</span>=<span class=\"hljs-string\">\"Назва задачі\"</span> /&gt;</span>\n        {errors.title &amp;&amp; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"error\"</span>&gt;</span>{errors.title.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"description\"</span>&gt;</span>Опис<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">textarea</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"description\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">description</span>\")} <span class=\"hljs-attr\">rows</span>=<span class=\"hljs-string\">{3}</span> /&gt;</span>\n        {errors.description &amp;&amp; (\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"error\"</span>&gt;</span>{errors.description.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n        )}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"priority\"</span>&gt;</span>Пріоритет<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"priority\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">priority</span>\")}&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"low\"</span>&gt;</span>🟢 Низький<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"medium\"</span>&gt;</span>🟡 Середній<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"high\"</span>&gt;</span>🔴 Високий<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span>&gt;</span>✅ Зберегти задачу<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>🧩 Повний приклад: Task Manager</h1>\n<p><strong>Головна ідея:</strong> Поєднаємо все вивчене — форма створення/редагування задачі з React Hook Form, Zod та TypeScript.</p>\n<h2>📐 Архітектура</h2>\n\n<div class=\"mermaid\" data-source=\"graph TD\n    APP[&quot;🏠 App&quot;] --&gt; TASKLIST[&quot;📋 TaskList&quot;]\n    APP --&gt; TASKFORM[&quot;📝 TaskForm&quot;]\n    TASKFORM --&gt; RHF[&quot;📚 useForm + zodResolver&quot;]\n    RHF --&gt; ZOD[&quot;🛡️ taskSchema&quot;]\n    style APP fill:#fff9c4,stroke:#f9a825\n    style TASKFORM fill:#e3f2fd,stroke:#1565c0\n    style RHF fill:#e8f5e9,stroke:#388e3c\n    style ZOD fill:#fce4ec,stroke:#c2185b\"><svg id=\"exp-1772479507723-11-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 390.0859375px;\" viewBox=\"0 0 390.0859375 358\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1772479507723-11-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1772479507723-11-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1772479507723-11-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1772479507723-11-0 .error-icon{fill:#552222;}#exp-1772479507723-11-0 .error-text{fill:#552222;stroke:#552222;}#exp-1772479507723-11-0 .edge-thickness-normal{stroke-width:1px;}#exp-1772479507723-11-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1772479507723-11-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1772479507723-11-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1772479507723-11-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1772479507723-11-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1772479507723-11-0 .marker{fill:#333333;stroke:#333333;}#exp-1772479507723-11-0 .marker.cross{stroke:#333333;}#exp-1772479507723-11-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1772479507723-11-0 p{margin:0;}#exp-1772479507723-11-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1772479507723-11-0 .cluster-label text{fill:#333;}#exp-1772479507723-11-0 .cluster-label span{color:#333;}#exp-1772479507723-11-0 .cluster-label span p{background-color:transparent;}#exp-1772479507723-11-0 .label text,#exp-1772479507723-11-0 span{fill:#333;color:#333;}#exp-1772479507723-11-0 .node rect,#exp-1772479507723-11-0 .node circle,#exp-1772479507723-11-0 .node ellipse,#exp-1772479507723-11-0 .node polygon,#exp-1772479507723-11-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1772479507723-11-0 .rough-node .label text,#exp-1772479507723-11-0 .node .label text,#exp-1772479507723-11-0 .image-shape .label,#exp-1772479507723-11-0 .icon-shape .label{text-anchor:middle;}#exp-1772479507723-11-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1772479507723-11-0 .rough-node .label,#exp-1772479507723-11-0 .node .label,#exp-1772479507723-11-0 .image-shape .label,#exp-1772479507723-11-0 .icon-shape .label{text-align:center;}#exp-1772479507723-11-0 .node.clickable{cursor:pointer;}#exp-1772479507723-11-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1772479507723-11-0 .arrowheadPath{fill:#333333;}#exp-1772479507723-11-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1772479507723-11-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1772479507723-11-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772479507723-11-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1772479507723-11-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772479507723-11-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1772479507723-11-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1772479507723-11-0 .cluster text{fill:#333;}#exp-1772479507723-11-0 .cluster span{color:#333;}#exp-1772479507723-11-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1772479507723-11-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1772479507723-11-0 rect.text{fill:none;stroke-width:0;}#exp-1772479507723-11-0 .icon-shape,#exp-1772479507723-11-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772479507723-11-0 .icon-shape p,#exp-1772479507723-11-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1772479507723-11-0 .icon-shape rect,#exp-1772479507723-11-0 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772479507723-11-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1772479507723-11-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1772479507723-11-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1772479507723-11-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772479507723-11-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772479507723-11-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772479507723-11-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772479507723-11-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772479507723-11-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M121.333,56L113.381,60.167C105.428,64.333,89.523,72.667,81.57,80.333C73.617,88,73.617,95,73.617,98.5L73.617,102\" id=\"L_APP_TASKLIST_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_APP_TASKLIST_0\" data-points=\"W3sieCI6MTIxLjMzMzIyNzA0MDgxNjMzLCJ5Ijo1Nn0seyJ4Ijo3My42MTcxODc1LCJ5Ijo4MX0seyJ4Ijo3My42MTcxODc1LCJ5IjoxMDZ9XQ==\" marker-end=\"url(#exp-1772479507723-11-0_flowchart-v2-pointEnd)\"></path><path d=\"M212.948,56L220.901,60.167C228.853,64.333,244.759,72.667,252.711,80.333C260.664,88,260.664,95,260.664,98.5L260.664,102\" id=\"L_APP_TASKFORM_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_APP_TASKFORM_0\" data-points=\"W3sieCI6MjEyLjk0ODAyMjk1OTE4MzY3LCJ5Ijo1Nn0seyJ4IjoyNjAuNjY0MDYyNSwieSI6ODF9LHsieCI6MjYwLjY2NDA2MjUsInkiOjEwNn1d\" marker-end=\"url(#exp-1772479507723-11-0_flowchart-v2-pointEnd)\"></path><path d=\"M260.664,154L260.664,158.167C260.664,162.333,260.664,170.667,260.664,178.333C260.664,186,260.664,193,260.664,196.5L260.664,200\" id=\"L_TASKFORM_RHF_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_TASKFORM_RHF_0\" data-points=\"W3sieCI6MjYwLjY2NDA2MjUsInkiOjE1NH0seyJ4IjoyNjAuNjY0MDYyNSwieSI6MTc5fSx7IngiOjI2MC42NjQwNjI1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1772479507723-11-0_flowchart-v2-pointEnd)\"></path><path d=\"M260.664,252L260.664,256.167C260.664,260.333,260.664,268.667,260.664,276.333C260.664,284,260.664,291,260.664,294.5L260.664,298\" id=\"L_RHF_ZOD_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_RHF_ZOD_0\" data-points=\"W3sieCI6MjYwLjY2NDA2MjUsInkiOjI1Mn0seyJ4IjoyNjAuNjY0MDYyNSwieSI6Mjc3fSx7IngiOjI2MC42NjQwNjI1LCJ5IjozMDJ9XQ==\" marker-end=\"url(#exp-1772479507723-11-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_APP_TASKLIST_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_APP_TASKFORM_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_TASKFORM_RHF_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_RHF_ZOD_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-APP-0\" transform=\"translate(167.140625, 32)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-50.78125\" y=\"-24\" width=\"101.5625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-26.78125, -12)\"><rect></rect><foreignObject width=\"53.5625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🏠 App</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TASKLIST-1\" transform=\"translate(73.6171875, 130)\"><rect class=\"basic label-container\" style=\"\" x=\"-65.6171875\" y=\"-24\" width=\"131.234375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-41.6171875, -12)\"><rect></rect><foreignObject width=\"83.234375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📋 TaskList</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TASKFORM-3\" transform=\"translate(260.6640625, 130)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-71.4296875\" y=\"-24\" width=\"142.859375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.4296875, -12)\"><rect></rect><foreignObject width=\"94.859375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📝 TaskForm</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-RHF-5\" transform=\"translate(260.6640625, 228)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-121.421875\" y=\"-24\" width=\"242.84375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-97.421875, -12)\"><rect></rect><foreignObject width=\"194.84375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📚 useForm + zodResolver</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-ZOD-7\" transform=\"translate(260.6640625, 326)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-80.609375\" y=\"-24\" width=\"161.21875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-56.609375, -12)\"><rect></rect><foreignObject width=\"113.21875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🛡️ taskSchema</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<table>\n<thead>\n<tr>\n<th>Компонент</th>\n<th>Props</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>App</code></td>\n<td><code>tasks: Task[]</code>, керує станом</td>\n</tr>\n<tr>\n<td><code>TaskList</code></td>\n<td><code>tasks</code>, <code>onEdit</code>, <code>onDelete</code></td>\n</tr>\n<tr>\n<td><code>TaskForm</code></td>\n<td><code>task?: Task</code>, <code>onSave</code>, <code>onCancel</code></td>\n</tr>\n<tr>\n<td><code>useForm</code></td>\n<td><code>zodResolver(taskSchema)</code>, <code>defaultValues</code></td>\n</tr>\n</tbody></table>\n","<h1>🧩 TaskForm — фінальна реалізація</h1>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// schemas/taskSchema.ts</span>\n<span class=\"hljs-keyword\">import</span> { z } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"zod\"</span>;\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">const</span> taskSchema = z.<span class=\"hljs-title function_\">object</span>({\n  <span class=\"hljs-attr\">title</span>: z.<span class=\"hljs-title function_\">string</span>().<span class=\"hljs-title function_\">min</span>(<span class=\"hljs-number\">3</span>, <span class=\"hljs-string\">\"Назва має містити щонайменше 3 символи\"</span>).<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">100</span>),\n  <span class=\"hljs-attr\">description</span>: z.<span class=\"hljs-title function_\">string</span>().<span class=\"hljs-title function_\">max</span>(<span class=\"hljs-number\">500</span>, <span class=\"hljs-string\">\"Опис занадто довгий\"</span>).<span class=\"hljs-title function_\">default</span>(<span class=\"hljs-string\">\"\"</span>),\n  <span class=\"hljs-attr\">status</span>: z.<span class=\"hljs-title function_\">enum</span>([<span class=\"hljs-string\">\"todo\"</span>, <span class=\"hljs-string\">\"in-progress\"</span>, <span class=\"hljs-string\">\"done\"</span>]),\n  <span class=\"hljs-attr\">priority</span>: z.<span class=\"hljs-title function_\">enum</span>([<span class=\"hljs-string\">\"low\"</span>, <span class=\"hljs-string\">\"medium\"</span>, <span class=\"hljs-string\">\"high\"</span>]),\n});\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">TaskFormData</span> = z.<span class=\"hljs-property\">infer</span>&lt;<span class=\"hljs-keyword\">typeof</span> taskSchema&gt;;</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// components/TaskForm/TaskForm.tsx</span>\n<span class=\"hljs-keyword\">import</span> { useForm } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-hook-form\"</span>;\n<span class=\"hljs-keyword\">import</span> { zodResolver } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@hookform/resolvers/zod\"</span>;\n<span class=\"hljs-keyword\">import</span> { taskSchema, <span class=\"hljs-title class_\">TaskFormData</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../../schemas/taskSchema\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-keyword\">type</span> { <span class=\"hljs-title class_\">Task</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../../types/task\"</span>;\n<span class=\"hljs-keyword\">import</span> styles <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./TaskForm.module.css\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskFormProps</span> {\n  task?: <span class=\"hljs-title class_\">Task</span>;\n  <span class=\"hljs-attr\">onSave</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">data: TaskFormData</span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n  <span class=\"hljs-attr\">onCancel</span>: <span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskForm</span>(<span class=\"hljs-params\">{ task, onSave, onCancel }: TaskFormProps</span>) {\n  <span class=\"hljs-keyword\">const</span> {\n    register,\n    handleSubmit,\n    <span class=\"hljs-attr\">formState</span>: { errors, isDirty },\n  } = useForm&lt;<span class=\"hljs-title class_\">TaskFormData</span>&gt;({\n    <span class=\"hljs-attr\">resolver</span>: <span class=\"hljs-title function_\">zodResolver</span>(taskSchema),\n    <span class=\"hljs-attr\">defaultValues</span>: {\n      <span class=\"hljs-attr\">title</span>: task?.<span class=\"hljs-property\">title</span> ?? <span class=\"hljs-string\">\"\"</span>,\n      <span class=\"hljs-attr\">description</span>: task?.<span class=\"hljs-property\">description</span> ?? <span class=\"hljs-string\">\"\"</span>,\n      <span class=\"hljs-attr\">status</span>: task?.<span class=\"hljs-property\">status</span> ?? <span class=\"hljs-string\">\"todo\"</span>,\n      <span class=\"hljs-attr\">priority</span>: task?.<span class=\"hljs-property\">priority</span> ?? <span class=\"hljs-string\">\"medium\"</span>,\n    },\n  });\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">form</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.form}</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit(onSave)}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h2</span>&gt;</span>{task ? \"✏️ Редагувати задачу\" : \"➕ Нова задача\"}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h2</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.field}</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"title\"</span>&gt;</span>Назва *<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span>\n          <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"title\"</span>\n          {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">title</span>\")}\n          <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{errors.title</span> ? <span class=\"hljs-attr\">styles.inputError</span> <span class=\"hljs-attr\">:</span> \"\"}\n        /&gt;</span>\n        {errors.title &amp;&amp; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.error}</span>&gt;</span>{errors.title.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.field}</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"description\"</span>&gt;</span>Опис<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">textarea</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"description\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">description</span>\")} <span class=\"hljs-attr\">rows</span>=<span class=\"hljs-string\">{4}</span> /&gt;</span>\n        {errors.description &amp;&amp; (\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.error}</span>&gt;</span>{errors.description.message}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>\n        )}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.row}</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.field}</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"priority\"</span>&gt;</span>Пріоритет<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"priority\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">priority</span>\")}&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"low\"</span>&gt;</span>🟢 Низький<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"medium\"</span>&gt;</span>🟡 Середній<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"high\"</span>&gt;</span>🔴 Високий<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.field}</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">label</span> <span class=\"hljs-attr\">htmlFor</span>=<span class=\"hljs-string\">\"status\"</span>&gt;</span>Статус<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">label</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> <span class=\"hljs-attr\">id</span>=<span class=\"hljs-string\">\"status\"</span> {<span class=\"hljs-attr\">...register</span>(\"<span class=\"hljs-attr\">status</span>\")}&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"todo\"</span>&gt;</span>📌 До виконання<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"in-progress\"</span>&gt;</span>⚙️ В процесі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n            <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"done\"</span>&gt;</span>✅ Виконано<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n          <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{styles.actions}</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"button\"</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{onCancel}</span>&gt;</span>\n          Скасувати\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n        {/* isDirty: кнопка активна тільки якщо форма змінилась */}\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">type</span>=<span class=\"hljs-string\">\"submit\"</span> <span class=\"hljs-attr\">disabled</span>=<span class=\"hljs-string\">{!isDirty}</span>&gt;</span>\n          💾 Зберегти\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">form</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>📊 Підсумок: порівняння підходів</h1>\n<p><strong>Головна ідея:</strong> Вибір підходу залежить від складності форми. Для продакшн-застосунків React Hook Form + Zod є оптимальним балансом між простотою і потужністю.</p>\n<h2>🗺️ Коли що обирати?</h2>\n<p><strong>✋ Ручний підхід</strong> — 1-2 поля без складної валідації, навчальні приклади.</p>\n<p><strong>📚 React Hook Form</strong> — 3+ полів, потрібно менше коду та менше перерендерів.</p>\n<p><strong>🔗 RHF + Zod</strong> — форми з комплексною валідацією, правила планується перевикористовувати (наприклад, на бекенді через той самий <code>taskSchema</code>).</p>\n<h2>📋 Що отримуємо з кожним підходом</h2>\n<table>\n<thead>\n<tr>\n<th></th>\n<th align=\"center\">Ручний</th>\n<th align=\"center\">RHF</th>\n<th align=\"center\">RHF + Zod</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>📉 Мало коду</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">✅</td>\n<td align=\"center\">✅</td>\n</tr>\n<tr>\n<td>⚡ Мінімум перерендерів</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">✅</td>\n<td align=\"center\">✅</td>\n</tr>\n<tr>\n<td>🔒 Авто-типи з валідації</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">✅</td>\n</tr>\n<tr>\n<td>♻️ Перевикористання правил</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">❌</td>\n<td align=\"center\">✅</td>\n</tr>\n<tr>\n<td>🚀 Низький поріг входу</td>\n<td align=\"center\">✅</td>\n<td align=\"center\">🟡</td>\n<td align=\"center\">🟡</td>\n</tr>\n</tbody></table>\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Controlled компоненти</strong> — значення форми у React-стані, повний контроль над даними. Рекомендований підхід для складних форм</p>\n</li>\n<li><p><strong>Uncontrolled компоненти</strong> — значення у DOM, доступ через <code>ref</code>. Підходить лише для простих ізольованих форм</p>\n</li>\n<li><p><strong>Типізація подій</strong> — <code>React.ChangeEvent&lt;HTMLInputElement&gt;</code>, <code>React.FormEvent&lt;HTMLFormElement&gt;</code> забезпечують безпечний доступ до властивостей подій</p>\n</li>\n<li><p><strong>Ручна валідація</strong> — зрозуміла, але вимагає багато boilerplate. При зростанні форми перетворюється на важкий для підтримки код</p>\n</li>\n<li><p><strong>React Hook Form</strong> — мінімізує перерендери та кількість коду. <code>register()</code> підключає поля, <code>handleSubmit()</code> запускає валідацію перед submit</p>\n</li>\n<li><p><strong>Zod</strong> — опис схем даних зі автоматичним виводом TypeScript-типів через <code>z.infer&lt;&gt;</code>. Один файл — і валідатор, і тип</p>\n</li>\n<li><p><strong>RHF + Zod через <code>zodResolver</code></strong> — оптимальне рішення для реальних застосунків: мало коду, повна типобезпека, перевикористовувані схеми</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Яка різниця між controlled та uncontrolled компонентами? В яких ситуаціях кожен підхід доречний?</p>\n</li>\n<li><p>🤔 Чому потрібно викликати <code>e.preventDefault()</code> у обробнику submit HTML-форми?</p>\n</li>\n<li><p>🤔 Яку проблему вирішує React Hook Form порівняно з ручним управлінням станом форми?</p>\n</li>\n<li><p>🤔 Що таке <code>formState.errors</code> у React Hook Form? Як відобразити повідомлення про помилку під конкретним полем?</p>\n</li>\n<li><p>🤔 Для чого використовується <code>z.infer&lt;typeof schema&gt;</code>? Яку перевагу це дає порівняно з ручним написанням TypeScript-інтерфейсу?</p>\n</li>\n<li><p>🤔 Що таке <code>zodResolver</code> і як він пов'язує React Hook Form та Zod?</p>\n</li>\n<li><p>🤔 Навіщо вказувати <code>defaultValues</code> у <code>useForm()</code>? Що буде, якщо їх не вказати для форми редагування?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Контрольований елемент</td>\n<td>Controlled Component</td>\n<td>Елемент форми, значення якого керується через React-стан</td>\n</tr>\n<tr>\n<td>Неконтрольований елемент</td>\n<td>Uncontrolled Component</td>\n<td>Елемент форми, значення якого зберігається у DOM і читається через ref</td>\n</tr>\n<tr>\n<td>Схема валідації</td>\n<td>Validation Schema</td>\n<td>Опис правил та форми даних, що використовується для перевірки</td>\n</tr>\n<tr>\n<td>Вивід типу</td>\n<td>Type Inference</td>\n<td>Автоматичне визначення TypeScript-типу зі схеми без ручного опису</td>\n</tr>\n<tr>\n<td>Стан форми</td>\n<td>Form State</td>\n<td>Сукупність значень полів, помилок та прапорів (isDirty, isSubmitting тощо)</td>\n</tr>\n<tr>\n<td>Резолвер</td>\n<td>Resolver</td>\n<td>Функція-адаптер, що пов'язує React Hook Form із бібліотекою валідації</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>RHF</td>\n<td>React Hook Form</td>\n<td>Бібліотека для роботи з формами у React</td>\n</tr>\n<tr>\n<td>DOM</td>\n<td>Document Object Model</td>\n<td>Об'єктна модель документа</td>\n</tr>\n<tr>\n<td>UI</td>\n<td>User Interface</td>\n<td>Інтерфейс користувача</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>JSX</td>\n<td>JavaScript XML</td>\n<td>Синтаксичне розширення JavaScript для опису UI</td>\n</tr>\n<tr>\n<td>TSX</td>\n<td>TypeScript XML</td>\n<td>Синтаксичне розширення TypeScript для опису UI</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
