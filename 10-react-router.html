@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>React: маршрутизація</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 21</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>React: маршрутизація</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🌐 SPA-маршрутизація: як це працює в браузері</li>\n<li>🗺️ React Router v7: встановлення та базові компоненти</li>\n<li>🔗 Навігація: Link та NavLink</li>\n<li>🏗️ Вкладені маршрути та Layout</li>\n<li>🎯 Динамічні маршрути та хуки навігації</li>\n<li>🧭 Програмна навігація</li>\n<li>🔐 Protected Routes — захист сторінок</li>\n</ol>\n","<h1>🌐 Як працює навігація у звичайному сайті</h1>\n<p><strong>Головна ідея:</strong> Розуміння різниці між серверною та клієнтською навігацією — ключ до розуміння того, навіщо взагалі потрібен роутер у React.</p>\n<h2>📡 Серверна навігація (традиційний підхід)</h2>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">Користувач натискає &lt;a href=\"/tasks\"&gt;\n          ↓\nБраузер надсилає GET /tasks на сервер\n          ↓\nСервер повертає цілком новий HTML-документ\n          ↓\nБраузер повністю перезавантажує сторінку\n          ↓\nВсі JavaScript-змінні, стан — втрачено</code></pre><h2>⚡ Клієнтська навігація (SPA)</h2>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">Користувач натискає &lt;Link to=\"/tasks\"&gt;\n          ↓\nJavaScript перехоплює подію — НЕ перезавантажує сторінку\n          ↓\nReact Router оновлює URL через History API\n          ↓\nReact рендерить новий компонент замість старого\n          ↓\nСтан застосунку, дані, авторизація — збережено</code></pre><div class=\"tip\"><strong>💡 Переваги SPA-навігації</strong> <p>Миттєві переходи між сторінками без затримки мережевого запиту, збереження стану застосунку між переходами, можливість реалізувати анімації переходів між сторінками.</p>\n</div>\n\n","<h1>🌐 History API — механізм під капотом</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>History API</strong> — браузерне API, що дозволяє JavaScript змінювати URL у адресному рядку без перезавантаження сторінки. React Router побудований поверх цього API.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Браузер надає нам інструменти для керування навігацією. React Router лише зручно обгортає їх.</p>\n<h2>🔧 Два ключові методи</h2>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 1. pushState — додає новий запис до стека навігації</span>\n<span class=\"hljs-comment\">//    Користувач може натиснути \"Назад\" і повернутись</span>\nhistory.<span class=\"hljs-title function_\">pushState</span>({}, <span class=\"hljs-string\">\"\"</span>, <span class=\"hljs-string\">\"/tasks\"</span>);\n\n<span class=\"hljs-comment\">// 2. replaceState — замінює поточний запис у стеку</span>\n<span class=\"hljs-comment\">//    \"Назад\" поверне на сторінку ДО поточної</span>\nhistory.<span class=\"hljs-title function_\">replaceState</span>({}, <span class=\"hljs-string\">\"\"</span>, <span class=\"hljs-string\">\"/tasks/1\"</span>);\n\n<span class=\"hljs-comment\">// 3. Подія popstate — спрацьовує коли натискають \"Назад\"/\"Вперед\"</span>\n<span class=\"hljs-variable language_\">window</span>.<span class=\"hljs-title function_\">addEventListener</span>(<span class=\"hljs-string\">\"popstate\"</span>, <span class=\"hljs-function\">() =&gt;</span> {\n  <span class=\"hljs-comment\">// React Router слухає цю подію і оновлює UI</span>\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"URL змінився:\"</span>, <span class=\"hljs-variable language_\">window</span>.<span class=\"hljs-property\">location</span>.<span class=\"hljs-property\">pathname</span>);\n});</code></pre><h2>📊 Стек навігації браузера</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    H[&quot;🏠 /home&quot;] --&gt; T[&quot;📋 /tasks&quot;] --&gt; D[&quot;🗒️ /tasks/42&quot;]\n    style H fill:#e8f5e9,stroke:#388e3c\n    style T fill:#e3f2fd,stroke:#1565c0\n    style D fill:#fff9c4,stroke:#f9a825\"><svg id=\"exp-1772652254557-3-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 486.921875px;\" viewBox=\"0 0 486.921875 64\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1772652254557-3-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1772652254557-3-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1772652254557-3-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1772652254557-3-0 .error-icon{fill:#552222;}#exp-1772652254557-3-0 .error-text{fill:#552222;stroke:#552222;}#exp-1772652254557-3-0 .edge-thickness-normal{stroke-width:1px;}#exp-1772652254557-3-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1772652254557-3-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1772652254557-3-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1772652254557-3-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1772652254557-3-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1772652254557-3-0 .marker{fill:#333333;stroke:#333333;}#exp-1772652254557-3-0 .marker.cross{stroke:#333333;}#exp-1772652254557-3-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1772652254557-3-0 p{margin:0;}#exp-1772652254557-3-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1772652254557-3-0 .cluster-label text{fill:#333;}#exp-1772652254557-3-0 .cluster-label span{color:#333;}#exp-1772652254557-3-0 .cluster-label span p{background-color:transparent;}#exp-1772652254557-3-0 .label text,#exp-1772652254557-3-0 span{fill:#333;color:#333;}#exp-1772652254557-3-0 .node rect,#exp-1772652254557-3-0 .node circle,#exp-1772652254557-3-0 .node ellipse,#exp-1772652254557-3-0 .node polygon,#exp-1772652254557-3-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1772652254557-3-0 .rough-node .label text,#exp-1772652254557-3-0 .node .label text,#exp-1772652254557-3-0 .image-shape .label,#exp-1772652254557-3-0 .icon-shape .label{text-anchor:middle;}#exp-1772652254557-3-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1772652254557-3-0 .rough-node .label,#exp-1772652254557-3-0 .node .label,#exp-1772652254557-3-0 .image-shape .label,#exp-1772652254557-3-0 .icon-shape .label{text-align:center;}#exp-1772652254557-3-0 .node.clickable{cursor:pointer;}#exp-1772652254557-3-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1772652254557-3-0 .arrowheadPath{fill:#333333;}#exp-1772652254557-3-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1772652254557-3-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1772652254557-3-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772652254557-3-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1772652254557-3-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772652254557-3-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1772652254557-3-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1772652254557-3-0 .cluster text{fill:#333;}#exp-1772652254557-3-0 .cluster span{color:#333;}#exp-1772652254557-3-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1772652254557-3-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1772652254557-3-0 rect.text{fill:none;stroke-width:0;}#exp-1772652254557-3-0 .icon-shape,#exp-1772652254557-3-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772652254557-3-0 .icon-shape p,#exp-1772652254557-3-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1772652254557-3-0 .icon-shape rect,#exp-1772652254557-3-0 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772652254557-3-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1772652254557-3-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1772652254557-3-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1772652254557-3-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254557-3-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254557-3-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772652254557-3-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772652254557-3-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254557-3-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M125.438,32L129.604,32C133.771,32,142.104,32,149.771,32C157.438,32,164.438,32,167.938,32L171.438,32\" id=\"L_H_T_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_H_T_0\" data-points=\"W3sieCI6MTI1LjQzNzUsInkiOjMyfSx7IngiOjE1MC40Mzc1LCJ5IjozMn0seyJ4IjoxNzUuNDM3NSwieSI6MzJ9XQ==\" marker-end=\"url(#exp-1772652254557-3-0_flowchart-v2-pointEnd)\"></path><path d=\"M290.391,32L294.557,32C298.724,32,307.057,32,314.724,32C322.391,32,329.391,32,332.891,32L336.391,32\" id=\"L_T_D_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_T_D_0\" data-points=\"W3sieCI6MjkwLjM5MDYyNSwieSI6MzJ9LHsieCI6MzE1LjM5MDYyNSwieSI6MzJ9LHsieCI6MzQwLjM5MDYyNSwieSI6MzJ9XQ==\" marker-end=\"url(#exp-1772652254557-3-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_H_T_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_T_D_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-H-0\" transform=\"translate(66.71875, 32)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-58.71875\" y=\"-24\" width=\"117.4375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-34.71875, -12)\"><rect></rect><foreignObject width=\"69.4375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🏠 /home</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-T-1\" transform=\"translate(232.9140625, 32)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-57.4765625\" y=\"-24\" width=\"114.953125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-33.4765625, -12)\"><rect></rect><foreignObject width=\"66.953125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📋 /tasks</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-D-2\" transform=\"translate(409.65625, 32)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-69.265625\" y=\"-24\" width=\"138.53125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-45.265625, -12)\"><rect></rect><foreignObject width=\"90.53125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🗒️ /tasks/42</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<p>Натискання «Назад»: <code>/tasks/42</code> → <code>/tasks</code> → <code>/home</code></p>\n","<h1>🗺️ React Router v7: встановлення</h1>\n<p><strong>Головна ідея:</strong> React Router — окрема бібліотека, яку потрібно встановити. Вона не входить до React і не є його частиною. Починаючи з v7, пакет об'єднано — все імпортується з одного <code>react-router</code>, пакет <code>react-router-dom</code> більше не потрібен.</p>\n<h2>🚀 Встановлення та налаштування</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># React Router v7 — єдиний пакет для веб-застосунків</span>\nnpm install react-router</code></pre><h2>🏗️ Підключення у застосунку</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// main.tsx — точка входу застосунку</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">StrictMode</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> { createRoot } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-dom/client\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">BrowserRouter</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">App</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./App\"</span>;\n\n<span class=\"hljs-title function_\">createRoot</span>(<span class=\"hljs-variable language_\">document</span>.<span class=\"hljs-title function_\">getElementById</span>(<span class=\"hljs-string\">\"root\"</span>)!).<span class=\"hljs-title function_\">render</span>(\n  <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">StrictMode</span>&gt;</span>\n    {/* BrowserRouter — \"обгортка\", що надає контекст навігації */}\n    {/* Весь застосунок має бути всередині BrowserRouter */}\n    <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">BrowserRouter</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">App</span> /&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">BrowserRouter</span>&gt;</span>\n  <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">StrictMode</span>&gt;</span></span>,\n);</code></pre><div class=\"warning\"><strong>⚠️ Важливо: BrowserRouter — один на весь застосунок</strong> <p><code>BrowserRouter</code> створює контекст навігації. Якщо обгорнути лише частину застосунку — хуки <code>useNavigate</code>, <code>useParams</code> та інші не будуть працювати за межами обгортки.</p>\n</div>\n\n","<h1>🗺️ Routes та Route — оголошення маршрутів</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Routes</strong> — контейнер, що з наявних <code>Route</code>-елементів вибирає той, чий <code>path</code> відповідає поточному URL. <strong>Route</strong> — прив'язує URL-шлях до конкретного компонента.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> <code>Routes</code> завжди рендерить лише <strong>один</strong> маршрут — перший, що підходить. Це схоже на <code>switch/case</code> для URL.</p>\n<h2>💻 Базова конфігурація маршрутів</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// App.tsx</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Routes</span>, <span class=\"hljs-title class_\">Route</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">HomePage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/HomePage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">TasksPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/TasksPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">TaskDetailPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/TaskDetailPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">NotFoundPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/NotFoundPage\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>\n      {/* path=\"/\" — відповідає лише кореневому URL */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">HomePage</span> /&gt;</span>} /&gt;\n\n      {/* path=\"/tasks\" — відповідає URL /tasks */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TasksPage</span> /&gt;</span>} /&gt;\n\n      {/* path=\"/tasks/:id\" — динамічний маршрут (розглянемо пізніше) */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/:id\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TaskDetailPage</span> /&gt;</span>} /&gt;\n\n      {/* path=\"*\" — спрацьовує якщо жоден інший не підійшов (сторінка 404) */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"*\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">NotFoundPage</span> /&gt;</span>} /&gt;\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span></span>\n  );\n}</code></pre><h2>📊 Як Routes вибирає маршрут</h2>\n<table>\n<thead>\n<tr>\n<th>URL у браузері</th>\n<th>Який Route спрацює</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>/</code></td>\n<td><code>&lt;HomePage /&gt;</code></td>\n</tr>\n<tr>\n<td><code>/tasks</code></td>\n<td><code>&lt;TasksPage /&gt;</code></td>\n</tr>\n<tr>\n<td><code>/tasks/42</code></td>\n<td><code>&lt;TaskDetailPage /&gt;</code></td>\n</tr>\n<tr>\n<td><code>/unknown</code></td>\n<td><code>&lt;NotFoundPage /&gt;</code></td>\n</tr>\n</tbody></table>\n","<h1>🔗 Link та NavLink — навігація в JSX</h1>\n<p><strong>Головна ідея:</strong> Замість <code>&lt;a href=\"...\"&gt;</code> у React Router використовують <code>&lt;Link&gt;</code> та <code>&lt;NavLink&gt;</code>. Вони запобігають перезавантаженню сторінки та оновлюють URL через History API.</p>\n<h2>🔗 Компонент Link</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Link</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Header</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">nav</span>&gt;</span>\n      {/* ✅ Link — навігація без перезавантаження сторінки */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Link</span> <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/\"</span>&gt;</span>🏠 Головна<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Link</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Link</span> <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/tasks\"</span>&gt;</span>📋 Задачі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Link</span>&gt;</span>\n\n      {/* ❌ Звичайний <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">a</span>&gt;</span> — перезавантажить всю сторінку! */}\n      {/* <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">a</span> <span class=\"hljs-attr\">href</span>=<span class=\"hljs-string\">\"/tasks\"</span>&gt;</span>Задачі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">a</span>&gt;</span> */}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">nav</span>&gt;</span>\n  );\n}</span></code></pre><h2>🎨 Компонент NavLink — з активним станом</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">NavLink</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> styles <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./Header.module.css\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Header</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">nav</span>&gt;</span>\n      {/* end — NavLink активний лише при точному збігу \"/\", не при \"/tasks\" */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">NavLink</span>\n        <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/\"</span>\n        <span class=\"hljs-attr\">end</span>\n        <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{({</span> <span class=\"hljs-attr\">isActive</span> }) =&gt;</span>\n          isActive ? styles.linkActive : styles.link\n        }\n      &gt;\n        🏠 Головна\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">NavLink</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">NavLink</span>\n        <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/tasks\"</span>\n        <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{({</span> <span class=\"hljs-attr\">isActive</span> }) =&gt;</span>\n          isActive ? styles.linkActive : styles.link\n        }\n      &gt;\n        📋 Задачі\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">NavLink</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">nav</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"tip\"><strong>💡 NavLink vs Link</strong> <p>Використовуйте <code>NavLink</code> для елементів навігаційного меню — він дає змогу підсвітити активний пункт. Для звичайних посилань у тексті або кнопок — достатньо <code>Link</code>.</p>\n</div>\n\n","<h1>🏗️ Вкладені маршрути та Layout</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Layout Route</strong> — маршрут без власного <code>element</code>-компонента сторінки, що слугує обгорткою для дочірніх маршрутів. Дозволяє мати спільний header, sidebar, footer для групи сторінок.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість того, щоб копіювати <code>&lt;Header&gt;</code> та <code>&lt;Footer&gt;</code> в кожну сторінку, ми виносимо їх у Layout-компонент і рендеримо дочірні маршрути через <code>&lt;Outlet&gt;</code>.</p>\n<h2>🏗️ Структура Layout</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// layouts/MainLayout.tsx</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Outlet</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">Header</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../components/Header\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">Sidebar</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../components/Sidebar\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">Footer</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../components/Footer\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">MainLayout</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"layout\"</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Header</span> /&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"layout__content\"</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Sidebar</span> /&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">main</span>&gt;</span>\n          {/* Outlet — \"слот\", куди React Router рендерить дочірній маршрут */}\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Outlet</span> /&gt;</span>\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">main</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Footer</span> /&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// App.tsx — налаштування вкладених маршрутів</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>\n      {/* Layout-маршрут: без path — просто обгортка з Outlet для дочірніх маршрутів */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">MainLayout</span> /&gt;</span>}&gt;\n        {/* index — рендериться при URL \"/\" (кореневий маршрут) */}\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">HomePage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TasksPage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/:id\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TaskDetailPage</span> /&gt;</span>} /&gt;\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Route</span>&gt;</span>\n\n      {/* Сторінка без Layout (наприклад, сторінка логіну) */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/login\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">LoginPage</span> /&gt;</span>} /&gt;\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"*\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">NotFoundPage</span> /&gt;</span>} /&gt;\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>🏗️ Outlet — як це працює</h1>\n<p><strong>Головна ідея:</strong> <code>&lt;Outlet&gt;</code> — це \"слот\" у Layout, куди підставляється поточна дочірня сторінка. При переході між сторінками Layout залишається незмінним, змінюється лише вміст Outlet.</p>\n<h2>📊 Візуалізація вкладених маршрутів</h2>\n\n<div class=\"mermaid\" data-source=\"graph TD\n    APP[&quot;🏠 App (BrowserRouter)&quot;] --&gt; LAYOUT[&quot;🏗️ MainLayout&quot;]\n    LAYOUT --&gt; HEADER[&quot;🔝 Header (завжди)&quot;]\n    LAYOUT --&gt; OUTLET[&quot;📦 Outlet (змінюється)&quot;]\n    LAYOUT --&gt; FOOTER[&quot;🔻 Footer (завжди)&quot;]\n    OUTLET --&gt; HOME[&quot;/ → HomePage&quot;]\n    OUTLET --&gt; TASKS[&quot;/tasks → TasksPage&quot;]\n    OUTLET --&gt; DETAIL[&quot;/tasks/42 → TaskDetailPage&quot;]\n    style APP fill:#fff9c4,stroke:#f9a825\n    style LAYOUT fill:#e3f2fd,stroke:#1565c0\n    style OUTLET fill:#fce4ec,stroke:#c2185b\n    style HEADER fill:#e8f5e9,stroke:#388e3c\n    style FOOTER fill:#e8f5e9,stroke:#388e3c\"><svg id=\"exp-1772652254576-8-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 765.703125px;\" viewBox=\"0 0 765.703125 358\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1772652254576-8-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1772652254576-8-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1772652254576-8-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1772652254576-8-0 .error-icon{fill:#552222;}#exp-1772652254576-8-0 .error-text{fill:#552222;stroke:#552222;}#exp-1772652254576-8-0 .edge-thickness-normal{stroke-width:1px;}#exp-1772652254576-8-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1772652254576-8-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1772652254576-8-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1772652254576-8-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1772652254576-8-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1772652254576-8-0 .marker{fill:#333333;stroke:#333333;}#exp-1772652254576-8-0 .marker.cross{stroke:#333333;}#exp-1772652254576-8-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1772652254576-8-0 p{margin:0;}#exp-1772652254576-8-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1772652254576-8-0 .cluster-label text{fill:#333;}#exp-1772652254576-8-0 .cluster-label span{color:#333;}#exp-1772652254576-8-0 .cluster-label span p{background-color:transparent;}#exp-1772652254576-8-0 .label text,#exp-1772652254576-8-0 span{fill:#333;color:#333;}#exp-1772652254576-8-0 .node rect,#exp-1772652254576-8-0 .node circle,#exp-1772652254576-8-0 .node ellipse,#exp-1772652254576-8-0 .node polygon,#exp-1772652254576-8-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1772652254576-8-0 .rough-node .label text,#exp-1772652254576-8-0 .node .label text,#exp-1772652254576-8-0 .image-shape .label,#exp-1772652254576-8-0 .icon-shape .label{text-anchor:middle;}#exp-1772652254576-8-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1772652254576-8-0 .rough-node .label,#exp-1772652254576-8-0 .node .label,#exp-1772652254576-8-0 .image-shape .label,#exp-1772652254576-8-0 .icon-shape .label{text-align:center;}#exp-1772652254576-8-0 .node.clickable{cursor:pointer;}#exp-1772652254576-8-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1772652254576-8-0 .arrowheadPath{fill:#333333;}#exp-1772652254576-8-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1772652254576-8-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1772652254576-8-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772652254576-8-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1772652254576-8-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772652254576-8-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1772652254576-8-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1772652254576-8-0 .cluster text{fill:#333;}#exp-1772652254576-8-0 .cluster span{color:#333;}#exp-1772652254576-8-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1772652254576-8-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1772652254576-8-0 rect.text{fill:none;stroke-width:0;}#exp-1772652254576-8-0 .icon-shape,#exp-1772652254576-8-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1772652254576-8-0 .icon-shape p,#exp-1772652254576-8-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1772652254576-8-0 .icon-shape rect,#exp-1772652254576-8-0 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1772652254576-8-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1772652254576-8-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1772652254576-8-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1772652254576-8-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254576-8-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254576-8-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772652254576-8-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1772652254576-8-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1772652254576-8-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M364.547,56L364.547,60.167C364.547,64.333,364.547,72.667,364.547,80.333C364.547,88,364.547,95,364.547,98.5L364.547,102\" id=\"L_APP_LAYOUT_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_APP_LAYOUT_0\" data-points=\"W3sieCI6MzY0LjU0Njg3NSwieSI6NTZ9LHsieCI6MzY0LjU0Njg3NSwieSI6ODF9LHsieCI6MzY0LjU0Njg3NSwieSI6MTA2fV0=\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M286.672,144.791L256.654,150.493C226.635,156.194,166.599,167.597,136.581,176.799C106.563,186,106.563,193,106.563,196.5L106.563,200\" id=\"L_LAYOUT_HEADER_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_LAYOUT_HEADER_0\" data-points=\"W3sieCI6Mjg2LjY3MTg3NSwieSI6MTQ0Ljc5MTEwODk1NzY2NDZ9LHsieCI6MTA2LjU2MjUsInkiOjE3OX0seyJ4IjoxMDYuNTYyNSwieSI6MjA0fV0=\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M364.547,154L364.547,158.167C364.547,162.333,364.547,170.667,364.547,178.333C364.547,186,364.547,193,364.547,196.5L364.547,200\" id=\"L_LAYOUT_OUTLET_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_LAYOUT_OUTLET_0\" data-points=\"W3sieCI6MzY0LjU0Njg3NSwieSI6MTU0fSx7IngiOjM2NC41NDY4NzUsInkiOjE3OX0seyJ4IjozNjQuNTQ2ODc1LCJ5IjoyMDR9XQ==\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M442.422,144.963L471.947,150.636C501.471,156.309,560.521,167.654,590.046,176.827C619.57,186,619.57,193,619.57,196.5L619.57,200\" id=\"L_LAYOUT_FOOTER_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_LAYOUT_FOOTER_0\" data-points=\"W3sieCI6NDQyLjQyMTg3NSwieSI6MTQ0Ljk2Mjg0MDQyNTIwNjAyfSx7IngiOjYxOS41NzAzMTI1LCJ5IjoxNzl9LHsieCI6NjE5LjU3MDMxMjUsInkiOjIwNH1d\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M255.54,252L236.616,256.167C217.691,260.333,179.842,268.667,160.917,276.333C141.992,284,141.992,291,141.992,294.5L141.992,298\" id=\"L_OUTLET_HOME_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_OUTLET_HOME_0\" data-points=\"W3sieCI6MjU1LjU0MDQ5NzQ0ODk3OTU4LCJ5IjoyNTJ9LHsieCI6MTQxLjk5MjE4NzUsInkiOjI3N30seyJ4IjoxNDEuOTkyMTg3NSwieSI6MzAyfV0=\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M364.547,252L364.547,256.167C364.547,260.333,364.547,268.667,364.547,276.333C364.547,284,364.547,291,364.547,294.5L364.547,298\" id=\"L_OUTLET_TASKS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_OUTLET_TASKS_0\" data-points=\"W3sieCI6MzY0LjU0Njg3NSwieSI6MjUyfSx7IngiOjM2NC41NDY4NzUsInkiOjI3N30seyJ4IjozNjQuNTQ2ODc1LCJ5IjozMDJ9XQ==\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M473.969,247.916L500.6,252.764C527.232,257.611,580.495,267.305,607.126,275.653C633.758,284,633.758,291,633.758,294.5L633.758,298\" id=\"L_OUTLET_DETAIL_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_OUTLET_DETAIL_0\" data-points=\"W3sieCI6NDczLjk2ODc1LCJ5IjoyNDcuOTE2MjQ4Mjk1MDc1MzJ9LHsieCI6NjMzLjc1NzgxMjUsInkiOjI3N30seyJ4Ijo2MzMuNzU3ODEyNSwieSI6MzAyfV0=\" marker-end=\"url(#exp-1772652254576-8-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_APP_LAYOUT_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_LAYOUT_HEADER_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_LAYOUT_OUTLET_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_LAYOUT_FOOTER_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_OUTLET_HOME_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_OUTLET_TASKS_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_OUTLET_DETAIL_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\"><tspan class=\"text-outer-tspan\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"></tspan></text></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-APP-0\" transform=\"translate(364.546875, 32)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-112.25\" y=\"-24\" width=\"224.5\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-88.25, -12)\"><rect></rect><foreignObject width=\"176.5\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🏠 App (BrowserRouter)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-LAYOUT-1\" transform=\"translate(364.546875, 130)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-77.875\" y=\"-24\" width=\"155.75\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-53.875, -12)\"><rect></rect><foreignObject width=\"107.75\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🏗️ MainLayout</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-HEADER-3\" transform=\"translate(106.5625, 228)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-98.5625\" y=\"-24\" width=\"197.125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-74.5625, -12)\"><rect></rect><foreignObject width=\"149.125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔝 Header (завжди)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-OUTLET-5\" transform=\"translate(364.546875, 228)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-109.421875\" y=\"-24\" width=\"218.84375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-85.421875, -12)\"><rect></rect><foreignObject width=\"170.84375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Outlet (змінюється)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-FOOTER-7\" transform=\"translate(619.5703125, 228)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-95.6015625\" y=\"-24\" width=\"191.203125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-71.6015625, -12)\"><rect></rect><foreignObject width=\"143.203125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔻 Footer (завжди)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-HOME-9\" transform=\"translate(141.9921875, 326)\"><rect class=\"basic label-container\" style=\"\" x=\"-77.2890625\" y=\"-24\" width=\"154.578125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-53.2890625, -12)\"><rect></rect><foreignObject width=\"106.578125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>/ → HomePage</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TASKS-11\" transform=\"translate(364.546875, 326)\"><rect class=\"basic label-container\" style=\"\" x=\"-95.265625\" y=\"-24\" width=\"190.53125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-71.265625, -12)\"><rect></rect><foreignObject width=\"142.53125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>/tasks → TasksPage</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-DETAIL-13\" transform=\"translate(633.7578125, 326)\"><rect class=\"basic label-container\" style=\"\" x=\"-123.9453125\" y=\"-24\" width=\"247.890625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-99.9453125, -12)\"><rect></rect><foreignObject width=\"199.890625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>/tasks/42 → TaskDetailPage</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<h2>💻 Передача даних через Outlet</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// MainLayout.tsx — передаємо статичні дані дочірнім маршрутам</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Outlet</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">LayoutContext</span> {\n  <span class=\"hljs-attr\">appName</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">version</span>: <span class=\"hljs-built_in\">string</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">MainLayout</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">ctx</span>: <span class=\"hljs-title class_\">LayoutContext</span> = { <span class=\"hljs-attr\">appName</span>: <span class=\"hljs-string\">\"Task Manager\"</span>, <span class=\"hljs-attr\">version</span>: <span class=\"hljs-string\">\"1.0\"</span> };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Header</span> /&gt;</span>\n      {/* context — спосіб передати дані через Outlet */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Outlet</span> <span class=\"hljs-attr\">context</span>=<span class=\"hljs-string\">{ctx}</span> /&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-comment\">// TasksPage.tsx — отримуємо дані від Layout</span>\n<span class=\"hljs-keyword\">import</span> { useOutletContext } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TasksPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> { appName } = useOutletContext&lt;<span class=\"hljs-title class_\">LayoutContext</span>&gt;();\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>Застосунок: {appName}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span></span>;\n}</code></pre><div class=\"note\"><strong>📝 Коли використовувати Outlet context?</strong> <p>Outlet context підходить для передачі простих статичних даних (назва застосунку, конфігурація). Для глобального стану (поточний користувач, список задач) використовують Context API або Zustand.</p>\n</div>\n\n","<h1>🎯 Динамічні маршрути та useParams</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Динамічний маршрут</strong> — маршрут, де частина URL є змінною. Позначається двокрапкою: <code>/tasks/:id</code>. Значення після двокрапки доступне через хук <code>useParams</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість того, щоб створювати окремий маршрут для кожної задачі (<code>/tasks/1</code>, <code>/tasks/2</code>, ...), використовуємо один шаблон <code>/tasks/:id</code>.</p>\n<h2>💻 Отримання параметрів через useParams</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// pages/TaskDetailPage.tsx</span>\n<span class=\"hljs-keyword\">import</span> { useParams } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> { useState, useEffect } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-keyword\">type</span> { <span class=\"hljs-title class_\">Task</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"../types/task\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskDetailPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// useParams повертає об'єкт з параметрами URL</span>\n  <span class=\"hljs-comment\">// Для маршруту /tasks/:id при URL /tasks/42 → { id: \"42\" }</span>\n  <span class=\"hljs-comment\">// Тип — string | undefined, бо React Router не гарантує наявність параметра</span>\n  <span class=\"hljs-keyword\">const</span> { id } = useParams&lt;{ <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">string</span> }&gt;();\n\n  <span class=\"hljs-keyword\">const</span> [task, setTask] = useState&lt;<span class=\"hljs-title class_\">Task</span> | <span class=\"hljs-literal\">null</span>&gt;(<span class=\"hljs-literal\">null</span>);\n  <span class=\"hljs-keyword\">const</span> [isLoading, setIsLoading] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">true</span>);\n  <span class=\"hljs-keyword\">const</span> [error, setError] = useState&lt;<span class=\"hljs-built_in\">string</span> | <span class=\"hljs-literal\">null</span>&gt;(<span class=\"hljs-literal\">null</span>);\n\n  <span class=\"hljs-title function_\">useEffect</span>(<span class=\"hljs-function\">() =&gt;</span> {\n    <span class=\"hljs-keyword\">if</span> (!id) <span class=\"hljs-keyword\">return</span>; <span class=\"hljs-comment\">// Guard: id може бути undefined якщо маршрут не збігається</span>\n    <span class=\"hljs-title function_\">setIsLoading</span>(<span class=\"hljs-literal\">true</span>);\n    <span class=\"hljs-comment\">// id — завжди рядок! При потребі конвертуйте: Number(id) або parseInt(id, 10)</span>\n    <span class=\"hljs-title function_\">fetch</span>(<span class=\"hljs-string\">`/api/tasks/<span class=\"hljs-subst\">${id}</span>`</span>)\n      .<span class=\"hljs-title function_\">then</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">res</span>) =&gt;</span> res.<span class=\"hljs-title function_\">json</span>())\n      .<span class=\"hljs-title function_\">then</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">data: Task</span>) =&gt;</span> {\n        <span class=\"hljs-title function_\">setTask</span>(data);\n        <span class=\"hljs-title function_\">setIsLoading</span>(<span class=\"hljs-literal\">false</span>);\n      })\n      .<span class=\"hljs-title function_\">catch</span>(<span class=\"hljs-function\">() =&gt;</span> {\n        <span class=\"hljs-title function_\">setError</span>(<span class=\"hljs-string\">\"Задачу не знайдено\"</span>);\n        <span class=\"hljs-title function_\">setIsLoading</span>(<span class=\"hljs-literal\">false</span>);\n      });\n  }, [id]); <span class=\"hljs-comment\">// При зміні id (переході між задачами) — перезавантажуємо</span>\n\n  <span class=\"hljs-keyword\">if</span> (isLoading) <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>⏳ Завантаження...<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span></span>;\n  <span class=\"hljs-keyword\">if</span> (error) <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>❌ {error}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span></span>;\n  <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">null</span>;\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">article</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h1</span>&gt;</span>{task.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h1</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>{task.description}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{</span>`<span class=\"hljs-attr\">badge</span> <span class=\"hljs-attr\">badge--</span>${<span class=\"hljs-attr\">task.status</span>}`}&gt;</span>{task.status}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">article</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"warning\"><strong>⚠️ Параметри URL — завжди рядки</strong> <p><code>useParams</code> завжди повертає рядки (<code>string</code>), навіть якщо URL містить число. При роботі з числовими ID конвертуйте: <code>const numericId = Number(id)</code> або <code>parseInt(id, 10)</code>.</p>\n</div>\n\n","<h1>🎯 useSearchParams — query-параметри</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Query-параметри</strong> — частина URL після знаку <code>?</code>. Наприклад, <code>/tasks?status=todo&amp;priority=high</code>. Вони не є частиною маршруту, але несуть додаткову інформацію (фільтри, пошук, сортування).</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> <code>useSearchParams</code> — аналог <code>useState</code>, але значення зберігається в URL. Це дозволяє ділитися посиланням з активними фільтрами.</p>\n<h2>💻 Фільтрація задач через URL</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useSearchParams } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TasksPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// useSearchParams повертає [params, setParams] — аналогічно useState</span>\n  <span class=\"hljs-keyword\">const</span> [searchParams, setSearchParams] = <span class=\"hljs-title function_\">useSearchParams</span>();\n\n  <span class=\"hljs-comment\">// Зчитуємо фільтр статусу з URL</span>\n  <span class=\"hljs-comment\">// Якщо параметру немає — повертає null, використовуємо значення за замовчуванням</span>\n  <span class=\"hljs-keyword\">const</span> statusFilter = searchParams.<span class=\"hljs-title function_\">get</span>(<span class=\"hljs-string\">\"status\"</span>) ?? <span class=\"hljs-string\">\"all\"</span>;\n\n  <span class=\"hljs-comment\">// Оновлюємо URL при зміні фільтра</span>\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleStatusChange</span> = (<span class=\"hljs-params\">status: <span class=\"hljs-built_in\">string</span></span>) =&gt; {\n    <span class=\"hljs-title function_\">setSearchParams</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">prev</span>) =&gt;</span> {\n      <span class=\"hljs-comment\">// Створюємо новий об'єкт на основі поточних параметрів — іммутабельний підхід</span>\n      <span class=\"hljs-keyword\">const</span> next = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">URLSearchParams</span>(prev);\n      next.<span class=\"hljs-title function_\">set</span>(<span class=\"hljs-string\">\"status\"</span>, status);\n      <span class=\"hljs-keyword\">return</span> next; <span class=\"hljs-comment\">// Зберігаємо інші параметри, оновлюємо лише status</span>\n    });\n  };\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span>\n        <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{statusFilter}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> handleStatusChange(e.target.value)}\n      &gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"all\"</span>&gt;</span>Всі статуси<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"todo\"</span>&gt;</span>📌 Todo<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"in-progress\"</span>&gt;</span>🔄 В роботі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"done\"</span>&gt;</span>✅ Виконано<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>Активний фільтр: {statusFilter}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>\n      {/* При виборі \"todo\" URL стане: /tasks?status=todo */}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>🧭 Програмна навігація: useNavigate</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>useNavigate</strong> — хук, що повертає функцію для переходу між сторінками з JavaScript-коду. Використовується коли потрібно навігувати не по кліку на посилання, а після виконання якоїсь дії.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Після збереження форми, виходу з акаунту, або успішного запиту — потрібно перейти на іншу сторінку програмно, без натискання посилань.</p>\n<h2>💻 Навігація після submit форми</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useNavigate } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">CreateTaskPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> navigate = <span class=\"hljs-title function_\">useNavigate</span>();\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = <span class=\"hljs-keyword\">async</span> (<span class=\"hljs-params\">data: TaskFormData</span>) =&gt; {\n    <span class=\"hljs-keyword\">try</span> {\n      <span class=\"hljs-comment\">// 1. Зберігаємо задачу на сервері</span>\n      <span class=\"hljs-keyword\">const</span> response = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">fetch</span>(<span class=\"hljs-string\">\"/api/tasks\"</span>, {\n        <span class=\"hljs-attr\">method</span>: <span class=\"hljs-string\">\"POST\"</span>,\n        <span class=\"hljs-attr\">body</span>: <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>(data),\n      });\n      <span class=\"hljs-keyword\">const</span> newTask = <span class=\"hljs-keyword\">await</span> response.<span class=\"hljs-title function_\">json</span>();\n\n      <span class=\"hljs-comment\">// 2. Після успішного збереження — переходимо на сторінку задачі</span>\n      <span class=\"hljs-title function_\">navigate</span>(<span class=\"hljs-string\">`/tasks/<span class=\"hljs-subst\">${newTask.id}</span>`</span>);\n      <span class=\"hljs-comment\">// navigate(-1) — повернутись на попередню сторінку</span>\n      <span class=\"hljs-comment\">// navigate(\"/tasks\", { replace: true }) — замінити поточний запис у стеку</span>\n    } <span class=\"hljs-keyword\">catch</span> (error) {\n      <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">error</span>(<span class=\"hljs-string\">\"Помилка збереження:\"</span>, error);\n    }\n  };\n\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">TaskForm</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit}</span> /&gt;</span></span>;\n}</code></pre><h2>🔄 Navigate — декларативний редірект</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Navigate</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">OldTasksPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// Компонент Navigate одразу виконує перехід при рендері</span>\n  <span class=\"hljs-comment\">// replace — замінює поточний запис (щоб \"Назад\" не повертало сюди)</span>\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Navigate</span> <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">replace</span> /&gt;</span></span>;\n}</code></pre><h2>📊 useNavigate: корисні варіанти виклику</h2>\n<table>\n<thead>\n<tr>\n<th>Виклик</th>\n<th>Що робить</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>navigate(\"/tasks\")</code></td>\n<td>Перейти за абсолютним шляхом</td>\n</tr>\n<tr>\n<td><code>navigate(\"../\")</code></td>\n<td>Перейти на рівень вище (відносний шлях)</td>\n</tr>\n<tr>\n<td><code>navigate(-1)</code></td>\n<td>Назад (як кнопка \"Назад\" у браузері)</td>\n</tr>\n<tr>\n<td><code>navigate(1)</code></td>\n<td>Вперед (як кнопка \"Вперед\")</td>\n</tr>\n<tr>\n<td><code>navigate(\"/login\", { replace: true })</code></td>\n<td>Перейти, замінивши запис у стеку</td>\n</tr>\n</tbody></table>\n","<h1>🔐 Protected Routes — навіщо це потрібно</h1>\n<p><strong>Головна ідея:</strong> Деякі сторінки мають бути доступні лише авторизованим користувачам. Якщо неавторизований користувач намагається зайти на <code>/tasks</code>, його слід перенаправити на <code>/login</code>.</p>\n<h2>🚫 Проблема: відкриті сторінки</h2>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">Без захисту:\n  URL /tasks → TasksPage рендериться для ВСІХ\n  URL /admin → AdminPage рендериться для ВСІХ\n\nЩо нам потрібно:\n  URL /tasks → якщо авторизований → TasksPage\n             → якщо НІ → перенаправити на /login</code></pre><h2>🔐 Реалізація ProtectedRoute</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// components/ProtectedRoute.tsx</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Navigate</span>, <span class=\"hljs-title class_\">Outlet</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">ProtectedRouteProps</span> {\n  <span class=\"hljs-comment\">// isAuthenticated — проста перевірка: чи є користувач у системі</span>\n  <span class=\"hljs-comment\">// Реальна аутентифікація через JWT/сесії — це тема backend-модулю</span>\n  <span class=\"hljs-attr\">isAuthenticated</span>: <span class=\"hljs-built_in\">boolean</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">ProtectedRoute</span>(<span class=\"hljs-params\">{ isAuthenticated }: ProtectedRouteProps</span>) {\n  <span class=\"hljs-comment\">// Якщо НЕ авторизований — перенаправляємо на логін</span>\n  <span class=\"hljs-keyword\">if</span> (!isAuthenticated) {\n    <span class=\"hljs-comment\">// state={{ from: location }} — зберігаємо, звідки прийшов (розглянемо далі)</span>\n    <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Navigate</span> <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/login\"</span> <span class=\"hljs-attr\">replace</span> /&gt;</span></span>;\n  }\n\n  <span class=\"hljs-comment\">// Якщо авторизований — рендеримо дочірній маршрут через Outlet</span>\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Outlet</span> /&gt;</span></span>;\n}</code></pre>","<h1>🔐 Protected Routes — підключення</h1>\n<p><strong>Головна ідея:</strong> <code>ProtectedRoute</code> — звичайний Layout-компонент. Він або рендерить <code>&lt;Outlet&gt;</code> (і дочірні сторінки стають доступні), або перенаправляє на логін.</p>\n<h2>💻 Конфігурація захищених маршрутів</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// App.tsx</span>\n<span class=\"hljs-keyword\">import</span> { useState } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Routes</span>, <span class=\"hljs-title class_\">Route</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// Спрощена симуляція стану авторизації</span>\n  <span class=\"hljs-comment\">// В реальному застосунку — перевірка токену, сесії тощо</span>\n  <span class=\"hljs-keyword\">const</span> [isAuthenticated, setIsAuthenticated] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">false</span>);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>\n      {/* Публічні маршрути — доступні всім */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span>\n        <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/login\"</span>\n        <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">LoginPage</span> <span class=\"hljs-attr\">onLogin</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> setIsAuthenticated(true)} /&gt;}\n      /&gt;\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">LandingPage</span> /&gt;</span>} /&gt;\n\n      {/* Захищені маршрути — обгорнуті у ProtectedRoute */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">ProtectedRoute</span> <span class=\"hljs-attr\">isAuthenticated</span>=<span class=\"hljs-string\">{isAuthenticated}</span> /&gt;</span>}&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TasksPage</span> /&gt;</span>} /&gt;\n        {/* ⚠️ /tasks/new — ПЕРЕД /tasks/:id, інакше \"new\" сприймається як id */}\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/new\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">CreateTaskPage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/:id\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TaskDetailPage</span> /&gt;</span>} /&gt;\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Route</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"*\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">NotFoundPage</span> /&gt;</span>} /&gt;\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span></span>\n  );\n}</code></pre>","<h1>🔐 Збереження цільового маршруту</h1>\n<p><strong>Головна ідея:</strong> Якщо користувач намагається зайти на <code>/tasks/42</code>, але не авторизований — його перенаправляють на логін. Після успішного входу він має потрапити саме на <code>/tasks/42</code>, а не на головну.</p>\n<h2>💻 Redirect After Login</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// components/ProtectedRoute.tsx</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Navigate</span>, <span class=\"hljs-title class_\">Outlet</span>, useLocation } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">ProtectedRoute</span>(<span class=\"hljs-params\">{ isAuthenticated }: { isAuthenticated: <span class=\"hljs-built_in\">boolean</span> }</span>) {\n  <span class=\"hljs-keyword\">const</span> location = <span class=\"hljs-title function_\">useLocation</span>(); <span class=\"hljs-comment\">// Поточний URL (/tasks/42)</span>\n\n  <span class=\"hljs-keyword\">if</span> (!isAuthenticated) {\n    <span class=\"hljs-comment\">// Передаємо поточний шлях у стані — LoginPage зможе прочитати його</span>\n    <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Navigate</span> <span class=\"hljs-attr\">to</span>=<span class=\"hljs-string\">\"/login\"</span> <span class=\"hljs-attr\">state</span>=<span class=\"hljs-string\">{{</span> <span class=\"hljs-attr\">from:</span> <span class=\"hljs-attr\">location</span> }} <span class=\"hljs-attr\">replace</span> /&gt;</span></span>;\n  }\n\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Outlet</span> /&gt;</span></span>;\n}</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// pages/LoginPage.tsx</span>\n<span class=\"hljs-keyword\">import</span> { useNavigate, useLocation } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-keyword\">type</span> { <span class=\"hljs-title class_\">Location</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">LoginPage</span>(<span class=\"hljs-params\">{ onLogin }: { onLogin: () =&gt; <span class=\"hljs-built_in\">void</span> }</span>) {\n  <span class=\"hljs-keyword\">const</span> navigate = <span class=\"hljs-title function_\">useNavigate</span>();\n  <span class=\"hljs-comment\">// useLocation — дає доступ до поточного location, включно з state</span>\n  <span class=\"hljs-keyword\">const</span> location = <span class=\"hljs-title function_\">useLocation</span>();\n\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleSubmit</span> = <span class=\"hljs-keyword\">async</span> (<span class=\"hljs-params\">credentials: Credentials</span>) =&gt; {\n    <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">authenticate</span>(credentials);\n    <span class=\"hljs-title function_\">onLogin</span>();\n\n    <span class=\"hljs-comment\">// Повертаємось туди, звідки прийшов, або на /tasks за замовчуванням</span>\n    <span class=\"hljs-keyword\">const</span> <span class=\"hljs-keyword\">from</span> =\n      (location.<span class=\"hljs-property\">state</span> <span class=\"hljs-keyword\">as</span> { <span class=\"hljs-keyword\">from</span>?: <span class=\"hljs-title class_\">Location</span> })?.<span class=\"hljs-property\">from</span>?.<span class=\"hljs-property\">pathname</span> ?? <span class=\"hljs-string\">\"/tasks\"</span>;\n    <span class=\"hljs-title function_\">navigate</span>(<span class=\"hljs-keyword\">from</span>, { <span class=\"hljs-attr\">replace</span>: <span class=\"hljs-literal\">true</span> });\n  };\n\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">LoginForm</span> <span class=\"hljs-attr\">onSubmit</span>=<span class=\"hljs-string\">{handleSubmit}</span> /&gt;</span></span>;\n}</code></pre>","<h1>🗺️ Повна структура маршрутів Task Manager</h1>\n<p><strong>Головна ідея:</strong> Об'єднаємо все, що вивчили, у повну конфігурацію маршрутів реального застосунку.</p>\n<h2>💻 Фінальна конфігурація App.tsx</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useState } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Routes</span>, <span class=\"hljs-title class_\">Route</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">MainLayout</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./layouts/MainLayout\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">AuthLayout</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./layouts/AuthLayout\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">ProtectedRoute</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./components/ProtectedRoute\"</span>;\n\n<span class=\"hljs-comment\">// Сторінки</span>\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">HomePage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/HomePage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">TasksPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/TasksPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">TaskDetailPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/TaskDetailPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">CreateTaskPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/CreateTaskPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">LoginPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/LoginPage\"</span>;\n<span class=\"hljs-keyword\">import</span> <span class=\"hljs-title class_\">NotFoundPage</span> <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./pages/NotFoundPage\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [isAuthenticated, setIsAuthenticated] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">false</span>);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>\n      {/* Публічні сторінки з мінімальним layout */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">AuthLayout</span> /&gt;</span>}&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span>\n          <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/login\"</span>\n          <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">LoginPage</span> <span class=\"hljs-attr\">onLogin</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> setIsAuthenticated(true)} /&gt;}\n        /&gt;\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Route</span>&gt;</span>\n\n      {/* Захищені сторінки з повним layout */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">ProtectedRoute</span> <span class=\"hljs-attr\">isAuthenticated</span>=<span class=\"hljs-string\">{isAuthenticated}</span> /&gt;</span>}&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">MainLayout</span> /&gt;</span>}&gt;\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">HomePage</span> /&gt;</span>} /&gt;\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TasksPage</span> /&gt;</span>} /&gt;\n          {/* ⚠️ /tasks/new — ПЕРЕД /tasks/:id */}\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/new\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">CreateTaskPage</span> /&gt;</span>} /&gt;\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks/:id\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TaskDetailPage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Route</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Route</span>&gt;</span>\n\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"*\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">NotFoundPage</span> /&gt;</span>} /&gt;\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"tip\"><strong>💡 Вкладені ProtectedRoute + Layout</strong> <p>Можна вкладати кілька рівнів Route без <code>path</code>. ProtectedRoute перевіряє авторизацію, MainLayout додає header/footer — кожен компонент відповідає за свою задачу.</p>\n</div>\n\n","<h1>📊 Огляд хуків React Router v7</h1>\n<p><strong>Головна ідея:</strong> React Router надає набір хуків для різних задач навігації. Кожен хук вирішує конкретну задачу.</p>\n<h2>🪝 Таблиця хуків</h2>\n<table>\n<thead>\n<tr>\n<th>Хук</th>\n<th>Що повертає</th>\n<th>Коли використовувати</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>useNavigate()</code></td>\n<td><code>navigate(path)</code> функція</td>\n<td>Програмна навігація після дії</td>\n</tr>\n<tr>\n<td><code>useParams()</code></td>\n<td><code>{ id: string, ... }</code></td>\n<td>Читання <code>:param</code> з URL</td>\n</tr>\n<tr>\n<td><code>useSearchParams()</code></td>\n<td><code>[params, setParams]</code></td>\n<td>Читання/запис <code>?key=value</code></td>\n</tr>\n<tr>\n<td><code>useLocation()</code></td>\n<td>Об'єкт location</td>\n<td>Поточний path, state, search</td>\n</tr>\n<tr>\n<td><code>useOutletContext()</code></td>\n<td>Дані з батьківського Outlet</td>\n<td>Передача даних через Layout</td>\n</tr>\n</tbody></table>\n<h2>💻 Приклад: useLocation для аналітики</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useEffect } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> { useLocation } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router\"</span>;\n\n<span class=\"hljs-comment\">// Custom hook для відстеження переходів між сторінками</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">usePageTracking</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> location = <span class=\"hljs-title function_\">useLocation</span>();\n\n  <span class=\"hljs-title function_\">useEffect</span>(<span class=\"hljs-function\">() =&gt;</span> {\n    <span class=\"hljs-comment\">// При кожній зміні pathname — логуємо перехід</span>\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Перехід на:\"</span>, location.<span class=\"hljs-property\">pathname</span>);\n    <span class=\"hljs-comment\">// analytics.track(location.pathname); — реальна аналітика</span>\n  }, [location.<span class=\"hljs-property\">pathname</span>]);\n}\n\n<span class=\"hljs-comment\">// Підключення у кореневому компоненті:</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-title function_\">usePageTracking</span>(); <span class=\"hljs-comment\">// Хук спостерігає за навігацією по всьому застосунку</span>\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>{/* ... */}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span></span>;\n}</code></pre>","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>SPA-навігація</strong> базується на History API: URL змінюється без перезавантаження, стан застосунку зберігається</p>\n</li>\n<li><p><strong>BrowserRouter</strong> — обгортає весь застосунок, надає контекст навігації для всіх хуків та компонентів</p>\n</li>\n<li><p><strong>Routes + Route</strong> — декларативна конфігурація маршрутів. <code>Routes</code> рендерить лише перший маршрут, що відповідає URL</p>\n</li>\n<li><p><strong>Link / NavLink</strong> — замінники <code>&lt;a&gt;</code> для клієнтської навігації. <code>NavLink</code> автоматично отримує активний стан</p>\n</li>\n<li><p><strong>Вкладені маршрути + Outlet</strong> — Layout-компоненти зі спільним header/footer. <code>&lt;Outlet&gt;</code> — \"слот\" для дочірньої сторінки</p>\n</li>\n<li><p><strong>useParams</strong> — читає динамічні сегменти URL (<code>/tasks/:id</code>). Завжди повертає рядок</p>\n</li>\n<li><p><strong>useSearchParams</strong> — керує query-параметрами (<code>?status=todo</code>). Фільтри в URL = shareable посилання</p>\n</li>\n<li><p><strong>useNavigate</strong> — програмна навігація після дій (submit, logout). <code>navigate(-1)</code> — кнопка \"Назад\"</p>\n</li>\n<li><p><strong>ProtectedRoute</strong> — компонент-обгортка для захисту сторінок. При відсутності авторизації — <code>&lt;Navigate to=\"/login\" /&gt;</code></p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 У чому різниця між серверною та клієнтською навігацією? Що відбувається з JavaScript-станом при кожному підході?</p>\n</li>\n<li><p>🤔 Навіщо обгортати весь застосунок у <code>BrowserRouter</code>? Що станеться, якщо викликати <code>useNavigate</code> поза цією обгорткою?</p>\n</li>\n<li><p>🤔 Що таке <code>&lt;Outlet&gt;</code> і яку задачу він вирішує в контексті Layout Routes?</p>\n</li>\n<li><p>🤔 Яка різниця між <code>&lt;Link&gt;</code> та <code>&lt;NavLink&gt;</code>? Коли варто використовувати кожен?</p>\n</li>\n<li><p>🤔 Чому <code>useParams</code> завжди повертає рядки, навіть якщо в URL є числа? Як це правильно обробити?</p>\n</li>\n<li><p>🤔 Коли доречно використовувати <code>useSearchParams</code> замість <code>useState</code> для зберігання стану фільтрів?</p>\n</li>\n<li><p>🤔 Що таке Protected Route і як він реалізується? Поясніть патерн збереження цільового маршруту після логіну.</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Маршрутизація</td>\n<td>Routing</td>\n<td>Визначення, який компонент відобразити для певного URL</td>\n</tr>\n<tr>\n<td>Маршрут</td>\n<td>Route</td>\n<td>Правило відповідності між URL-шаблоном та компонентом</td>\n</tr>\n<tr>\n<td>Вкладені маршрути</td>\n<td>Nested Routes</td>\n<td>Ієрархічна структура маршрутів зі спільним Layout</td>\n</tr>\n<tr>\n<td>Динамічний сегмент</td>\n<td>Dynamic Segment</td>\n<td>Змінна частина URL, позначена <code>:param</code></td>\n</tr>\n<tr>\n<td>Query-параметри</td>\n<td>Search Params</td>\n<td>Параметри URL після знаку <code>?</code> у форматі <code>key=value</code></td>\n</tr>\n<tr>\n<td>Захищений маршрут</td>\n<td>Protected Route</td>\n<td>Маршрут, доступний лише авторизованим користувачам</td>\n</tr>\n<tr>\n<td>Програмна навігація</td>\n<td>Programmatic Navigation</td>\n<td>Перехід між сторінками через JavaScript-код</td>\n</tr>\n<tr>\n<td>Редірект</td>\n<td>Redirect</td>\n<td>Автоматичне перенаправлення на інший маршрут</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>SPA</td>\n<td>Single Page Application</td>\n<td>Односторінковий застосунок</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>URL</td>\n<td>Uniform Resource Locator</td>\n<td>Уніфікований вказівник ресурсу</td>\n</tr>\n<tr>\n<td>UI</td>\n<td>User Interface</td>\n<td>Інтерфейс користувача</td>\n</tr>\n<tr>\n<td>DOM</td>\n<td>Document Object Model</td>\n<td>Об'єктна модель документа</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
