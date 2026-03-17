@@ -437,9 +437,10 @@ export default function Layout() {
 ```tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import Layout from "./components/Layout/Layout";
-import TasksPage from "./pages/TasksPage/TasksPage";
-import TaskDetailPage from "./pages/TaskDetailPage/TaskDetailPage";
-import NewTaskPage from "./pages/NewTaskPage/NewTaskPage";
+// Розкоментуйте кожен імпорт після того, як створите відповідний файл на Етапах 5–7:
+// import TasksPage from "./pages/TasksPage/TasksPage";
+// import TaskDetailPage from "./pages/TaskDetailPage/TaskDetailPage";
+// import NewTaskPage from "./pages/NewTaskPage/NewTaskPage";
 // TODO (Варіант А): імпортуйте useState, INITIAL_TASKS та тип Task
 // TODO (Варіант Б): імпортуйте TasksProvider
 
