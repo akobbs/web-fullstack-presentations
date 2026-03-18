@@ -16,7 +16,7 @@
 2. Які три стани необхідно обробляти при будь-якому HTTP-запиті і що відбудеться з UI, якщо проігнорувати один із них?
 3. Яка принципова різниця між `useQuery` та `useMutation` у TanStack Query?
 4. Що таке `queryKey` та навіщо викликати `invalidateQueries` після успішної мутації?
-5. Яка різниця між `isLoading` у `useQuery` та `isPending` у `useMutation`? У яких ситуаціях використовується кожен із них?
+5. Яка різниця між `isLoading` та `isFetching` у `useQuery`? Коли кожен із них буде `true`?
 
 ---
 
@@ -38,8 +38,10 @@ REST API відображає операції над ресурсами на HT
 | ------------ | -------- | ------------- |
 | Отримати всі | `GET`    | `/todos`      |
 | Створити     | `POST`   | `/todos`      |
-| Оновити      | `PUT`    | `/todos/{id}` |
+| Оновити      | `PATCH`  | `/todos/{id}` |
 | Видалити     | `DELETE` | `/todos/{id}` |
+
+> `PATCH` та `PUT` — обидва оновлюють ресурс, але по-різному. `PUT` **замінює** об'єкт цілком — якщо надіслати лише `{ completed: true }`, решта полів зникне. `PATCH` **зливає** передані поля з існуючим об'єктом. Для часткових оновлень (наприклад, зміна лише `completed`) завжди використовуйте `PATCH`.
 
 ### **fetch vs axios**
 
@@ -65,7 +67,7 @@ TanStack Query — бібліотека для управління сервер
 
 **Підключення.** Увесь застосунок має бути обгорнутий у `QueryClientProvider` з екземпляром `QueryClient`. Це робиться один раз у `main.tsx`.
 
-**`useQuery`** призначений для отримання даних. Хук приймає об'єкт конфігурації з двома обов'язковими полями: `queryKey` — унікальний масив-ідентифікатор запису в кеші, та `queryFn` — функція, що повертає Promise з даними. Хук повертає об'єкт зі станами `isLoading`, `isError`, `error` та `data`.
+**`useQuery`** призначений для отримання даних. Хук приймає об'єкт конфігурації з двома обов'язковими полями: `queryKey` — унікальний масив-ідентифікатор запису в кеші, та `queryFn` — функція, що повертає Promise з даними. Хук повертає об'єкт зі станами `isPending`, `isLoading`, `isFetching`, `isError`, `error` та `data`. `isPending` означає, що даних ще немає (перший запит або після скидання кешу). `isFetching` — запит виконується прямо зараз (включаючи фонові рефетчі). `isLoading` — комбінація обох: перший запит, який ще виконується (`isPending && isFetching`).
 
 **`useMutation`** призначений для операцій запису. На відміну від `useQuery`, він не виконується автоматично — потрібен явний виклик `.mutate()`. Конфігурація приймає `mutationFn` та колбеки `onSuccess`, `onError`. Під час виконання мутації доступне поле `isPending`.
 
@@ -87,14 +89,27 @@ npm install
 
 1.2. Встановіть TanStack Query (`@tanstack/react-query`) та, якщо обрали axios, встановіть його також.
 
-1.3. Підключіть `QueryClientProvider` у `src/main.tsx` — оберніть ним компонент `<App />`. Документація: https://tanstack.com/query/latest/docs/framework/react/quick-start
+1.3. Підключіть `QueryClientProvider` у `src/main.tsx` — оберніть ним компонент `<App />`:
+
+```tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+
+// всередині render:
+<QueryClientProvider client={queryClient}>
+  <App />
+</QueryClientProvider>
+```
+
+Документація: https://tanstack.com/query/latest/docs/framework/react/quick-start
 
 1.4. Видаліть шаблонний вміст `App.tsx` та `App.css`.
 
 1.5. Зафіксуйте початковий стан:
 
 ```bash
-git add lab5/
+git add .
 git commit -m "Lab 5: Initial Vite + React + TypeScript setup"
 git push origin main
 ```
@@ -112,7 +127,7 @@ npm run dev
 2.1. Встановіть JSON Server у папці `lab5`:
 
 ```bash
-npm install json-server
+npm install json-server@0.17
 ```
 
 2.2. Створіть файл `db.json` з початковими даними у корені папки `lab5`:
@@ -130,10 +145,23 @@ npm install json-server
 2.3. Додайте скрипт запуску сервера до секції `scripts` у `package.json`:
 
 ```json
-"server": "json-server --watch db.json --port 3001"
+"server": "json-server db.json --port 3001"
 ```
 
-2.4. Запустіть JSON Server у **окремому терміналі** і переконайтесь, що він працює:
+2.4. JSON Server зберігає зміни безпосередньо у `db.json`. Оскільки цей файл знаходиться в корені проєкту, Vite буде реагувати на його зміни і перезавантажувати React-застосунок після кожного POST/PATCH/DELETE. Щоб уникнути цього, додайте `db.json` до ігнорованих файлів у `vite.config.ts`:
+
+```ts
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    watch: {
+      ignored: ["**/db.json"],
+    },
+  },
+});
+```
+
+2.5. Запустіть JSON Server у **окремому терміналі** і переконайтесь, що він працює:
 
 ```bash
 npm run server
@@ -141,7 +169,7 @@ npm run server
 
 Відкрийте у браузері `http://localhost:3001/todos` — має відображатись масив з трьома об'єктами.
 
-2.5. Зафіксуйте:
+2.6. Зафіксуйте:
 
 ```bash
 git add .
@@ -219,11 +247,11 @@ git commit -m "Lab 5: Add todo creation with useMutation"
 
 ### **Етап 6: Оновлення та видалення**
 
-6.1. Поруч із кожним todo додайте чекбокс, що відображає поточне значення `completed`. При зміні чекбоксу — викликайте мутацію оновлення через `todosApi.update`, передаючи `id` та нове значення `completed`. Після успіху — інвалідуйте кеш.
+6.1. Поруч із кожним todo додайте чекбокс, що відображає поточне значення `completed`. При зміні чекбоксу — викликайте мутацію оновлення через `todosApi.update`, передаючи `id` та об'єкт з новим значенням `completed`. Після успіху — інвалідуйте кеш.
 
 6.2. Поруч із кожним todo додайте кнопку «Видалити». При натисканні — викликайте мутацію видалення через `todosApi.remove`. Після успіху — інвалідуйте кеш.
 
-6.3. Перевірте у **Network**: зміна чекбоксу має породжувати PUT-запит, натискання «Видалити» — DELETE-запит, обидва зі статусом `200 OK`. Переконайтесь, що після видалення запис зникає зі списку і не повертається після рефетчу.
+6.3. Перевірте у **Network**: зміна чекбоксу має породжувати PATCH-запит, натискання «Видалити» — DELETE-запит, обидва зі статусом `200 OK`. Переконайтесь, що після видалення запис зникає зі списку і не повертається після рефетчу.
 
 6.4. Зафіксуйте:
 
@@ -290,7 +318,7 @@ xxxxxxx Lab 5: Initial Vite + React + TypeScript setup
 
    3.6. Скріншот вмісту `db.json` після додавання нового завдання
 
-   3.7. Скріншот вкладки **Network** з PUT-запитом після зміни статусу чекбоксом
+   3.7. Скріншот вкладки **Network** з PATCH-запитом після зміни статусу чекбоксом
 
    3.8. Скріншот вкладки **Network** з DELETE-запитом після видалення завдання
 
@@ -311,6 +339,8 @@ xxxxxxx Lab 5: Initial Vite + React + TypeScript setup
 | Список не оновлюється після мутації                             | Переконайтесь, що `invalidateQueries` викликається в `onSuccess` з точно таким самим `queryKey`, як у `useQuery`           |
 | TypeScript-помилка при типізації аргументу `mutationFn`         | Явно вкажіть тип параметра функції у `mutationFn`                                                                          |
 | Застосунок показує помилку одразу після запуску                 | Переконайтесь, що JSON Server запущений (`npm run server`) — React-застосунок не може отримати дані, якщо бекенд не працює |
+| TypeScript-помилка `TS1484` при імпорті типів                   | Використовуйте `import type { Todo }` замість `import { Todo }` — Vite вимагає `type`-імпорти для типів та інтерфейсів     |
+| React-застосунок перезавантажується після кожної мутації        | Переконайтесь, що `db.json` додано до `server.watch.ignored` у `vite.config.ts`                                            |
 
 ---
 
