@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>React: оптимізація та патерни</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 15</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>React: оптимізація та патерни</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🔄 Як React вирішує що перерендерити — Reconciliation + Profiler</li>\n<li>🧠 React.memo — мемоізація компонентів</li>\n<li>⚡ useMemo — мемоізація обчислень</li>\n<li>🔗 useCallback — стабільні посилання на функції</li>\n<li>✂️ Code splitting та lazy loading</li>\n<li>📜 Віртуалізація довгих списків</li>\n<li>🤖 React Compiler — автоматична мемоізація</li>\n<li>🧩 Compound Components — патерн складних UI-компонентів</li>\n<li>🎭 Render Props — патерн передачі логіки</li>\n</ol>\n","<h1>🔄 Reconciliation — як React оновлює UI</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Reconciliation</strong> — алгоритм React, що порівнює попереднє дерево Virtual DOM з новим і визначає мінімальний набір змін для реального DOM. Реальний DOM оновлюється лише там, де є різниця.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> React не замінює весь DOM при кожній зміні стану. Він будує нове Virtual DOM-дерево, порівнює його зі старим (diffing), і вносить лише мінімально необхідні зміни.</p>\n<h2>🔁 Коли компонент перерендерюється?</h2>\n<table>\n<thead>\n<tr>\n<th>Причина</th>\n<th>Опис</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>🔵 Зміна <code>state</code></td>\n<td><code>useState</code> або <code>useReducer</code> повертає нове значення</td>\n</tr>\n<tr>\n<td>🟡 Зміна <code>props</code></td>\n<td>Батьківський компонент передав нові props</td>\n</tr>\n<tr>\n<td>🟢 Зміна контексту</td>\n<td>Значення у <code>Context.Provider</code> змінилось</td>\n</tr>\n<tr>\n<td>🔴 Рендер батька</td>\n<td><strong>Дочірній рендериться автоматично — навіть якщо його props не змінились</strong></td>\n</tr>\n</tbody></table>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useState } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Parent</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [count, setCount] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-number\">0</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> setCount(c =&gt; c + 1)}&gt;+1 ({count})<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n      {/* Child рендериться при кожному натисканні, навіть якщо його props незмінні */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Child</span> <span class=\"hljs-attr\">title</span>=<span class=\"hljs-string\">\"Задачі\"</span> /&gt;</span>\n    <span class=\"hljs-tag\">&lt;/&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Child</span>(<span class=\"hljs-params\">{ title }: { title: <span class=\"hljs-built_in\">string</span> }</span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Child render!\"</span>); <span class=\"hljs-comment\">// Виводиться при кожному рендері Parent</span>\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h2</span>&gt;</span>{title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h2</span>&gt;</span></span>;\n}</code></pre><h2>🔍 React DevTools Profiler — пошук проблем</h2>\n<p><strong>Profiler</strong> — вкладка у React DevTools, що показує які компоненти рендерились, скільки часу витратив кожен і чому відбувся рендер.</p>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">Як використовувати:\n  1. Відкрити DevTools → вкладка \"Profiler\"\n  2. Натиснути ● (Record)\n  3. Виконати дію у застосунку (клік, введення тексту)\n  4. Натиснути ● знову (Stop)\n  5. Аналізувати: сірі компоненти = не рендерились, кольорові = рендерились</code></pre><div class=\"tip\"><strong>💡 Головне правило</strong> <p>Ніколи не оптимізуй наосліп. Спочатку знайди реальну проблему у Profiler, і лише потім застосовуй <code>React.memo</code>, <code>useMemo</code>, <code>useCallback</code>.</p>\n</div>\n\n","<h1>🧠 React.memo — мемоізація компонентів</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong><code>React.memo</code></strong> — Higher-Order Component (HOC), що загортає функціональний компонент. При рендері батька React порівнює нові props зі старими через <code>Object.is</code>. Якщо всі props однакові — рендер пропускається, повертається збережений результат.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> <code>React.memo</code> — це «кеш» компонента. Він усуває зайві рендери, спричинені рендером батьківського компонента, коли власні дані дочірнього не змінились.</p>\n<h2>📦 Базове використання</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { memo } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskCardProps</span> {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-string\">\"low\"</span> | <span class=\"hljs-string\">\"medium\"</span> | <span class=\"hljs-string\">\"high\"</span>;\n  <span class=\"hljs-attr\">onDelete</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">id: <span class=\"hljs-built_in\">string</span></span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-comment\">// ✅ Загорнутий компонент: рендериться лише якщо змінились props</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TaskCard</span> = <span class=\"hljs-title function_\">memo</span>(<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskCard</span>(<span class=\"hljs-params\">{ id, title, priority, onDelete }: TaskCardProps</span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`TaskCard render: <span class=\"hljs-subst\">${title}</span>`</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{</span>`<span class=\"hljs-attr\">card</span> <span class=\"hljs-attr\">card-</span>${<span class=\"hljs-attr\">priority</span>}`}&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h3</span>&gt;</span>{title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h3</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> onDelete(id)}&gt;Видалити<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n});</code></pre><h2>🔬 Кастомна функція порівняння</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// За замовчуванням React.memo порівнює КОЖЕН prop через Object.is</span>\n<span class=\"hljs-comment\">// Якщо потрібна власна логіка — другий аргумент:</span>\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TaskCard</span> = <span class=\"hljs-title function_\">memo</span>(\n  <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskCard</span>(<span class=\"hljs-params\">{ task }: { task: Task }</span>) {\n    <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>{task.title} — {task.status}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>;\n  },\n  <span class=\"hljs-comment\">// (prevProps, nextProps) =&gt; true  → props рівні, рендер НЕ потрібен</span>\n  <span class=\"hljs-comment\">// (prevProps, nextProps) =&gt; false → props різні, рендер ПОТРІБЕН</span>\n  <span class=\"hljs-function\">(<span class=\"hljs-params\">prev, next</span>) =&gt;</span>\n    prev.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">id</span> === next.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">id</span> &amp;&amp;\n    prev.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">title</span> === next.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">title</span> &amp;&amp;\n    prev.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">status</span> === next.<span class=\"hljs-property\">task</span>.<span class=\"hljs-property\">status</span>\n);</code></pre><h2>✅ Коли використовувати / ❌ Коли не варто</h2>\n<table>\n<thead>\n<tr>\n<th>✅ Варто</th>\n<th>❌ Не варто</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Важкий компонент, повільний рендер</td>\n<td>Простий компонент (2–3 рядки JSX)</td>\n</tr>\n<tr>\n<td>Список із сотнями елементів</td>\n<td>Props майже завжди різні при кожному рендері батька</td>\n</tr>\n<tr>\n<td>Props стабільні між рендерами батька</td>\n<td>Компонент рендериться рідко і так</td>\n</tr>\n</tbody></table>\n<div class=\"warning\"><strong>⚠️ Підводний камінь</strong> <p><code>React.memo</code> порівнює props через <code>Object.is</code>. Для примітивів (<code>string</code>, <code>number</code>, <code>boolean</code>) це працює добре. Але якщо prop — це функція або об'єкт, що створюється заново при кожному рендері батька, порівняння завжди поверне <code>false</code> і memo не спрацює. Саме тут потрібен <code>useCallback</code>.</p>\n</div>\n\n","<h1>⚡ useMemo — мемоізація обчислень</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong><code>useMemo</code></strong> — хук, що запам'ятовує результат обчислення між рендерами. Перераховує значення лише тоді, коли змінились залежності (dependency array). Синтаксис: <code>useMemo(() =&gt; обчислення, [залежності])</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Без <code>useMemo</code> будь-яке обчислення всередині компонента виконується заново при кожному рендері — навіть якщо вхідні дані не змінились. <code>useMemo</code> кешує результат і повертає його, доки залежності стабільні.</p>\n<h2>🧮 Практичний приклад: фільтрація та сортування задач</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useMemo, useState } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">SortKey</span> = <span class=\"hljs-string\">\"priority\"</span> | <span class=\"hljs-string\">\"createdAt\"</span>;\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-variable constant_\">PRIORITY_ORDER</span> = { <span class=\"hljs-attr\">high</span>: <span class=\"hljs-number\">0</span>, <span class=\"hljs-attr\">medium</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">low</span>: <span class=\"hljs-number\">2</span> };\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskList</span>(<span class=\"hljs-params\">{ tasks }: { tasks: Task[] }</span>) {\n  <span class=\"hljs-keyword\">const</span> [search, setSearch] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"\"</span>);\n  <span class=\"hljs-keyword\">const</span> [statusFilter, setStatusFilter] = useState&lt;<span class=\"hljs-string\">\"all\"</span> | <span class=\"hljs-string\">\"todo\"</span> | <span class=\"hljs-string\">\"done\"</span>&gt;(<span class=\"hljs-string\">\"all\"</span>);\n  <span class=\"hljs-keyword\">const</span> [sortBy, setSortBy] = useState&lt;<span class=\"hljs-title class_\">SortKey</span>&gt;(<span class=\"hljs-string\">\"createdAt\"</span>);\n\n  <span class=\"hljs-comment\">// ❌ Без useMemo: весь пайплайн filter+sort запускається при КОЖНОМУ рендері,</span>\n  <span class=\"hljs-comment\">//    навіть якщо змінився лише непов'язаний стан компонента</span>\n\n  <span class=\"hljs-comment\">// ✅ З useMemo: перераховується лише коли змінились tasks, search, statusFilter або sortBy</span>\n  <span class=\"hljs-keyword\">const</span> processedTasks = <span class=\"hljs-title function_\">useMemo</span>(<span class=\"hljs-function\">() =&gt;</span> {\n    <span class=\"hljs-comment\">// Крок 1: фільтрація за статусом</span>\n    <span class=\"hljs-keyword\">const</span> byStatus =\n      statusFilter === <span class=\"hljs-string\">\"all\"</span> ? tasks : tasks.<span class=\"hljs-title function_\">filter</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span> t.<span class=\"hljs-property\">status</span> === statusFilter);\n\n    <span class=\"hljs-comment\">// Крок 2: фільтрація за пошуковим запитом</span>\n    <span class=\"hljs-keyword\">const</span> bySearch = byStatus.<span class=\"hljs-title function_\">filter</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span>\n      t.<span class=\"hljs-property\">title</span>.<span class=\"hljs-title function_\">toLowerCase</span>().<span class=\"hljs-title function_\">includes</span>(search.<span class=\"hljs-title function_\">toLowerCase</span>())\n    );\n\n    <span class=\"hljs-comment\">// Крок 3: сортування</span>\n    <span class=\"hljs-keyword\">return</span> [...bySearch].<span class=\"hljs-title function_\">sort</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">a, b</span>) =&gt;</span> {\n      <span class=\"hljs-keyword\">if</span> (sortBy === <span class=\"hljs-string\">\"priority\"</span>) {\n        <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable constant_\">PRIORITY_ORDER</span>[a.<span class=\"hljs-property\">priority</span>] - <span class=\"hljs-variable constant_\">PRIORITY_ORDER</span>[b.<span class=\"hljs-property\">priority</span>];\n      }\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(b.<span class=\"hljs-property\">createdAt</span>).<span class=\"hljs-title function_\">getTime</span>() - <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(a.<span class=\"hljs-property\">createdAt</span>).<span class=\"hljs-title function_\">getTime</span>();\n    });\n  }, [tasks, search, statusFilter, sortBy]);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">input</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{search}</span> <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setSearch(e.target.value)} placeholder=\"Пошук...\" /&gt;\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{statusFilter}</span> <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setStatusFilter(e.target.value as typeof statusFilter)}&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"all\"</span>&gt;</span>Всі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"todo\"</span>&gt;</span>To Do<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"done\"</span>&gt;</span>Done<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{sortBy}</span> <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> setSortBy(e.target.value as SortKey)}&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"createdAt\"</span>&gt;</span>За датою<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"priority\"</span>&gt;</span>За пріоритетом<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>Знайдено: {processedTasks.length}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span>\n      {processedTasks.map((t) =&gt; <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">TaskCard</span> <span class=\"hljs-attr\">key</span>=<span class=\"hljs-string\">{t.id}</span> <span class=\"hljs-attr\">task</span>=<span class=\"hljs-string\">{t}</span> /&gt;</span>)}\n    <span class=\"hljs-tag\">&lt;/&gt;</span></span>\n  );\n}</code></pre><h2>⚠️ Антипатерн: useMemo скрізь</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Надмірне використання — ускладнює код без реальної користі</span>\n<span class=\"hljs-keyword\">const</span> title = <span class=\"hljs-title function_\">useMemo</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-string\">\"Task Manager\"</span>, []);        <span class=\"hljs-comment\">// константа</span>\n<span class=\"hljs-keyword\">const</span> doubled = <span class=\"hljs-title function_\">useMemo</span>(<span class=\"hljs-function\">() =&gt;</span> count * <span class=\"hljs-number\">2</span>, [count]);      <span class=\"hljs-comment\">// тривіальна математика</span>\n<span class=\"hljs-keyword\">const</span> upper = <span class=\"hljs-title function_\">useMemo</span>(<span class=\"hljs-function\">() =&gt;</span> task.<span class=\"hljs-property\">title</span>.<span class=\"hljs-title function_\">toUpperCase</span>(), [task.<span class=\"hljs-property\">title</span>]); <span class=\"hljs-comment\">// проста строкова операція</span></code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ Правильно — прості обчислення пишемо без useMemo</span>\n<span class=\"hljs-keyword\">const</span> title = <span class=\"hljs-string\">\"Task Manager\"</span>;\n<span class=\"hljs-keyword\">const</span> doubled = count * <span class=\"hljs-number\">2</span>;\n<span class=\"hljs-keyword\">const</span> upper = task.<span class=\"hljs-property\">title</span>.<span class=\"hljs-title function_\">toUpperCase</span>();</code></pre><div class=\"warning\"><strong>⚠️ Передчасна оптимізація</strong> <p><code>useMemo</code> додає накладні витрати: React зберігає попередні залежності, порівнює їх при кожному рендері. Якщо обчислення дешевше за це порівняння — <code>useMemo</code> лише сповільнює. Використовуйте лише для справді дорогих операцій (фільтрація/сортування сотень елементів).</p>\n</div>\n\n","<h1>🔗 useCallback — стабільні посилання на функції</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong><code>useCallback</code></strong> — хук, що повертає мемоізовану версію функції. Функція перестворюється лише при зміні залежностей. По суті <code>useCallback(fn, deps)</code> — це скорочення для <code>useMemo(() =&gt; fn, deps)</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> При кожному рендері компонента всі функції всередині нього створюються заново — це нові об'єкти у пам'яті з різними посиланнями. Якщо таку функцію передати у <code>React.memo</code>-компонент як prop, він вважатиме props зміненими і перерендериться. <code>useCallback</code> фіксує посилання.</p>\n<h2>🔗 Зв'язок useCallback та React.memo</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useState, useCallback, memo } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">type</span> <span class=\"hljs-title class_\">TaskStatus</span> = <span class=\"hljs-string\">\"todo\"</span> | <span class=\"hljs-string\">\"in-progress\"</span> | <span class=\"hljs-string\">\"done\"</span>;\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TaskCard</span> = <span class=\"hljs-title function_\">memo</span>(<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskCard</span>(<span class=\"hljs-params\">{\n  task,\n  onDelete,\n  onStatusChange,\n}: {\n  task: Task;\n  onDelete: (id: <span class=\"hljs-built_in\">string</span>) =&gt; <span class=\"hljs-built_in\">void</span>;\n  onStatusChange: (id: <span class=\"hljs-built_in\">string</span>, status: TaskStatus) =&gt; <span class=\"hljs-built_in\">void</span>;\n}</span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`TaskCard render: <span class=\"hljs-subst\">${task.title}</span>`</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span>&gt;</span>{task.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> onDelete(task.id)}&gt;Видалити<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">select</span>\n        <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{task.status}</span>\n        <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{(e)</span> =&gt;</span> onStatusChange(task.id, e.target.value as TaskStatus)}\n      &gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"todo\"</span>&gt;</span>To Do<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"in-progress\"</span>&gt;</span>In Progress<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"done\"</span>&gt;</span>Done<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">select</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n});\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskList</span>(<span class=\"hljs-params\">{ tasks }: { tasks: Task[] }</span>) {\n  <span class=\"hljs-keyword\">const</span> [unrelated, setUnrelated] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-number\">0</span>);\n\n  <span class=\"hljs-comment\">// ❌ Без useCallback: нова функція при кожному рендері TaskList</span>\n  <span class=\"hljs-comment\">//    → нове посилання → TaskCard.memo вважає props зміненими → зайвий рендер</span>\n  <span class=\"hljs-comment\">// const handleDelete = (id: string) =&gt; console.log(\"delete\", id);</span>\n\n  <span class=\"hljs-comment\">// ✅ З useCallback: посилання стабільне між рендерами</span>\n  <span class=\"hljs-comment\">//    → TaskCard.memo бачить ті самі props → рендер пропускається</span>\n  <span class=\"hljs-keyword\">const</span> handleDelete = <span class=\"hljs-title function_\">useCallback</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">id: <span class=\"hljs-built_in\">string</span></span>) =&gt;</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"delete\"</span>, id);\n  }, []); <span class=\"hljs-comment\">// [] → функція створюється один раз</span>\n\n  <span class=\"hljs-keyword\">const</span> handleStatusChange = <span class=\"hljs-title function_\">useCallback</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">id: <span class=\"hljs-built_in\">string</span>, status: TaskStatus</span>) =&gt;</span> {\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"status change\"</span>, id, status);\n  }, []);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;&gt;</span>\n      {/* Натискання оновлює лише лічильник, TaskCard НЕ рендериться */}\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> setUnrelated((n) =&gt; n + 1)}&gt;\n        Оновити лічильник: {unrelated}\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n      {tasks.map((t) =&gt; (\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">TaskCard</span> <span class=\"hljs-attr\">key</span>=<span class=\"hljs-string\">{t.id}</span> <span class=\"hljs-attr\">task</span>=<span class=\"hljs-string\">{t}</span> <span class=\"hljs-attr\">onDelete</span>=<span class=\"hljs-string\">{handleDelete}</span> <span class=\"hljs-attr\">onStatusChange</span>=<span class=\"hljs-string\">{handleStatusChange}</span> /&gt;</span>\n      ))}\n    <span class=\"hljs-tag\">&lt;/&gt;</span></span>\n  );\n}</code></pre><h2>📊 Порівняльна таблиця трьох інструментів</h2>\n<table>\n<thead>\n<tr>\n<th>Інструмент</th>\n<th>Що мемоізує</th>\n<th>Повертає</th>\n<th>Типовий кейс</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>React.memo</code></td>\n<td>Компонент</td>\n<td>JSX (пропускає рендер)</td>\n<td>Важкий дочірній компонент</td>\n</tr>\n<tr>\n<td><code>useMemo</code></td>\n<td>Результат обчислення</td>\n<td>Значення будь-якого типу</td>\n<td>Дорога фільтрація, сортування</td>\n</tr>\n<tr>\n<td><code>useCallback</code></td>\n<td>Функцію</td>\n<td>Функцію зі стабільним посиланням</td>\n<td>Обробники, що передаються як props</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Золоте правило</strong> <p><code>useCallback</code> без <code>React.memo</code> на дочірньому компоненті — марна трата. <code>React.memo</code> без <code>useCallback</code> для функцій-props — не спрацює. Ці два інструменти завжди йдуть разом.</p>\n</div>\n\n","<h1>✂️ Code Splitting та Lazy Loading</h1>\n<div class=\"info\"><strong>ℹ️ Проблема великого бандлу</strong> <p>За замовчуванням Vite пакує весь застосунок в один JS-файл. При великому застосунку перше завантаження сповільнюється: браузер завантажує і парсить код сторінок, які користувач ще не відвідав і, можливо, не відвідає взагалі.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість завантаження всього коду одразу — розбиваємо його на окремі файли (chunks). Кожен chunk завантажується лише тоді, коли він дійсно потрібен.</p>\n<h2>🦥 React.lazy + Suspense</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { lazy, <span class=\"hljs-title class_\">Suspense</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Routes</span>, <span class=\"hljs-title class_\">Route</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-router-dom\"</span>;\n\n<span class=\"hljs-comment\">// ❌ Статичний імпорт: весь код сторінок в одному бандлі</span>\n<span class=\"hljs-comment\">// import TasksPage from \"./pages/TasksPage\";</span>\n<span class=\"hljs-comment\">// import SettingsPage from \"./pages/SettingsPage\";</span>\n\n<span class=\"hljs-comment\">// ✅ Динамічний імпорт: окремий chunk для кожної сторінки.</span>\n<span class=\"hljs-comment\">//    Код завантажується лише при першому переході на маршрут.</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TasksPage</span> = <span class=\"hljs-title function_\">lazy</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">import</span>(<span class=\"hljs-string\">\"./pages/TasksPage\"</span>));\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">SettingsPage</span> = <span class=\"hljs-title function_\">lazy</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">import</span>(<span class=\"hljs-string\">\"./pages/SettingsPage\"</span>));\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">StatisticsPage</span> = <span class=\"hljs-title function_\">lazy</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">import</span>(<span class=\"hljs-string\">\"./pages/StatisticsPage\"</span>));\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">PageLoader</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"page-loader\"</span>&gt;</span>Завантаження...<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">App</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// Suspense перехоплює стан \"очікування\" від React.lazy</span>\n  <span class=\"hljs-comment\">// і показує fallback доки chunk не завантажився</span>\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Suspense</span> <span class=\"hljs-attr\">fallback</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">PageLoader</span> /&gt;</span>}&gt;\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Routes</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/tasks\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">TasksPage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/settings\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">SettingsPage</span> /&gt;</span>} /&gt;\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Route</span> <span class=\"hljs-attr\">path</span>=<span class=\"hljs-string\">\"/stats\"</span> <span class=\"hljs-attr\">element</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">StatisticsPage</span> /&gt;</span>} /&gt;\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Routes</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Suspense</span>&gt;</span></span>\n  );\n}</code></pre><h2>📁 Стратегії розбиття</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { useState, lazy, <span class=\"hljs-title class_\">Suspense</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-comment\">// 1. По маршрутах — найпоширеніший підхід</span>\n<span class=\"hljs-comment\">//    Кожна сторінка завантажується лише при переході на неї</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TasksPage</span> = <span class=\"hljs-title function_\">lazy</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">import</span>(<span class=\"hljs-string\">\"./pages/TasksPage\"</span>));\n\n<span class=\"hljs-comment\">// 2. По функціональності — важкий компонент, що рідко використовується</span>\n<span class=\"hljs-comment\">//    Наприклад: текстовий редактор, графіки, PDF-viewer</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">RichTextEditor</span> = <span class=\"hljs-title function_\">lazy</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">import</span>(<span class=\"hljs-string\">\"./components/RichTextEditor\"</span>));\n\n<span class=\"hljs-comment\">// Suspense можна розміщувати на будь-якому рівні дерева</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskDetailPage</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [editing, setEditing] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">false</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h1</span>&gt;</span>Деталі задачі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h1</span>&gt;</span>\n      {editing &amp;&amp; (\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Suspense</span> <span class=\"hljs-attr\">fallback</span>=<span class=\"hljs-string\">{</span>&lt;<span class=\"hljs-attr\">span</span>&gt;</span>Завантаження редактора...<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>}&gt;\n          <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">RichTextEditor</span> /&gt;</span>\n        <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Suspense</span>&gt;</span>\n      )}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"warning\"><strong>⚠️ Обмеження React.lazy</strong> <p><code>React.lazy</code> підтримує лише <strong>default export</strong>. Якщо компонент використовує named export — потрібна обгортка:<br><code>lazy(() =&gt; import(\"./Comp\").then(m =&gt; ({ default: m.NamedComp })))</code></p>\n</div>\n\n","<h1>📜 Віртуалізація довгих списків</h1>\n<div class=\"info\"><strong>ℹ️ Проблема</strong> <p>Якщо у списку 5 000 задач — React рендерить 5 000 DOM-вузлів одночасно. Браузер тримає їх у пам'яті та обраховує layout для кожного, навіть для тих що поза екраном. Результат: гальмування скролу і зависання при першому рендері.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Віртуалізація (windowing) — техніка, при якій у DOM рендеряться лише елементи, видимі у viewport, плюс невеликий буфер. При скролі невидимі елементи видаляються, нові — додаються. Список завжди містить лише ~20–30 DOM-вузлів незалежно від розміру даних.</p>\n<h2>📊 Порівняння підходів</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n  A[&quot;5000 задач&quot;] --&gt; B[&quot;Без віртуалізації: 5000 DOM-вузлів&quot;]\n  A --&gt; C[&quot;З react-window: 20-30 DOM-вузлів&quot;]\n  B --&gt; D[&quot;Повільний рендер та скрол&quot;]\n  C --&gt; E[&quot;Миттєвий рендер та плавний скрол&quot;]\n  style B fill:#fce4ec,stroke:#c62828\n  style D fill:#fce4ec,stroke:#c62828\n  style C fill:#e8f5e9,stroke:#2e7d32\n  style E fill:#e8f5e9,stroke:#2e7d32\"><svg id=\"exp-1773864370912-7-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 746.8125px;\" viewBox=\"0 0 746.8125 210\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1773864370912-7-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1773864370912-7-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1773864370912-7-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1773864370912-7-0 .error-icon{fill:#552222;}#exp-1773864370912-7-0 .error-text{fill:#552222;stroke:#552222;}#exp-1773864370912-7-0 .edge-thickness-normal{stroke-width:1px;}#exp-1773864370912-7-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1773864370912-7-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1773864370912-7-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1773864370912-7-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1773864370912-7-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1773864370912-7-0 .marker{fill:#333333;stroke:#333333;}#exp-1773864370912-7-0 .marker.cross{stroke:#333333;}#exp-1773864370912-7-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1773864370912-7-0 p{margin:0;}#exp-1773864370912-7-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1773864370912-7-0 .cluster-label text{fill:#333;}#exp-1773864370912-7-0 .cluster-label span{color:#333;}#exp-1773864370912-7-0 .cluster-label span p{background-color:transparent;}#exp-1773864370912-7-0 .label text,#exp-1773864370912-7-0 span{fill:#333;color:#333;}#exp-1773864370912-7-0 .node rect,#exp-1773864370912-7-0 .node circle,#exp-1773864370912-7-0 .node ellipse,#exp-1773864370912-7-0 .node polygon,#exp-1773864370912-7-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1773864370912-7-0 .rough-node .label text,#exp-1773864370912-7-0 .node .label text,#exp-1773864370912-7-0 .image-shape .label,#exp-1773864370912-7-0 .icon-shape .label{text-anchor:middle;}#exp-1773864370912-7-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1773864370912-7-0 .rough-node .label,#exp-1773864370912-7-0 .node .label,#exp-1773864370912-7-0 .image-shape .label,#exp-1773864370912-7-0 .icon-shape .label{text-align:center;}#exp-1773864370912-7-0 .node.clickable{cursor:pointer;}#exp-1773864370912-7-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1773864370912-7-0 .arrowheadPath{fill:#333333;}#exp-1773864370912-7-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1773864370912-7-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1773864370912-7-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1773864370912-7-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1773864370912-7-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1773864370912-7-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1773864370912-7-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1773864370912-7-0 .cluster text{fill:#333;}#exp-1773864370912-7-0 .cluster span{color:#333;}#exp-1773864370912-7-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1773864370912-7-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1773864370912-7-0 rect.text{fill:none;stroke-width:0;}#exp-1773864370912-7-0 .icon-shape,#exp-1773864370912-7-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1773864370912-7-0 .icon-shape p,#exp-1773864370912-7-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1773864370912-7-0 .icon-shape .label rect,#exp-1773864370912-7-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1773864370912-7-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1773864370912-7-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1773864370912-7-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1773864370912-7-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1773864370912-7-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1773864370912-7-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1773864370912-7-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1773864370912-7-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1773864370912-7-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M111.763,81L121.104,74.833C130.446,68.667,149.129,56.333,161.971,50.167C174.813,44,181.813,44,185.313,44L188.813,44\" id=\"L_A_B_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_A_B_0\" data-points=\"W3sieCI6MTExLjc2MjgwNzM3NzA0OTE3LCJ5Ijo4MX0seyJ4IjoxNjcuODEyNSwieSI6NDR9LHsieCI6MTkyLjgxMjUsInkiOjQ0fV0=\" marker-end=\"url(#exp-1773864370912-7-0_flowchart-v2-pointEnd)\"></path><path d=\"M111.763,129L121.104,135.167C130.446,141.333,149.129,153.667,161.971,159.833C174.813,166,181.813,166,185.313,166L188.813,166\" id=\"L_A_C_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_A_C_0\" data-points=\"W3sieCI6MTExLjc2MjgwNzM3NzA0OTE3LCJ5IjoxMjl9LHsieCI6MTY3LjgxMjUsInkiOjE2Nn0seyJ4IjoxOTIuODEyNSwieSI6MTY2fV0=\" marker-end=\"url(#exp-1773864370912-7-0_flowchart-v2-pointEnd)\"></path><path d=\"M440.813,44L444.979,44C449.146,44,457.479,44,465.146,44C472.813,44,479.813,44,483.313,44L486.813,44\" id=\"L_B_D_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_B_D_0\" data-points=\"W3sieCI6NDQwLjgxMjUsInkiOjQ0fSx7IngiOjQ2NS44MTI1LCJ5Ijo0NH0seyJ4Ijo0OTAuODEyNSwieSI6NDR9XQ==\" marker-end=\"url(#exp-1773864370912-7-0_flowchart-v2-pointEnd)\"></path><path d=\"M440.813,166L444.979,166C449.146,166,457.479,166,465.146,166C472.813,166,479.813,166,483.313,166L486.813,166\" id=\"L_C_E_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_C_E_0\" data-points=\"W3sieCI6NDQwLjgxMjUsInkiOjE2Nn0seyJ4Ijo0NjUuODEyNSwieSI6MTY2fSx7IngiOjQ5MC44MTI1LCJ5IjoxNjZ9XQ==\" marker-end=\"url(#exp-1773864370912-7-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_A_B_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_A_C_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_B_D_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_C_E_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-A-0\" transform=\"translate(75.40625, 105)\"><rect class=\"basic label-container\" style=\"\" x=\"-67.40625\" y=\"-24\" width=\"134.8125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-43.40625, -12)\"><rect></rect><foreignObject width=\"86.8125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>5000 задач</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-B-1\" transform=\"translate(316.8125, 44)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c62828 !important\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>Без віртуалізації: 5000 DOM-вузлів</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-C-3\" transform=\"translate(316.8125, 166)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#2e7d32 !important\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>З react-window: 20-30 DOM-вузлів</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-D-5\" transform=\"translate(614.8125, 44)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c62828 !important\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>Повільний рендер та скрол</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-E-7\" transform=\"translate(614.8125, 166)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#2e7d32 !important\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>Миттєвий рендер та плавний скрол</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<h2>🏗️ Рішення: react-window</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install react-window\nnpm install --save-dev @types/react-window</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">FixedSizeList</span>, <span class=\"hljs-title class_\">ListChildComponentProps</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react-window\"</span>;\n\n<span class=\"hljs-comment\">// Компонент окремого рядка — отримує index, style та data від react-window</span>\n<span class=\"hljs-comment\">// style ОБОВ'ЯЗКОВО передавати в кореневий елемент рядка —</span>\n<span class=\"hljs-comment\">// він містить значення top та height для абсолютного позиціонування</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskRow</span>(<span class=\"hljs-params\">{ index, style, data }: ListChildComponentProps&lt;Task[]&gt;</span>) {\n  <span class=\"hljs-keyword\">const</span> task = data[index];\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">style</span>=<span class=\"hljs-string\">{style}</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">{</span>`<span class=\"hljs-attr\">task-row</span> <span class=\"hljs-attr\">task-row--</span>${<span class=\"hljs-attr\">task.priority</span>}`}&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"task-row__index\"</span>&gt;</span>#{index + 1}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"task-row__title\"</span>&gt;</span>{task.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"task-row__status\"</span>&gt;</span>{task.status}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">VirtualTaskList</span>(<span class=\"hljs-params\">{ tasks }: { tasks: Task[] }</span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">FixedSizeList</span>\n      <span class=\"hljs-attr\">height</span>=<span class=\"hljs-string\">{600}</span>           // <span class=\"hljs-attr\">висота</span> <span class=\"hljs-attr\">видимої</span> <span class=\"hljs-attr\">області</span> <span class=\"hljs-attr\">у</span> <span class=\"hljs-attr\">пікселях</span>\n      <span class=\"hljs-attr\">width</span>=<span class=\"hljs-string\">\"100%\"</span>           // <span class=\"hljs-attr\">ширина</span> <span class=\"hljs-attr\">списку</span>\n      <span class=\"hljs-attr\">itemCount</span>=<span class=\"hljs-string\">{tasks.length}</span>  // <span class=\"hljs-attr\">загальна</span> <span class=\"hljs-attr\">кількість</span> <span class=\"hljs-attr\">елементів</span>\n      <span class=\"hljs-attr\">itemSize</span>=<span class=\"hljs-string\">{64}</span>          // <span class=\"hljs-attr\">висота</span> <span class=\"hljs-attr\">КОЖНОГО</span> <span class=\"hljs-attr\">рядка</span> <span class=\"hljs-attr\">у</span> <span class=\"hljs-attr\">пікселях</span> (<span class=\"hljs-attr\">фіксована</span>!)\n      <span class=\"hljs-attr\">itemData</span>=<span class=\"hljs-string\">{tasks}</span>       // <span class=\"hljs-attr\">дані</span> <span class=\"hljs-attr\">передаються</span> <span class=\"hljs-attr\">у</span> <span class=\"hljs-attr\">кожен</span> <span class=\"hljs-attr\">рядок</span> <span class=\"hljs-attr\">через</span> <span class=\"hljs-attr\">props.data</span>\n    &gt;</span>\n      {TaskRow}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">FixedSizeList</span>&gt;</span></span>\n  );\n}</code></pre><h2>🔀 FixedSizeList vs VariableSizeList</h2>\n<table>\n<thead>\n<tr>\n<th></th>\n<th><code>FixedSizeList</code></th>\n<th><code>VariableSizeList</code></th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Висота рядка</td>\n<td>Однакова для всіх</td>\n<td>Різна для кожного рядка</td>\n</tr>\n<tr>\n<td>API</td>\n<td>✅ Простий</td>\n<td>⚠️ Потрібна функція <code>itemSize(index)</code></td>\n</tr>\n<tr>\n<td>Продуктивність</td>\n<td>✅ Максимальна</td>\n<td>Дещо нижча</td>\n</tr>\n<tr>\n<td>Коли використовувати</td>\n<td>Таблиці, прості списки</td>\n<td>Чати, стрічки з різним вмістом</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Коли потрібна віртуалізація?</strong> <p>Менше 100 елементів — <code>React.memo</code> достатньо. 100–500 — варто виміряти. Більше 500 елементів — віртуалізація майже завжди виправдана. Загальне правило: якщо скрол гальмує — спочатку вимірюй у Profiler, потім вирішуй.</p>\n</div>\n\n","<h1>🤖 React Compiler — автоматична мемоізація</h1>\n<div class=\"info\"><strong>ℹ️ Що таке React Compiler</strong> <p><strong>React Compiler</strong> (раніше React Forget) — інструмент статичного аналізу та компіляції, що автоматично додає мемоізацію до компонентів і хуків. Замість того, щоб писати <code>useMemo</code>, <code>useCallback</code> і <code>React.memo</code> вручну — компілятор аналізує код і вставляє оптимізації там, де вони дійсно потрібні.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> React Compiler робить те саме, що розробник робить вручну, але автоматично і без помилок у масивах залежностей. Він розуміє правила React і гарантує коректність.</p>\n<h2>🔄 До і після компілятора</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Код БЕЗ компілятора — розробник пише мемоізацію вручну</span>\n<span class=\"hljs-keyword\">import</span> { memo, useMemo, useCallback } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskCardProps</span> {\n  <span class=\"hljs-attr\">task</span>: <span class=\"hljs-title class_\">Task</span>;\n  <span class=\"hljs-attr\">onDelete</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">id: <span class=\"hljs-built_in\">string</span></span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">TaskCard</span> = <span class=\"hljs-title function_\">memo</span>(<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskCard</span>(<span class=\"hljs-params\">{ task, onDelete }: TaskCardProps</span>) {\n  <span class=\"hljs-keyword\">const</span> formattedDate = <span class=\"hljs-title function_\">useMemo</span>(\n    <span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(task.<span class=\"hljs-property\">createdAt</span>).<span class=\"hljs-title function_\">toLocaleDateString</span>(<span class=\"hljs-string\">\"uk-UA\"</span>),\n    [task.<span class=\"hljs-property\">createdAt</span>]\n  );\n  <span class=\"hljs-keyword\">const</span> handleDelete = <span class=\"hljs-title function_\">useCallback</span>(<span class=\"hljs-function\">() =&gt;</span> {\n    <span class=\"hljs-title function_\">onDelete</span>(task.<span class=\"hljs-property\">id</span>);\n  }, [task.<span class=\"hljs-property\">id</span>, onDelete]);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h3</span>&gt;</span>{task.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h3</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span>&gt;</span>{formattedDate}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{handleDelete}</span>&gt;</span>Видалити<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n});</code></pre><pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ Код З компілятором — розробник пише просто, компілятор оптимізує</span>\n<span class=\"hljs-comment\">//    Компілятор сам додасть memo, useMemo та useCallback де потрібно</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">TaskCardProps</span> {\n  <span class=\"hljs-attr\">task</span>: <span class=\"hljs-title class_\">Task</span>;\n  <span class=\"hljs-attr\">onDelete</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">id: <span class=\"hljs-built_in\">string</span></span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskCard</span>(<span class=\"hljs-params\">{ task, onDelete }: TaskCardProps</span>) {\n  <span class=\"hljs-keyword\">const</span> formattedDate = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>(task.<span class=\"hljs-property\">createdAt</span>).<span class=\"hljs-title function_\">toLocaleDateString</span>(<span class=\"hljs-string\">\"uk-UA\"</span>);\n  <span class=\"hljs-keyword\">const</span> <span class=\"hljs-title function_\">handleDelete</span> = (<span class=\"hljs-params\"></span>) =&gt; <span class=\"hljs-title function_\">onDelete</span>(task.<span class=\"hljs-property\">id</span>);\n\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">h3</span>&gt;</span>{task.title}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">h3</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">span</span>&gt;</span>{formattedDate}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">span</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{handleDelete}</span>&gt;</span>Видалити<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span></span>\n  );\n}</code></pre><h2>📦 Підключення (React 19+)</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install react@19 react-dom@19\nnpm install --save-dev babel-plugin-react-compiler</code></pre><pre><code class=\"language-ts hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// vite.config.ts</span>\n<span class=\"hljs-keyword\">import</span> { defineConfig } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"vite\"</span>;\n<span class=\"hljs-keyword\">import</span> react <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@vitejs/plugin-react\"</span>;\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">default</span> <span class=\"hljs-title function_\">defineConfig</span>({\n  <span class=\"hljs-attr\">plugins</span>: [\n    <span class=\"hljs-title function_\">react</span>({\n      <span class=\"hljs-attr\">babel</span>: {\n        <span class=\"hljs-attr\">plugins</span>: [[<span class=\"hljs-string\">\"babel-plugin-react-compiler\"</span>, {}]],\n      },\n    }),\n  ],\n});</code></pre><div class=\"warning\"><strong>⚠️ Важливо розуміти</strong> <p>Навіть з React Compiler — знання <code>useMemo</code>, <code>useCallback</code> і <code>React.memo</code> залишаються необхідними. По-перше, більшість існуючих проєктів ще не мігрували на React 19. По-друге, компілятор не виправляє помилки у логіці — він лише додає мемоізацію до коду, що вже є правильним. Розуміння принципів допомагає писати код, який компілятор зможе коректно оптимізувати.</p>\n</div>\n\n","<h1>🧩 Compound Components</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Compound Components</strong> — патерн, при якому кілька компонентів разом утворюють єдиний складний UI-елемент. Вони поділяють спільний стан через Context, але зовні виглядають як самостійні теги — що дає споживачу повну гнучкість у розміщенні.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість одного компонента з десятками props — набір дрібних компонентів, кожен з яких відповідає за свою частину UI. Вони працюють разом через спільний контекст, але споживач сам вирішує як і де їх розмістити.</p>\n<h2>🎛️ Приклад: Compound Select для фільтра задач</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { createContext, useContext, useState, <span class=\"hljs-title class_\">ReactNode</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"react\"</span>;\n\n<span class=\"hljs-comment\">// 1. Спільний контекст для стану Select</span>\n<span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">SelectContextValue</span> {\n  <span class=\"hljs-attr\">value</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">onChange</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">value: <span class=\"hljs-built_in\">string</span></span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n  <span class=\"hljs-attr\">isOpen</span>: <span class=\"hljs-built_in\">boolean</span>;\n  <span class=\"hljs-attr\">setIsOpen</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">open: <span class=\"hljs-built_in\">boolean</span></span>) =&gt;</span> <span class=\"hljs-built_in\">void</span>;\n}\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-title class_\">SelectContext</span> = createContext&lt;<span class=\"hljs-title class_\">SelectContextValue</span> | <span class=\"hljs-literal\">null</span>&gt;(<span class=\"hljs-literal\">null</span>);\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">useSelectContext</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> ctx = <span class=\"hljs-title function_\">useContext</span>(<span class=\"hljs-title class_\">SelectContext</span>);\n  <span class=\"hljs-keyword\">if</span> (!ctx) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">\"Компоненти Select мають бути всередині &lt;Select&gt;\"</span>);\n  <span class=\"hljs-keyword\">return</span> ctx;\n}\n\n<span class=\"hljs-comment\">// 2. Кореневий компонент — надає контекст всім дочірнім</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">Select</span>(<span class=\"hljs-params\">{ children, value, onChange }: {\n  children: ReactNode; value: <span class=\"hljs-built_in\">string</span>; onChange: (v: <span class=\"hljs-built_in\">string</span>) =&gt; <span class=\"hljs-built_in\">void</span>;\n}</span>) {\n  <span class=\"hljs-keyword\">const</span> [isOpen, setIsOpen] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">false</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">SelectContext.Provider</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{{</span> <span class=\"hljs-attr\">value</span>, <span class=\"hljs-attr\">onChange</span>, <span class=\"hljs-attr\">isOpen</span>, <span class=\"hljs-attr\">setIsOpen</span> }}&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">div</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"select\"</span>&gt;</span>{children}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">div</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">SelectContext.Provider</span>&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-comment\">// 3. Дочірні компоненти — читають спільний стан через Context</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">SelectTrigger</span>(<span class=\"hljs-params\">{ children }: { children: ReactNode }</span>) {\n  <span class=\"hljs-keyword\">const</span> { isOpen, setIsOpen, value } = <span class=\"hljs-title function_\">useSelectContext</span>();\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">button</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"select__trigger\"</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> setIsOpen(!isOpen)}&gt;\n      {/* Якщо значення вже обрано — показуємо його, інакше — placeholder з children */}\n      {value || children} {isOpen ? \"▲\" : \"▼\"}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">button</span>&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">SelectOptions</span>(<span class=\"hljs-params\">{ children }: { children: ReactNode }</span>) {\n  <span class=\"hljs-keyword\">const</span> { isOpen } = <span class=\"hljs-title function_\">useSelectContext</span>();\n  <span class=\"hljs-keyword\">return</span> isOpen ? <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">ul</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"select__options\"</span>&gt;</span>{children}<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">ul</span>&gt;</span></span> : <span class=\"hljs-literal\">null</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">SelectOption</span>(<span class=\"hljs-params\">{ value, children }: { value: <span class=\"hljs-built_in\">string</span>; children: ReactNode }</span>) {\n  <span class=\"hljs-keyword\">const</span> { onChange, setIsOpen } = <span class=\"hljs-title function_\">useSelectContext</span>();\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">li</span> <span class=\"hljs-attr\">className</span>=<span class=\"hljs-string\">\"select__option\"</span> <span class=\"hljs-attr\">onClick</span>=<span class=\"hljs-string\">{()</span> =&gt;</span> { onChange(value); setIsOpen(false); }}&gt;\n      {children}\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">li</span>&gt;</span></span>\n  );\n}\n\n<span class=\"hljs-comment\">// Прикріплення дочірніх компонентів — зручний namespace API</span>\n<span class=\"hljs-title class_\">Select</span>.<span class=\"hljs-property\">Trigger</span> = <span class=\"hljs-title class_\">SelectTrigger</span>;\n<span class=\"hljs-title class_\">Select</span>.<span class=\"hljs-property\">Options</span> = <span class=\"hljs-title class_\">SelectOptions</span>;\n<span class=\"hljs-title class_\">Select</span>.<span class=\"hljs-property\">Option</span> = <span class=\"hljs-title class_\">SelectOption</span>;\n\n<span class=\"hljs-comment\">// 4. Використання — споживач керує структурою самостійно</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TaskFilterBar</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> [status, setStatus] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-string\">\"all\"</span>);\n  <span class=\"hljs-keyword\">return</span> (\n    <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">{status}</span> <span class=\"hljs-attr\">onChange</span>=<span class=\"hljs-string\">{setStatus}</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Trigger</span>&gt;</span>Статус<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Trigger</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Options</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"all\"</span>&gt;</span>Всі задачі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"todo\"</span>&gt;</span>До виконання<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"in-progress\"</span>&gt;</span>В процесі<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Option</span>&gt;</span>\n        <span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">Select.Option</span> <span class=\"hljs-attr\">value</span>=<span class=\"hljs-string\">\"done\"</span>&gt;</span>Виконані<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Option</span>&gt;</span>\n      <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select.Options</span>&gt;</span>\n    <span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">Select</span>&gt;</span></span>\n  );\n}</code></pre><div class=\"tip\"><strong>💡 Де зустрічається у бібліотеках</strong> <p>Radix UI, Headless UI, shadcn/ui — побудовані на Compound Components. Наприклад: <code>&lt;Dialog&gt;</code>, <code>&lt;Dialog.Trigger&gt;</code>, <code>&lt;Dialog.Content&gt;</code>, <code>&lt;Dialog.Close&gt;</code> — це класичний compound pattern.</p>\n</div>\n\n","<h1>🎭 Render Props</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Render Props</strong> — патерн, при якому компонент отримує функцію через <code>children</code>, викликає її і передає свої внутрішні дані. Функція повертає JSX — саме його компонент і відображає.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Компонент відповідає за логіку і стан, а споживач — за зовнішній вигляд. До появи хуків (React 16.8) це був основний спосіб перевикористання логіки між компонентами.</p>\n<h2>📦 Приклад: завантаження даних через children</h2>\n<pre><code class=\"language-tsx hljs language-typescript\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// DataLoader відповідає лише за fetch-логіку.</span>\n<span class=\"hljs-comment\">// Що рендерити з результатом — вирішує споживач через children.</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title class_\">DataLoader</span>&lt;T&gt;({ url, children }: {\n  <span class=\"hljs-attr\">url</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">children</span>: <span class=\"hljs-function\">(<span class=\"hljs-params\">data: T | <span class=\"hljs-literal\">null</span>, isLoading: <span class=\"hljs-built_in\">boolean</span></span>) =&gt;</span> <span class=\"hljs-title class_\">ReactNode</span>;\n}) {\n  <span class=\"hljs-keyword\">const</span> [data, setData] = useState&lt;T | <span class=\"hljs-literal\">null</span>&gt;(<span class=\"hljs-literal\">null</span>);\n  <span class=\"hljs-keyword\">const</span> [isLoading, setIsLoading] = <span class=\"hljs-title function_\">useState</span>(<span class=\"hljs-literal\">true</span>);\n\n  <span class=\"hljs-title function_\">useEffect</span>(<span class=\"hljs-function\">() =&gt;</span> {\n    <span class=\"hljs-title function_\">fetch</span>(url).<span class=\"hljs-title function_\">then</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">r</span>) =&gt;</span> r.<span class=\"hljs-title function_\">json</span>()).<span class=\"hljs-title function_\">then</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">json</span>) =&gt;</span> {\n      <span class=\"hljs-title function_\">setData</span>(json);\n      <span class=\"hljs-title function_\">setIsLoading</span>(<span class=\"hljs-literal\">false</span>);\n    });\n  }, [url]);\n\n  <span class=\"hljs-keyword\">return</span> <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;&gt;</span>{children(data, isLoading)}<span class=\"hljs-tag\">&lt;/&gt;</span></span>;\n}\n\n<span class=\"hljs-comment\">// Один і той самий DataLoader — різний UI у кожного споживача</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">TasksWidget</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> (\n    &lt;<span class=\"hljs-title class_\">DataLoader</span>&lt;<span class=\"hljs-title class_\">Task</span>[]&gt; url=<span class=\"hljs-string\">\"/api/tasks\"</span>&gt;\n      {<span class=\"hljs-function\">(<span class=\"hljs-params\">tasks, isLoading</span>) =&gt;</span>\n        isLoading ? <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">p</span>&gt;</span>Завантаження...<span class=\"hljs-tag\">&lt;/<span class=\"hljs-name\">p</span>&gt;</span></span> : <span class=\"language-xml\"><span class=\"hljs-tag\">&lt;<span class=\"hljs-name\">TaskList</span> <span class=\"hljs-attr\">tasks</span>=<span class=\"hljs-string\">{tasks</span> ?? []} /&gt;</span></span>\n      }\n    &lt;/<span class=\"hljs-title class_\">DataLoader</span>&gt;\n  );\n}</code></pre><h2>💡 Сьогодні ту саму задачу вирішують Custom Hooks</h2>\n<p>Render Props з'явились до хуків як єдиний спосіб перевикористати логіку. З появою хуків у React 16.8 та сама задача вирішується простіше — логіка виноситься у <code>useFetch</code>, <code>useHover</code> тощо, без додаткових компонентів-обгорток у дереві.</p>\n<div class=\"note\"><strong>📝 Чому Render Props досі важливі</strong> <p>Патерн зустрічається у популярних бібліотеках: react-table, деякі версії Formik, react-spring. Розуміння патерну допомагає читати чужий код і працювати зі сторонніми бібліотеками.</p>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Reconciliation</strong> — React перерендерює дочірній компонент при рендері батька, навіть якщо props не змінились. DevTools Profiler — перший крок перед будь-якою оптимізацією.</p>\n</li>\n<li><p><strong>React.memo</strong> — пропускає рендер компонента, якщо props не змінились. Не спрацьовує, якщо функції-props щоразу створюються заново.</p>\n</li>\n<li><p><strong>useMemo</strong> — кешує результат дорогих обчислень. Не варто використовувати для тривіальних операцій — це лише додає складність.</p>\n</li>\n<li><p><strong>useCallback</strong> — стабілізує посилання на функції. Завжди у парі з <code>React.memo</code> на дочірньому компоненті.</p>\n</li>\n<li><p><strong>Code splitting</strong> — <code>React.lazy()</code> + <code>&lt;Suspense&gt;</code> завантажують код сторінок на вимогу, зменшуючи час першого завантаження.</p>\n</li>\n<li><p><strong>Віртуалізація</strong> — <code>react-window</code> рендерить лише видимі елементи списку. Необхідна при сотнях і тисячах елементів.</p>\n</li>\n<li><p><strong>React Compiler</strong> — автоматизує мемоізацію у React 19, але розуміти принципи ручної оптимізації залишається необхідним.</p>\n</li>\n<li><p><strong>Compound Components</strong> — гнучкий патерн складних UI-елементів через спільний Context і набір дочірніх компонентів.</p>\n</li>\n<li><p><strong>Render Props</strong> — патерн розділення логіки і рендерингу; сьогодні здебільшого замінюється custom hooks.</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li>🔄 Чому дочірній компонент рендериться при рендері батька, навіть якщо його props не змінились? Як це виправити?</li>\n<li>🧠 Яка різниця між <code>React.memo</code> і <code>useMemo</code>? Наведіть конкретний приклад для кожного.</li>\n<li>🔗 Чому <code>useCallback</code> без <code>React.memo</code> на дочірньому компоненті не дає ефекту?</li>\n<li>✂️ Що таке code splitting і яке обмеження має <code>React.lazy</code> щодо типу експорту?</li>\n<li>📜 У чому полягає проблема рендерингу 5 000 елементів без віртуалізації? Як її вирішує <code>react-window</code>?</li>\n<li>🤖 Що робить React Compiler? Чи замінює він повністю потребу розуміти <code>useMemo</code> і <code>useCallback</code>?</li>\n<li>🧩 У чому перевага Compound Components над одним компонентом із багатьма props?</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Reconciliation</strong></td>\n<td>Алгоритм порівняння Virtual DOM-дерев для визначення мінімальних змін у реальному DOM</td>\n</tr>\n<tr>\n<td><strong>Мемоізація</strong></td>\n<td>Техніка кешування результату функції для уникнення повторних обчислень при незмінних аргументах</td>\n</tr>\n<tr>\n<td><strong>Code splitting</strong></td>\n<td>Розбиття JS-бандлу на окремі частини (chunks), що завантажуються на вимогу</td>\n</tr>\n<tr>\n<td><strong>Lazy loading</strong></td>\n<td>Відкладене завантаження ресурсу або коду до моменту, коли він дійсно потрібен</td>\n</tr>\n<tr>\n<td><strong>Віртуалізація</strong></td>\n<td>Техніка рендерингу лише видимих елементів списку для економії ресурсів DOM</td>\n</tr>\n<tr>\n<td><strong>Windowing</strong></td>\n<td>Інша назва для віртуалізації — показ лише «вікна» видимих елементів</td>\n</tr>\n<tr>\n<td><strong>Compound Component</strong></td>\n<td>Патерн, де кілька компонентів поділяють спільний стан через Context та утворюють єдиний UI-елемент</td>\n</tr>\n<tr>\n<td><strong>Render Prop</strong></td>\n<td>Патерн, де компонент приймає функцію як prop для делегування рендерингу</td>\n</tr>\n<tr>\n<td><strong>Chunk</strong></td>\n<td>Окремий JS-файл, що утворюється при code splitting</td>\n</tr>\n<tr>\n<td><strong>Profiler</strong></td>\n<td>Інструмент React DevTools для вимірювання продуктивності та часу рендерингу компонентів</td>\n</tr>\n</tbody></table>\n","<h1>🔤 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифрування</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>HOC</strong></td>\n<td>Higher-Order Component / Компонент вищого порядку — функція, що приймає компонент і повертає новий, розширений компонент</td>\n</tr>\n<tr>\n<td><strong>DOM</strong></td>\n<td>Document Object Model / Об'єктна модель документа</td>\n</tr>\n<tr>\n<td><strong>API</strong></td>\n<td>Application Programming Interface / Інтерфейс прикладного програмування</td>\n</tr>\n<tr>\n<td><strong>UI</strong></td>\n<td>User Interface / Інтерфейс користувача</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
