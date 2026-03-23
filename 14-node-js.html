@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Node.js: основи</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 17</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>Node.js: основи</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🌍 Що таке Node.js і навіщо він потрібен</li>\n<li>⚙️ Як працює Node.js: Event Loop та неблокуюче I/O</li>\n<li>🔧 Встановлення: nvm та управління версіями</li>\n<li>📦 npm — менеджер пакетів</li>\n<li>🗂️ Модульна система: CommonJS та ESM</li>\n<li>🛠️ Вбудовані модулі Node.js</li>\n<li>🌐 HTTP-сервер та асинхронна обробка запитів</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🌍 Що таке Node.js</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Node.js</strong> — крос-платформне середовище виконання JavaScript поза браузером, побудоване на рушії <strong>V8</strong> від Google. Дозволяє запускати JavaScript на сервері, у CLI-інструментах та в будь-якому середовищі, де є операційна система.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> до Node.js JavaScript існував виключно у браузері. Node.js зробив мову універсальною — один розробник може писати frontend і backend спільною мовою, використовуючи одні й ті самі типи, утиліти та підходи.</p>\n<h2>📅 Ключові віхи розвитку</h2>\n<table>\n<thead>\n<tr>\n<th>Рік</th>\n<th>Подія</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>2009</td>\n<td>Раян Дал (Ryan Dahl) презентує Node.js на JSConf EU</td>\n</tr>\n<tr>\n<td>2010</td>\n<td>Офіційний реліз npm — менеджера пакетів</td>\n</tr>\n<tr>\n<td>2015</td>\n<td>Node.js Foundation та перехід до відкритого governance</td>\n</tr>\n<tr>\n<td>2019</td>\n<td>Об'єднання з JS Foundation → OpenJS Foundation</td>\n</tr>\n<tr>\n<td>2024</td>\n<td>Node.js 22 (\"Jod\") — Active LTS</td>\n</tr>\n<tr>\n<td>2025</td>\n<td>Node.js 24 — Active LTS з жовтня 2025</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Чому V8?</strong> <p><strong>V8</strong> — рушій Google Chrome, який компілює JavaScript безпосередньо у машинний код через <strong>JIT-компіляцію</strong> (Just-In-Time). Це забезпечує продуктивність, порівняну з компільованими мовами.</p>\n</div>\n\n","<h1>🆚 Node.js vs браузерне середовище</h1>\n<p><strong>Головна ідея:</strong> Node.js і браузер запускають однаковий JavaScript, але мають принципово різні можливості — різне оточення, різний глобальний об'єкт, різний набір API.</p>\n<h2>🔍 Порівняльна таблиця</h2>\n<table>\n<thead>\n<tr>\n<th>Можливість</th>\n<th>🌐 Браузер</th>\n<th>🟢 Node.js</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Робота з DOM</td>\n<td>✅ <code>document</code>, <code>window</code></td>\n<td>❌ DOM відсутній</td>\n</tr>\n<tr>\n<td>Доступ до файлової системи</td>\n<td>❌ Обмежено (File API)</td>\n<td>✅ Повний доступ (<code>fs</code>)</td>\n</tr>\n<tr>\n<td>Мережеві запити</td>\n<td>✅ <code>fetch</code>, WebSocket</td>\n<td>✅ <code>http</code>, <code>https</code>, <code>fetch</code></td>\n</tr>\n<tr>\n<td>Змінні середовища</td>\n<td>❌ Недоступні</td>\n<td>✅ <code>process.env</code></td>\n</tr>\n<tr>\n<td>Глобальний об'єкт</td>\n<td><code>window</code> / <code>globalThis</code></td>\n<td><code>global</code> / <code>globalThis</code></td>\n</tr>\n<tr>\n<td>Модульна система</td>\n<td>ES Modules (браузерний ESM)</td>\n<td>CommonJS + ES Modules</td>\n</tr>\n<tr>\n<td>TypeScript (нативно)</td>\n<td>❌ Потрібен транспайлер</td>\n<td>✅ з Node.js 22+ (стрипінг типів без компіляції)</td>\n</tr>\n</tbody></table>\n<div class=\"warning\"><strong>⚠️ Типова помилка</strong> <p>Починаючи Node.js-проект, розробники-початківці намагаються звернутись до <code>window</code> або <code>document</code>. У Node.js ці об'єкти не існують — замість <code>window</code> є <code>global</code>, замість <code>localStorage</code> — файлова система або бази даних.</p>\n</div>\n\n","<h1>⚙️ Однопотоковість та неблокуюче I/O</h1>\n<div class=\"info\"><strong>ℹ️ Ключова концепція</strong> <p>Node.js виконує JavaScript в <strong>одному потоці</strong> операційної системи. Проте I/O-операції (читання файлів, мережеві запити, звернення до БД) делегуються операційній системі через <strong>libuv</strong> і виконуються асинхронно, не блокуючи головний потік.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> вузьке місце серверних застосунків — не обчислення, а <strong>очікування</strong>. Типовий запит до API витрачає ~95% часу на очікування відповіді від БД або файлової системи, і лише ~5% — на виконання JavaScript-коду. Node.js перетворює цей простій на корисну роботу: поки один запит очікує відповіді від БД, потік обробляє наступний.</p>\n<h2>🔄 Конкурентна обробка запитів</h2>\n\n<div class=\"mermaid\" data-source=\"gantt\n    dateFormat SSS\n    axisFormat %Lмс\n    section Запит 1\n    JS-обробка      :active, q1a, 000, 020\n    Читання файлу (ОС) :crit, q1b, 020, 120\n    Відповідь       :active, q1c, 120, 140\n    section Запит 2\n    JS-обробка      :active, q2a, 025, 045\n    Запит до БД (ОС) :crit, q2b, 045, 130\n    Відповідь       :active, q2c, 130, 150\n    section Запит 3\n    JS-обробка      :active, q3a, 050, 070\n    Обчислення (ОС) :crit, q3b, 070, 110\n    Відповідь       :active, q3c, 110, 130\"><svg id=\"exp-1774291614703-4-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1920 316\" style=\"max-width: 1920px;\" role=\"graphics-document document\" aria-roledescription=\"gantt\"><style>#exp-1774291614703-4-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1774291614703-4-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1774291614703-4-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1774291614703-4-0 .error-icon{fill:#552222;}#exp-1774291614703-4-0 .error-text{fill:#552222;stroke:#552222;}#exp-1774291614703-4-0 .edge-thickness-normal{stroke-width:1px;}#exp-1774291614703-4-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1774291614703-4-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1774291614703-4-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1774291614703-4-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1774291614703-4-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1774291614703-4-0 .marker{fill:#333333;stroke:#333333;}#exp-1774291614703-4-0 .marker.cross{stroke:#333333;}#exp-1774291614703-4-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1774291614703-4-0 p{margin:0;}#exp-1774291614703-4-0 .mermaid-main-font{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;}#exp-1774291614703-4-0 .exclude-range{fill:#eeeeee;}#exp-1774291614703-4-0 .section{stroke:none;opacity:0.2;}#exp-1774291614703-4-0 .section0{fill:rgba(102, 102, 255, 0.49);}#exp-1774291614703-4-0 .section2{fill:#fff400;}#exp-1774291614703-4-0 .section1,#exp-1774291614703-4-0 .section3{fill:white;opacity:0.2;}#exp-1774291614703-4-0 .sectionTitle0{fill:#333;}#exp-1774291614703-4-0 .sectionTitle1{fill:#333;}#exp-1774291614703-4-0 .sectionTitle2{fill:#333;}#exp-1774291614703-4-0 .sectionTitle3{fill:#333;}#exp-1774291614703-4-0 .sectionTitle{text-anchor:start;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;}#exp-1774291614703-4-0 .grid .tick{stroke:lightgrey;opacity:0.8;shape-rendering:crispEdges;}#exp-1774291614703-4-0 .grid .tick text{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;fill:#333;}#exp-1774291614703-4-0 .grid path{stroke-width:0;}#exp-1774291614703-4-0 .today{fill:none;stroke:red;stroke-width:2px;}#exp-1774291614703-4-0 .task{stroke-width:2;}#exp-1774291614703-4-0 .taskText{text-anchor:middle;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;}#exp-1774291614703-4-0 .taskTextOutsideRight{fill:black;text-anchor:start;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;}#exp-1774291614703-4-0 .taskTextOutsideLeft{fill:black;text-anchor:end;}#exp-1774291614703-4-0 .task.clickable{cursor:pointer;}#exp-1774291614703-4-0 .taskText.clickable{cursor:pointer;fill:#003163!important;font-weight:bold;}#exp-1774291614703-4-0 .taskTextOutsideLeft.clickable{cursor:pointer;fill:#003163!important;font-weight:bold;}#exp-1774291614703-4-0 .taskTextOutsideRight.clickable{cursor:pointer;fill:#003163!important;font-weight:bold;}#exp-1774291614703-4-0 .taskText0,#exp-1774291614703-4-0 .taskText1,#exp-1774291614703-4-0 .taskText2,#exp-1774291614703-4-0 .taskText3{fill:white;}#exp-1774291614703-4-0 .task0,#exp-1774291614703-4-0 .task1,#exp-1774291614703-4-0 .task2,#exp-1774291614703-4-0 .task3{fill:#8a90dd;stroke:#534fbc;}#exp-1774291614703-4-0 .taskTextOutside0,#exp-1774291614703-4-0 .taskTextOutside2{fill:black;}#exp-1774291614703-4-0 .taskTextOutside1,#exp-1774291614703-4-0 .taskTextOutside3{fill:black;}#exp-1774291614703-4-0 .active0,#exp-1774291614703-4-0 .active1,#exp-1774291614703-4-0 .active2,#exp-1774291614703-4-0 .active3{fill:#bfc7ff;stroke:#534fbc;}#exp-1774291614703-4-0 .activeText0,#exp-1774291614703-4-0 .activeText1,#exp-1774291614703-4-0 .activeText2,#exp-1774291614703-4-0 .activeText3{fill:black!important;}#exp-1774291614703-4-0 .done0,#exp-1774291614703-4-0 .done1,#exp-1774291614703-4-0 .done2,#exp-1774291614703-4-0 .done3{stroke:grey;fill:lightgrey;stroke-width:2;}#exp-1774291614703-4-0 .doneText0,#exp-1774291614703-4-0 .doneText1,#exp-1774291614703-4-0 .doneText2,#exp-1774291614703-4-0 .doneText3{fill:black!important;}#exp-1774291614703-4-0 .doneText0.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneText0.taskTextOutsideRight,#exp-1774291614703-4-0 .doneText1.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneText1.taskTextOutsideRight,#exp-1774291614703-4-0 .doneText2.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneText2.taskTextOutsideRight,#exp-1774291614703-4-0 .doneText3.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneText3.taskTextOutsideRight{fill:black!important;}#exp-1774291614703-4-0 .crit0,#exp-1774291614703-4-0 .crit1,#exp-1774291614703-4-0 .crit2,#exp-1774291614703-4-0 .crit3{stroke:#ff8888;fill:red;stroke-width:2;}#exp-1774291614703-4-0 .activeCrit0,#exp-1774291614703-4-0 .activeCrit1,#exp-1774291614703-4-0 .activeCrit2,#exp-1774291614703-4-0 .activeCrit3{stroke:#ff8888;fill:#bfc7ff;stroke-width:2;}#exp-1774291614703-4-0 .doneCrit0,#exp-1774291614703-4-0 .doneCrit1,#exp-1774291614703-4-0 .doneCrit2,#exp-1774291614703-4-0 .doneCrit3{stroke:#ff8888;fill:lightgrey;stroke-width:2;cursor:pointer;shape-rendering:crispEdges;}#exp-1774291614703-4-0 .milestone{transform:rotate(45deg) scale(0.8,0.8);}#exp-1774291614703-4-0 .milestoneText{font-style:italic;}#exp-1774291614703-4-0 .doneCritText0,#exp-1774291614703-4-0 .doneCritText1,#exp-1774291614703-4-0 .doneCritText2,#exp-1774291614703-4-0 .doneCritText3{fill:black!important;}#exp-1774291614703-4-0 .doneCritText0.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneCritText0.taskTextOutsideRight,#exp-1774291614703-4-0 .doneCritText1.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneCritText1.taskTextOutsideRight,#exp-1774291614703-4-0 .doneCritText2.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneCritText2.taskTextOutsideRight,#exp-1774291614703-4-0 .doneCritText3.taskTextOutsideLeft,#exp-1774291614703-4-0 .doneCritText3.taskTextOutsideRight{fill:black!important;}#exp-1774291614703-4-0 .vert{stroke:navy;}#exp-1774291614703-4-0 .vertText{font-size:15px;text-anchor:middle;fill:navy!important;}#exp-1774291614703-4-0 .activeCritText0,#exp-1774291614703-4-0 .activeCritText1,#exp-1774291614703-4-0 .activeCritText2,#exp-1774291614703-4-0 .activeCritText3{fill:black!important;}#exp-1774291614703-4-0 .titleText{text-anchor:middle;font-size:18px;fill:#333;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;}#exp-1774291614703-4-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g></g><g class=\"grid\" transform=\"translate(75, 266)\" fill=\"none\" font-size=\"10\" font-family=\"sans-serif\" text-anchor=\"middle\"><path class=\"domain\" stroke=\"currentColor\" d=\"M0.5,-231V0.5H1770.5V-231\"></path><g class=\"tick\" opacity=\"1\" transform=\"translate(0.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">000мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(236.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">020мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(472.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">040мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(708.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">060мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(944.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">080мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(1180.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">100мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(1416.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">120мс</text></g><g class=\"tick\" opacity=\"1\" transform=\"translate(1652.5,0)\"><line stroke=\"currentColor\" y2=\"-231\"></line><text fill=\"#000\" y=\"3\" dy=\"1em\" stroke=\"none\" font-size=\"10\" style=\"text-anchor: middle;\">140мс</text></g></g><g><rect x=\"0\" y=\"48\" width=\"1882.5\" height=\"24\" class=\"section section0\"></rect><rect x=\"0\" y=\"72\" width=\"1882.5\" height=\"24\" class=\"section section0\"></rect><rect x=\"0\" y=\"120\" width=\"1882.5\" height=\"24\" class=\"section section1\"></rect><rect x=\"0\" y=\"144\" width=\"1882.5\" height=\"24\" class=\"section section1\"></rect><rect x=\"0\" y=\"192\" width=\"1882.5\" height=\"24\" class=\"section section2\"></rect><rect x=\"0\" y=\"216\" width=\"1882.5\" height=\"24\" class=\"section section2\"></rect><rect x=\"0\" y=\"240\" width=\"1882.5\" height=\"24\" class=\"section section2\"></rect><rect x=\"0\" y=\"96\" width=\"1882.5\" height=\"24\" class=\"section section0\"></rect><rect x=\"0\" y=\"168\" width=\"1882.5\" height=\"24\" class=\"section section1\"></rect></g><g><rect id=\"q1a\" rx=\"3\" ry=\"3\" x=\"75\" y=\"50\" width=\"236\" height=\"20\" transform-origin=\"193px 60px\" class=\"task active0 \"></rect><rect id=\"q1b\" rx=\"3\" ry=\"3\" x=\"311\" y=\"74\" width=\"1180\" height=\"20\" transform-origin=\"901px 84px\" class=\"task crit0 \"></rect><rect id=\"q2a\" rx=\"3\" ry=\"3\" x=\"370\" y=\"122\" width=\"236\" height=\"20\" transform-origin=\"488px 132px\" class=\"task active1 \"></rect><rect id=\"q2b\" rx=\"3\" ry=\"3\" x=\"606\" y=\"146\" width=\"1003\" height=\"20\" transform-origin=\"1107.5px 156px\" class=\"task crit1 \"></rect><rect id=\"q3a\" rx=\"3\" ry=\"3\" x=\"665\" y=\"194\" width=\"236\" height=\"20\" transform-origin=\"783px 204px\" class=\"task active2 \"></rect><rect id=\"q3b\" rx=\"3\" ry=\"3\" x=\"901\" y=\"218\" width=\"472\" height=\"20\" transform-origin=\"1137px 228px\" class=\"task crit2 \"></rect><rect id=\"q3c\" rx=\"3\" ry=\"3\" x=\"1373\" y=\"242\" width=\"236\" height=\"20\" transform-origin=\"1491px 252px\" class=\"task active2 \"></rect><rect id=\"q1c\" rx=\"3\" ry=\"3\" x=\"1491\" y=\"98\" width=\"236\" height=\"20\" transform-origin=\"1609px 108px\" class=\"task active0 \"></rect><rect id=\"q2c\" rx=\"3\" ry=\"3\" x=\"1609\" y=\"170\" width=\"236\" height=\"20\" transform-origin=\"1727px 180px\" class=\"task active1 \"></rect><text id=\"q1a-text\" font-size=\"11\" x=\"193\" y=\"63.5\" text-height=\"20\" class=\" taskText taskText0 activeText0 width-64.109375\">JS-обробка      </text><text id=\"q1b-text\" font-size=\"11\" x=\"901\" y=\"87.5\" text-height=\"20\" class=\" taskText taskText0  critText0 width-110.65625\">Читання файлу (ОС) </text><text id=\"q2a-text\" font-size=\"11\" x=\"488\" y=\"135.5\" text-height=\"20\" class=\" taskText taskText1 activeText1 width-64.109375\">JS-обробка      </text><text id=\"q2b-text\" font-size=\"11\" x=\"1107.5\" y=\"159.5\" text-height=\"20\" class=\" taskText taskText1  critText1 width-95.4375\">Запит до БД (ОС) </text><text id=\"q3a-text\" font-size=\"11\" x=\"783\" y=\"207.5\" text-height=\"20\" class=\" taskText taskText2 activeText2 width-64.109375\">JS-обробка      </text><text id=\"q3b-text\" font-size=\"11\" x=\"1137\" y=\"231.5\" text-height=\"20\" class=\" taskText taskText2  critText2 width-95.109375\">Обчислення (ОС) </text><text id=\"q3c-text\" font-size=\"11\" x=\"1491\" y=\"255.5\" text-height=\"20\" class=\" taskText taskText2 activeText2 width-51.90625\">Відповідь       </text><text id=\"q1c-text\" font-size=\"11\" x=\"1609\" y=\"111.5\" text-height=\"20\" class=\" taskText taskText0 activeText0 width-51.90625\">Відповідь       </text><text id=\"q2c-text\" font-size=\"11\" x=\"1727\" y=\"183.5\" text-height=\"20\" class=\" taskText taskText1 activeText1 width-51.90625\">Відповідь       </text></g><g><text dy=\"0em\" x=\"10\" y=\"86\" font-size=\"11\" class=\"sectionTitle sectionTitle0\"><tspan alignment-baseline=\"central\" x=\"10\">Запит 1</tspan></text><text dy=\"0em\" x=\"10\" y=\"158\" font-size=\"11\" class=\"sectionTitle sectionTitle1\"><tspan alignment-baseline=\"central\" x=\"10\">Запит 2</tspan></text><text dy=\"0em\" x=\"10\" y=\"230\" font-size=\"11\" class=\"sectionTitle sectionTitle2\"><tspan alignment-baseline=\"central\" x=\"10\">Запит 3</tspan></text></g><g class=\"today\"><line x1=\"882813641\" x2=\"882813641\" y1=\"25\" y2=\"291\" class=\"today\"></line></g><text x=\"960\" y=\"25\" class=\"titleText\"></text></svg></div>\n<div class=\"info\"><strong>ℹ️ Як це читати</strong> <p>Сині блоки — Node.js активно виконує JavaScript. Червоні блоки — операційна система виконує I/O, а Node.js у цей час <strong>вільний</strong> і обробляє наступні запити. Всі три запити обробляються паралельно в одному потоці завдяки асинхронності.</p>\n</div>\n\n","<h1>⚙️ Event Loop — механізм роботи</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Event Loop</strong> (цикл подій) — механізм, який безперервно перевіряє чергу завдань. Він виконує синхронний код у <strong>Call Stack</strong>, а асинхронні операції делегує <strong>libuv</strong> (бібліотека C++). Після завершення I/O результат повертається через чергу зворотних викликів.</p>\n</div>\n\n\n\n<h2>🔄 Схема роботи Event Loop</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    CODE[&quot;📝 JS-код&quot;] --&gt; CALLSTACK[&quot;📚 Call Stack&quot;]\n    CALLSTACK --&gt; SYNC{&quot;Тип операції?&quot;}\n    SYNC --&gt;|&quot;Синхронна&quot;| EXEC[&quot;✅ Виконати&quot;]\n    SYNC --&gt;|&quot;Асинхронна (I/O, таймер)&quot;| LIBUV[&quot;⚙️ libuv / ОС&quot;]\n    LIBUV --&gt; QUEUE[&quot;📬 Черга завдань&quot;]\n    QUEUE --&gt;|&quot;Call Stack порожній&quot;| CALLSTACK\n    style CODE fill:#fff9c4,stroke:#f9a825\n    style CALLSTACK fill:#e3f2fd,stroke:#1565c0\n    style LIBUV fill:#e8f5e9,stroke:#388e3c\n    style QUEUE fill:#fce4ec,stroke:#c2185b\"><svg id=\"exp-1774291614712-5-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 1157.59375px;\" viewBox=\"0 0 1157.59375 235.8984375\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1774291614712-5-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1774291614712-5-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1774291614712-5-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1774291614712-5-0 .error-icon{fill:#552222;}#exp-1774291614712-5-0 .error-text{fill:#552222;stroke:#552222;}#exp-1774291614712-5-0 .edge-thickness-normal{stroke-width:1px;}#exp-1774291614712-5-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1774291614712-5-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1774291614712-5-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1774291614712-5-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1774291614712-5-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1774291614712-5-0 .marker{fill:#333333;stroke:#333333;}#exp-1774291614712-5-0 .marker.cross{stroke:#333333;}#exp-1774291614712-5-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1774291614712-5-0 p{margin:0;}#exp-1774291614712-5-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1774291614712-5-0 .cluster-label text{fill:#333;}#exp-1774291614712-5-0 .cluster-label span{color:#333;}#exp-1774291614712-5-0 .cluster-label span p{background-color:transparent;}#exp-1774291614712-5-0 .label text,#exp-1774291614712-5-0 span{fill:#333;color:#333;}#exp-1774291614712-5-0 .node rect,#exp-1774291614712-5-0 .node circle,#exp-1774291614712-5-0 .node ellipse,#exp-1774291614712-5-0 .node polygon,#exp-1774291614712-5-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1774291614712-5-0 .rough-node .label text,#exp-1774291614712-5-0 .node .label text,#exp-1774291614712-5-0 .image-shape .label,#exp-1774291614712-5-0 .icon-shape .label{text-anchor:middle;}#exp-1774291614712-5-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1774291614712-5-0 .rough-node .label,#exp-1774291614712-5-0 .node .label,#exp-1774291614712-5-0 .image-shape .label,#exp-1774291614712-5-0 .icon-shape .label{text-align:center;}#exp-1774291614712-5-0 .node.clickable{cursor:pointer;}#exp-1774291614712-5-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1774291614712-5-0 .arrowheadPath{fill:#333333;}#exp-1774291614712-5-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1774291614712-5-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1774291614712-5-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774291614712-5-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1774291614712-5-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774291614712-5-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1774291614712-5-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1774291614712-5-0 .cluster text{fill:#333;}#exp-1774291614712-5-0 .cluster span{color:#333;}#exp-1774291614712-5-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1774291614712-5-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1774291614712-5-0 rect.text{fill:none;stroke-width:0;}#exp-1774291614712-5-0 .icon-shape,#exp-1774291614712-5-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774291614712-5-0 .icon-shape p,#exp-1774291614712-5-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1774291614712-5-0 .icon-shape .label rect,#exp-1774291614712-5-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774291614712-5-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1774291614712-5-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1774291614712-5-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1774291614712-5-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774291614712-5-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774291614712-5-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774291614712-5-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774291614712-5-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774291614712-5-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M132.313,138.398L136.479,138.398C140.646,138.398,148.979,138.398,156.646,138.398C164.313,138.398,171.313,138.398,174.813,138.398L178.313,138.398\" id=\"L_CODE_CALLSTACK_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CODE_CALLSTACK_0\" data-points=\"W3sieCI6MTMyLjMxMjUsInkiOjEzOC4zOTg0Mzc1fSx7IngiOjE1Ny4zMTI1LCJ5IjoxMzguMzk4NDM3NX0seyJ4IjoxODIuMzEyNSwieSI6MTM4LjM5ODQzNzV9XQ==\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M296.841,114.398L305.99,109.21C315.139,104.021,333.436,93.643,346.085,88.454C358.734,83.266,365.734,83.266,369.234,83.266L372.734,83.266\" id=\"L_CALLSTACK_SYNC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CALLSTACK_SYNC_0\" data-points=\"W3sieCI6Mjk2Ljg0MDU2OTQyNTc0NzUsInkiOjExNC4zOTg0Mzc1fSx7IngiOjM1MS43MzQzNzUsInkiOjgzLjI2NTYyNX0seyJ4IjozNzYuNzM0Mzc1LCJ5Ijo4My4yNjU2MjV9XQ==\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M512.355,68.355L535.353,62.674C558.351,56.992,604.348,45.629,647.192,39.947C690.036,34.266,729.729,34.266,749.576,34.266L769.422,34.266\" id=\"L_SYNC_EXEC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SYNC_EXEC_0\" data-points=\"W3sieCI6NTEyLjM1NTEzODU4MTgwNjcsInkiOjY4LjM1NTEzODU4MTgwNjd9LHsieCI6NjUwLjM0Mzc1LCJ5IjozNC4yNjU2MjV9LHsieCI6NzczLjQyMTg3NSwieSI6MzQuMjY1NjI1fV0=\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M512.355,98.176L535.353,103.858C558.351,109.539,604.348,120.902,647.305,126.584C690.263,132.266,730.182,132.266,750.142,132.266L770.102,132.266\" id=\"L_SYNC_LIBUV_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SYNC_LIBUV_0\" data-points=\"W3sieCI6NTEyLjM1NTEzODU4MTgwNjcsInkiOjk4LjE3NjExMTQxODE5MzN9LHsieCI6NjUwLjM0Mzc1LCJ5IjoxMzIuMjY1NjI1fSx7IngiOjc3NC4xMDE1NjI1LCJ5IjoxMzIuMjY1NjI1fV0=\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M916.992,132.266L921.272,132.266C925.552,132.266,934.112,132.266,948.703,137.168C963.295,142.071,983.918,151.876,994.23,156.778L1004.541,161.681\" id=\"L_LIBUV_QUEUE_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_LIBUV_QUEUE_0\" data-points=\"W3sieCI6OTE2Ljk5MjE4NzUsInkiOjEzMi4yNjU2MjV9LHsieCI6OTQyLjY3MTg3NSwieSI6MTMyLjI2NTYyNX0seyJ4IjoxMDA4LjE1MzU3MjAyOTU0NTEsInkiOjE2My4zOTg0Mzc1fV0=\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M967.672,210.539L963.505,211.599C959.339,212.659,951.005,214.778,930.651,215.838C910.297,216.898,877.922,216.898,829.201,216.898C780.479,216.898,715.411,216.898,649.82,216.898C584.229,216.898,518.115,216.898,468.346,216.898C418.578,216.898,385.156,216.898,357.716,208.234C330.275,199.569,308.815,182.24,298.086,173.576L287.356,164.911\" id=\"L_QUEUE_CALLSTACK_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_QUEUE_CALLSTACK_0\" data-points=\"W3sieCI6OTY3LjY3MTg3NSwieSI6MjEwLjUzODUzNzIxMDMwMTE0fSx7IngiOjk0Mi42NzE4NzUsInkiOjIxNi44OTg0Mzc1fSx7IngiOjg0NS41NDY4NzUsInkiOjIxNi44OTg0Mzc1fSx7IngiOjY1MC4zNDM3NSwieSI6MjE2Ljg5ODQzNzV9LHsieCI6NDUyLCJ5IjoyMTYuODk4NDM3NX0seyJ4IjozNTEuNzM0Mzc1LCJ5IjoyMTYuODk4NDM3NX0seyJ4IjoyODQuMjQzOTc4OTAxMjczODYsInkiOjE2Mi4zOTg0Mzc1fV0=\" marker-end=\"url(#exp-1774291614712-5-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_CODE_CALLSTACK_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_CALLSTACK_SYNC_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(650.34375, 34.265625)\"><g class=\"label\" data-id=\"L_SYNC_EXEC_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-44.1171875\" y=\"-1\" width=\"88.234375\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Синхронна</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(650.34375, 132.265625)\"><g class=\"label\" data-id=\"L_SYNC_LIBUV_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-98.078125\" y=\"-1\" width=\"196.15625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Асинхронна</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> (I/O,</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> таймер)</tspan></tspan></text></g></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_LIBUV_QUEUE_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(650.34375, 216.8984375)\"><g class=\"label\" data-id=\"L_QUEUE_CALLSTACK_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-76.03125\" y=\"-1\" width=\"152.0625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Call</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> Stack</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> порожній</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-CODE-0\" transform=\"translate(70.15625, 138.3984375)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-62.15625\" y=\"-24\" width=\"124.3125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-38.15625, -12)\"><rect></rect><foreignObject width=\"76.3125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📝 JS-код</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-CALLSTACK-1\" transform=\"translate(254.5234375, 138.3984375)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-72.2109375\" y=\"-24\" width=\"144.421875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-48.2109375, -12)\"><rect></rect><foreignObject width=\"96.421875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📚 Call Stack</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-SYNC-3\" transform=\"translate(452, 83.265625)\"><polygon points=\"75.265625,0 150.53125,-75.265625 75.265625,-150.53125 0,-75.265625\" class=\"label-container\" transform=\"translate(-74.765625, 75.265625)\"></polygon><g class=\"label\" style=\"\" transform=\"translate(-51.265625, -12)\"><rect></rect><foreignObject width=\"102.53125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Тип операції?</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-EXEC-5\" transform=\"translate(845.546875, 34.265625)\"><rect class=\"basic label-container\" style=\"\" x=\"-72.125\" y=\"-24\" width=\"144.25\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-48.125, -12)\"><rect></rect><foreignObject width=\"96.25\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>✅ Виконати</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-LIBUV-7\" transform=\"translate(845.546875, 132.265625)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-71.4453125\" y=\"-24\" width=\"142.890625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.4453125, -12)\"><rect></rect><foreignObject width=\"94.890625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ libuv / ОС</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-QUEUE-9\" transform=\"translate(1058.6328125, 187.3984375)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-90.9609375\" y=\"-24\" width=\"181.921875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-66.9609375, -12)\"><rect></rect><foreignObject width=\"133.921875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📬 Черга завдань</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'1: синхронно'</span>);\n\n<span class=\"hljs-built_in\">setTimeout</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'3: макротаск'</span>), <span class=\"hljs-number\">0</span>);\n\n<span class=\"hljs-title class_\">Promise</span>.<span class=\"hljs-title function_\">resolve</span>().<span class=\"hljs-title function_\">then</span>(<span class=\"hljs-function\">() =&gt;</span> <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'2: мікротаск'</span>));\n\n<span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'4: синхронно'</span>);\n\n<span class=\"hljs-comment\">// Виведе: 1 → 4 → 2 → 3</span>\n<span class=\"hljs-comment\">// Мікротаски (Promise) виконуються раніше макротасків (setTimeout)</span></code></pre><div class=\"warning\"><strong>⚠️ Блокування Event Loop</strong> <p>Якщо у синхронному коді виконується важке обчислення (наприклад, обробка великого масиву без поділу на частини), весь сервер \"зависає\" — жодний інший запит не буде оброблений до завершення обчислення.</p>\n</div>\n\n","<h1>🔧 Управління версіями: nvm</h1>\n<div class=\"info\"><strong>ℹ️ Проблема</strong> <p>У реальній розробці доводиться паралельно підтримувати кілька проектів з різними вимогами до версії Node.js. Ручне перевстановлення — незручне і ризиковане.</p>\n</div>\n\n\n\n\n\n<div class=\"info\"><strong>ℹ️ Рішення: nvm</strong> <p><strong>nvm</strong> (Node Version Manager) — інструмент для встановлення та перемикання між версіями Node.js без ризику пошкодити систему.</p>\n</div>\n\n\n\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Встановлення nvm (macOS / Linux)</span>\ncurl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash\n\n<span class=\"hljs-comment\"># Перегляд доступних LTS-версій</span>\nnvm ls-remote --lts\n\n<span class=\"hljs-comment\"># Встановлення конкретної версії</span>\nnvm install 24          <span class=\"hljs-comment\"># Node.js 24 (Active LTS)</span>\nnvm install 22          <span class=\"hljs-comment\"># Node.js 22 (Maintenance LTS)</span>\n\n<span class=\"hljs-comment\"># Перемикання між версіями</span>\nnvm use 24\nnvm <span class=\"hljs-built_in\">alias</span> default 24    <span class=\"hljs-comment\"># версія за замовчуванням</span>\n\n<span class=\"hljs-comment\"># Перевірка</span>\nnode --version          <span class=\"hljs-comment\"># v24.x.x</span>\nnpm --version           <span class=\"hljs-comment\"># 11.x.x</span></code></pre><h2>📋 Актуальні версії Node.js (березень 2026)</h2>\n<table>\n<thead>\n<tr>\n<th>Версія</th>\n<th>Кодова назва</th>\n<th>Статус</th>\n<th>EOL</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>24.x</strong></td>\n<td>Jod</td>\n<td>✅ Active LTS</td>\n<td>квітень 2028</td>\n</tr>\n<tr>\n<td><strong>22.x</strong></td>\n<td>Jod</td>\n<td>🔧 Maintenance</td>\n<td>квітень 2027</td>\n</tr>\n<tr>\n<td>20.x</td>\n<td>Iron</td>\n<td>⚠️ EOL</td>\n<td>квітень 2026</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 <code>.nvmrc</code></strong> <p>Додай файл <code>.nvmrc</code> з номером версії (<code>24</code>) до кореня проекту. Тоді команда <code>nvm use</code> без аргументів автоматично застосує потрібну версію — зручно для командної роботи.</p>\n</div>\n\n","<h1>📦 npm — менеджер пакетів</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>npm</strong> (Node Package Manager) — офіційний менеджер пакетів Node.js. Реєстр <strong>npmjs.com</strong> містить понад 2,5 мільйони пакетів. npm встановлюється разом з Node.js.</p>\n</div>\n\n\n\n<h2>🛠️ Ключові команди</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm init -y                        <span class=\"hljs-comment\"># створити package.json з дефолтами</span>\nnpm install express                <span class=\"hljs-comment\"># встановити залежність (runtime)</span>\nnpm install --save-dev typescript  <span class=\"hljs-comment\"># встановити devDependency</span>\nnpm install                        <span class=\"hljs-comment\"># відновити залежності з package.json</span>\nnpm update                         <span class=\"hljs-comment\"># оновити пакети відповідно до semver-діапазону</span>\nnpm run build                      <span class=\"hljs-comment\"># запустити скрипт \"build\"</span>\nnpm list --depth=0                 <span class=\"hljs-comment\"># переглянути встановлені пакети</span></code></pre><h2>📄 Структура <code>package.json</code></h2>\n<pre><code class=\"language-json hljs\" data-highlighted=\"yes\"><span class=\"hljs-punctuation\">{</span>\n  <span class=\"hljs-attr\">\"name\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"task-manager-api\"</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"version\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"1.0.0\"</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"type\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"module\"</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"engines\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">{</span> <span class=\"hljs-attr\">\"node\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"&gt;=24.0.0\"</span> <span class=\"hljs-punctuation\">}</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"scripts\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">{</span>\n    <span class=\"hljs-attr\">\"start\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"node dist/index.js\"</span><span class=\"hljs-punctuation\">,</span>\n    <span class=\"hljs-attr\">\"dev\"</span><span class=\"hljs-punctuation\">:</span>   <span class=\"hljs-string\">\"node --watch src/index.js\"</span><span class=\"hljs-punctuation\">,</span>\n    <span class=\"hljs-attr\">\"build\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"tsc\"</span>\n  <span class=\"hljs-punctuation\">}</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"dependencies\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">{</span>\n    <span class=\"hljs-attr\">\"express\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"^5.0.0\"</span>\n  <span class=\"hljs-punctuation\">}</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"devDependencies\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">{</span>\n    <span class=\"hljs-attr\">\"typescript\"</span><span class=\"hljs-punctuation\">:</span>      <span class=\"hljs-string\">\"^5.8.0\"</span><span class=\"hljs-punctuation\">,</span>\n    <span class=\"hljs-attr\">\"@types/express\"</span><span class=\"hljs-punctuation\">:</span>  <span class=\"hljs-string\">\"^5.0.0\"</span>\n  <span class=\"hljs-punctuation\">}</span>\n<span class=\"hljs-punctuation\">}</span></code></pre><div class=\"tip\"><strong>💡 <code>node --watch</code> та REPL</strong> <p><code>node --watch src/index.js</code> — вбудований аналог <code>nodemon</code> починаючи з Node.js 18: перезапускає процес при зміні файлів. <strong>REPL</strong> (Read-Eval-Print Loop) — інтерактивна консоль, запускається командою <code>node</code> без аргументів; зручна для швидкого тестування виразів.</p>\n</div>\n\n\n\n\n\n<div class=\"warning\"><strong>⚠️ <code>node_modules</code> та <code>.gitignore</code></strong> <p>Папка <code>node_modules</code> містить десятки тисяч файлів і <strong>ніколи</strong> не додається до git. До репозиторію комітять лише <code>package.json</code> та <code>package-lock.json</code>. Відновлення залежностей: <code>npm install</code>.</p>\n</div>\n\n","<h1>🗂️ Модулі: CommonJS</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Модуль</strong> — файл з власною ізольованою областю видимості. Змінні, функції та класи, оголошені в модулі, недоступні ззовні без явного експорту.</p>\n</div>\n\n\n\n<h2>CommonJS — класична система Node.js</h2>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks.repository.js</span>\n<span class=\"hljs-keyword\">const</span> tasks = [];\n<span class=\"hljs-keyword\">let</span> nextId = <span class=\"hljs-number\">1</span>;\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> [...tasks];\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">findById</span>(<span class=\"hljs-params\">id</span>) {\n  <span class=\"hljs-keyword\">return</span> tasks.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">task</span> =&gt;</span> task.<span class=\"hljs-property\">id</span> === id) ?? <span class=\"hljs-literal\">null</span>;\n}\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\">data</span>) {\n  <span class=\"hljs-keyword\">const</span> task = { <span class=\"hljs-attr\">id</span>: nextId++, ...data, <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>() };\n  tasks.<span class=\"hljs-title function_\">push</span>(task);\n  <span class=\"hljs-keyword\">return</span> task;\n}\n\n<span class=\"hljs-variable language_\">module</span>.<span class=\"hljs-property\">exports</span> = { findAll, findById, create };</code></pre><pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks.service.js</span>\n<span class=\"hljs-keyword\">const</span> repository = <span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">'./tasks.repository'</span>);\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">getTask</span>(<span class=\"hljs-params\">id</span>) {\n  <span class=\"hljs-keyword\">const</span> task = repository.<span class=\"hljs-title function_\">findById</span>(id);\n  <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">`Task <span class=\"hljs-subst\">${id}</span> not found`</span>);\n  <span class=\"hljs-keyword\">return</span> task;\n}\n\n<span class=\"hljs-variable language_\">module</span>.<span class=\"hljs-property\">exports</span> = { getTask, <span class=\"hljs-attr\">getAllTasks</span>: repository.<span class=\"hljs-property\">findAll</span> };</code></pre><div class=\"note\"><strong>📝 Як працює <code>require</code></strong> <p>При першому виклику <code>require('./module')</code> Node.js завантажує та виконує файл, а результат <strong>кешує</strong>. Повторні виклики з тим самим шляхом повертають кешований експорт без повторного виконання файлу.</p>\n</div>\n\n","<h1>🗂️ Модулі: ES Modules</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>ES Modules (ESM)</strong> — стандартна модульна система JavaScript (ES2015+). Підтримується і Node.js, і браузером. Рекомендований підхід для нових проектів.</p>\n</div>\n\n\n\n<p>Щоб увімкнути ESM у Node.js: <code>\"type\": \"module\"</code> у <code>package.json</code>.</p>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks.repository.js</span>\n<span class=\"hljs-keyword\">const</span> tasks = [];\n<span class=\"hljs-keyword\">let</span> nextId = <span class=\"hljs-number\">1</span>;\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">return</span> [...tasks];\n}\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\">data</span>) {\n  <span class=\"hljs-keyword\">const</span> task = { <span class=\"hljs-attr\">id</span>: nextId++, ...data, <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>() };\n  tasks.<span class=\"hljs-title function_\">push</span>(task);\n  <span class=\"hljs-keyword\">return</span> task;\n}</code></pre><pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks.service.js</span>\n<span class=\"hljs-keyword\">import</span> { findAll, create } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'./tasks.repository.js'</span>;\n<span class=\"hljs-comment\">// У ESM розширення файлу (.js) — обов'язкове</span>\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">createTask</span>(<span class=\"hljs-params\">title, priority = <span class=\"hljs-string\">'medium'</span></span>) {\n  <span class=\"hljs-keyword\">if</span> (!title?.<span class=\"hljs-title function_\">trim</span>()) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Error</span>(<span class=\"hljs-string\">'Title is required'</span>);\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title function_\">create</span>({ <span class=\"hljs-attr\">title</span>: title.<span class=\"hljs-title function_\">trim</span>(), priority, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">'todo'</span> });\n}\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">const</span> getAllTasks = findAll;</code></pre><h2>🆚 CommonJS vs ES Modules</h2>\n<table>\n<thead>\n<tr>\n<th>Ознака</th>\n<th>CommonJS</th>\n<th>ES Modules</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Синтаксис</td>\n<td><code>require</code> / <code>module.exports</code></td>\n<td><code>import</code> / <code>export</code></td>\n</tr>\n<tr>\n<td>Завантаження</td>\n<td>Синхронне</td>\n<td>Асинхронне, статично аналізоване</td>\n</tr>\n<tr>\n<td>Top-level <code>await</code></td>\n<td>❌</td>\n<td>✅</td>\n</tr>\n<tr>\n<td>Tree-shaking</td>\n<td>❌</td>\n<td>✅</td>\n</tr>\n<tr>\n<td>Рекомендація</td>\n<td>Legacy-проекти</td>\n<td>Нові проекти</td>\n</tr>\n</tbody></table>\n","<h1>🛠️ Вбудовані модулі: <code>fs</code>, <code>path</code>, <code>process</code></h1>\n<h2>📁 <code>node:fs/promises</code> — асинхронна файлова система</h2>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { readFile, writeFile, mkdir } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'node:fs/promises'</span>;\n<span class=\"hljs-keyword\">import</span> { join } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'node:path'</span>;\n\n<span class=\"hljs-comment\">// Префікс node: явно вказує, що це вбудований модуль (рекомендовано з Node.js 14+)</span>\n<span class=\"hljs-keyword\">const</span> <span class=\"hljs-variable constant_\">DATA_DIR</span> = <span class=\"hljs-title function_\">join</span>(<span class=\"hljs-keyword\">import</span>.<span class=\"hljs-property\">meta</span>.<span class=\"hljs-property\">dirname</span>, <span class=\"hljs-string\">'data'</span>);\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">loadTasks</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">try</span> {\n    <span class=\"hljs-keyword\">const</span> content = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">readFile</span>(<span class=\"hljs-title function_\">join</span>(<span class=\"hljs-variable constant_\">DATA_DIR</span>, <span class=\"hljs-string\">'tasks.json'</span>), <span class=\"hljs-string\">'utf8'</span>);\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">parse</span>(content);\n  } <span class=\"hljs-keyword\">catch</span> (error) {\n    <span class=\"hljs-keyword\">if</span> (error.<span class=\"hljs-property\">code</span> === <span class=\"hljs-string\">'ENOENT'</span>) <span class=\"hljs-keyword\">return</span> []; <span class=\"hljs-comment\">// файл не існує — повертаємо порожній масив</span>\n    <span class=\"hljs-keyword\">throw</span> error;\n  }\n}\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">saveTasks</span>(<span class=\"hljs-params\">tasks</span>) {\n  <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">mkdir</span>(<span class=\"hljs-variable constant_\">DATA_DIR</span>, { <span class=\"hljs-attr\">recursive</span>: <span class=\"hljs-literal\">true</span> }); <span class=\"hljs-comment\">// створити директорію, якщо не існує</span>\n  <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">writeFile</span>(\n    <span class=\"hljs-title function_\">join</span>(<span class=\"hljs-variable constant_\">DATA_DIR</span>, <span class=\"hljs-string\">'tasks.json'</span>),\n    <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>(tasks, <span class=\"hljs-literal\">null</span>, <span class=\"hljs-number\">2</span>),\n    <span class=\"hljs-string\">'utf8'</span>\n  );\n}</code></pre><h2>⚙️ <code>process</code> — змінні середовища та завершення роботи</h2>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">const</span> config = {\n  <span class=\"hljs-attr\">port</span>:    <span class=\"hljs-built_in\">parseInt</span>(process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">PORT</span> ?? <span class=\"hljs-string\">'3000'</span>, <span class=\"hljs-number\">10</span>),\n  <span class=\"hljs-attr\">dbUrl</span>:   process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">DATABASE_URL</span>,\n  <span class=\"hljs-attr\">nodeEnv</span>: process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">NODE_ENV</span> ?? <span class=\"hljs-string\">'development'</span>,\n};\n\n<span class=\"hljs-comment\">// Graceful shutdown — коректне завершення роботи</span>\nprocess.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">'SIGTERM'</span>, <span class=\"hljs-function\">() =&gt;</span> {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'Завершення процесу...'</span>);\n  server.<span class=\"hljs-title function_\">close</span>(<span class=\"hljs-function\">() =&gt;</span> {       <span class=\"hljs-comment\">// close() приймає колбек, а не повертає Promise</span>\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">'Сервер зупинено'</span>);\n    process.<span class=\"hljs-title function_\">exit</span>(<span class=\"hljs-number\">0</span>);\n  });\n});</code></pre><div class=\"warning\"><strong>⚠️ Змінні середовища</strong> <p>Паролі, ключі API, рядки підключення до БД <strong>ніколи</strong> не записують у код. Їх зберігають у файлі <code>.env</code> (локально) або у секретах хмарної платформи. <code>.env</code> обов'язково додається до <code>.gitignore</code>.</p>\n</div>\n\n","<h1>🌐 HTTP-сервер з поверненням JSON</h1>\n<div class=\"info\"><strong>ℹ️ Модуль <code>node:http</code></strong> <p>Вбудований модуль <code>http</code> дозволяє створювати HTTP-сервери без зовнішніх залежностей. Це фундамент, на якому побудовані Express, Fastify та інші фреймворки.</p>\n</div>\n\n\n\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> http <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'node:http'</span>;\n\n<span class=\"hljs-keyword\">const</span> tasks = [\n  { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">'Розробити API'</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">'in-progress'</span>, <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-string\">'high'</span> },\n  { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">2</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">'Написати тести'</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">'todo'</span>,        <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-string\">'medium'</span> },\n];\n\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">sendJson</span>(<span class=\"hljs-params\">res, statusCode, data</span>) {\n  res.<span class=\"hljs-title function_\">writeHead</span>(statusCode, { <span class=\"hljs-string\">'Content-Type'</span>: <span class=\"hljs-string\">'application/json; charset=utf-8'</span> });\n  res.<span class=\"hljs-title function_\">end</span>(<span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>(data));\n}\n\n<span class=\"hljs-keyword\">const</span> server = http.<span class=\"hljs-title function_\">createServer</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">req, res</span>) =&gt;</span> {\n  <span class=\"hljs-keyword\">const</span> { method, url } = req;\n\n  <span class=\"hljs-keyword\">if</span> (method === <span class=\"hljs-string\">'GET'</span> &amp;&amp; url === <span class=\"hljs-string\">'/tasks'</span>) {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">200</span>, tasks);\n  }\n\n  <span class=\"hljs-keyword\">const</span> match = url.<span class=\"hljs-title function_\">match</span>(<span class=\"hljs-regexp\">/^\\/tasks\\/(\\d+)$/</span>);\n  <span class=\"hljs-keyword\">if</span> (method === <span class=\"hljs-string\">'GET'</span> &amp;&amp; match) {\n    <span class=\"hljs-keyword\">const</span> task = tasks.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\"><span class=\"hljs-params\">t</span> =&gt;</span> t.<span class=\"hljs-property\">id</span> === <span class=\"hljs-built_in\">parseInt</span>(match[<span class=\"hljs-number\">1</span>], <span class=\"hljs-number\">10</span>));\n    <span class=\"hljs-keyword\">return</span> task\n      ? <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">200</span>, task)\n      : <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">404</span>, { <span class=\"hljs-attr\">error</span>: <span class=\"hljs-string\">'Task not found'</span> });\n  }\n\n  <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">404</span>, { <span class=\"hljs-attr\">error</span>: <span class=\"hljs-string\">'Route not found'</span> });\n});\n\nserver.<span class=\"hljs-title function_\">listen</span>(process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">PORT</span> ?? <span class=\"hljs-number\">3000</span>, <span class=\"hljs-function\">() =&gt;</span> {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`🚀 Сервер: http://localhost:<span class=\"hljs-subst\">${process.env.PORT ?? <span class=\"hljs-number\">3000</span>}</span>`</span>);\n});</code></pre><div class=\"note\"><strong>📝 Навіщо потрібен Express або Fastify?</strong> <p>Ручна маршрутизація через регулярні вирази стає некерованою вже при 5–10 ендпоінтах. Фреймворки надають декларативний синтаксис маршрутів, middleware, обробку помилок та багато іншого.</p>\n</div>\n\n","<h1>🌐 Читання тіла запиту (POST)</h1>\n<p><strong>Головна ідея:</strong> тіло HTTP-запиту надходить частинами у вигляді <strong>потоку даних</strong> (stream). Його необхідно зібрати повністю перед обробкою.</p>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Утиліта для читання тіла запиту як потоку</span>\n<span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">readRequestBody</span>(<span class=\"hljs-params\">req</span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Promise</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">resolve, reject</span>) =&gt;</span> {\n    <span class=\"hljs-keyword\">const</span> chunks = [];\n    req.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">'data'</span>,  <span class=\"hljs-function\"><span class=\"hljs-params\">chunk</span> =&gt;</span> chunks.<span class=\"hljs-title function_\">push</span>(chunk));\n    req.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">'end'</span>,   <span class=\"hljs-function\">()    =&gt;</span> <span class=\"hljs-title function_\">resolve</span>(<span class=\"hljs-title class_\">Buffer</span>.<span class=\"hljs-title function_\">concat</span>(chunks).<span class=\"hljs-title function_\">toString</span>(<span class=\"hljs-string\">'utf8'</span>)));\n    req.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">'error'</span>, reject);\n  });\n}\n\n<span class=\"hljs-comment\">// Обробник POST /tasks</span>\n<span class=\"hljs-keyword\">const</span> server = http.<span class=\"hljs-title function_\">createServer</span>(<span class=\"hljs-keyword\">async</span> (req, res) =&gt; {\n  <span class=\"hljs-keyword\">if</span> (req.<span class=\"hljs-property\">method</span> === <span class=\"hljs-string\">'POST'</span> &amp;&amp; req.<span class=\"hljs-property\">url</span> === <span class=\"hljs-string\">'/tasks'</span>) {\n    <span class=\"hljs-keyword\">try</span> {\n      <span class=\"hljs-keyword\">const</span> body = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">readRequestBody</span>(req);\n      <span class=\"hljs-keyword\">const</span> { title, priority = <span class=\"hljs-string\">'medium'</span> } = <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">parse</span>(body);\n\n      <span class=\"hljs-keyword\">if</span> (!title?.<span class=\"hljs-title function_\">trim</span>()) {\n        <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">400</span>, { <span class=\"hljs-attr\">error</span>: <span class=\"hljs-string\">'Field \"title\" is required'</span> });\n      }\n\n      <span class=\"hljs-keyword\">const</span> newTask = {\n        <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Date</span>.<span class=\"hljs-title function_\">now</span>(),\n        <span class=\"hljs-attr\">title</span>: title.<span class=\"hljs-title function_\">trim</span>(),\n        priority,\n        <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">'todo'</span>,\n        <span class=\"hljs-attr\">createdAt</span>: <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">Date</span>().<span class=\"hljs-title function_\">toISOString</span>(),\n      };\n      tasks.<span class=\"hljs-title function_\">push</span>(newTask);\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">201</span>, newTask);\n\n    } <span class=\"hljs-keyword\">catch</span> {\n      <span class=\"hljs-keyword\">return</span> <span class=\"hljs-title function_\">sendJson</span>(res, <span class=\"hljs-number\">400</span>, { <span class=\"hljs-attr\">error</span>: <span class=\"hljs-string\">'Invalid JSON body'</span> });\n    }\n  }\n});</code></pre><div class=\"tip\"><strong>💡 <code>async/await</code> в обробниках</strong> <p>Node.js підтримує <code>async</code> у колбеках <code>createServer</code>. Проте відхилені проміси без <code>try/catch</code> можуть звалити весь процес — завжди обробляй помилки явно.</p>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Що ми вивчили</strong> <p><strong>Node.js</strong> — середовище виконання JavaScript на основі V8, що забезпечує роботу поза браузером. Завдяки <strong>Event Loop</strong> та неблокуючому I/O через <strong>libuv</strong>, один потік ефективно обслуговує тисячі одночасних підключень.</p>\n<p><strong>nvm</strong> дозволяє керувати версіями Node.js: встановлювати, перемикати та фіксувати версію для проекту через <code>.nvmrc</code>. Для виробничих застосунків — виключно LTS-версії (зараз Node.js 24).</p>\n<p><strong>npm</strong> — менеджер пакетів з реєстром 2,5+ млн пакетів. <code>package.json</code> фіксує залежності та скрипти. <code>node_modules</code> — поза git, відновлюється через <code>npm install</code>.</p>\n<p><strong>CommonJS</strong> (<code>require</code>) — legacy-система Node.js. <strong>ES Modules</strong> (<code>import/export</code>) — сучасний стандарт, рекомендований для нових проектів; вмикається через <code>\"type\": \"module\"</code> у <code>package.json</code>.</p>\n<p>Вбудовані модулі з префіксом <code>node:</code> (<code>node:fs/promises</code>, <code>node:path</code>, <code>node:http</code>) покривають базові потреби серверної розробки. Для реальних проектів — фреймворки (Express, Fastify, Nest.js).</p>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li>🤔 Що таке Node.js і яка принципова відмінність між браузерним і Node.js-середовищем виконання JavaScript?</li>\n<li>🔄 Поясніть роботу Event Loop: як Node.js обробляє I/O-операції в одному потоці та в якому порядку виконуються мікро- і макротаски?</li>\n<li>⚠️ Що відбудеться з сервером, якщо в обробнику запиту виконати важке синхронне обчислення?</li>\n<li>🔧 Навіщо використовувати <code>nvm</code> замість прямого встановлення Node.js? Що таке <code>.nvmrc</code> і яка його роль у командній розробці?</li>\n<li>📦 Яка різниця між <code>dependencies</code> та <code>devDependencies</code> у <code>package.json</code>? Наведіть приклади обох категорій.</li>\n<li>🗂️ Чим відрізняються CommonJS та ES Modules за механізмом завантаження, можливостями та рекомендованим застосуванням?</li>\n<li>🌐 Чому тіло HTTP-запиту в Node.js читається асинхронно через події <code>data</code> та <code>end</code>, а не одразу як єдиний об'єкт?</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Node.js</strong></td>\n<td>Крос-платформне середовище виконання JavaScript на основі V8, незалежне від браузера</td>\n</tr>\n<tr>\n<td><strong>Event Loop</strong></td>\n<td>Механізм безперервної обробки черги асинхронних подій в одному потоці виконання</td>\n</tr>\n<tr>\n<td><strong>libuv</strong></td>\n<td>Бібліотека C++, що реалізує асинхронне I/O та пул потоків для Node.js</td>\n</tr>\n<tr>\n<td><strong>Мікротаск</strong></td>\n<td>Завдання з найвищим пріоритетом у Event Loop (Promise, <code>queueMicrotask</code>); виконується до макротасків</td>\n</tr>\n<tr>\n<td><strong>Макротаск</strong></td>\n<td>Завдання у черзі Event Loop (setTimeout, setInterval, I/O-колбеки)</td>\n</tr>\n<tr>\n<td><strong>Модуль</strong></td>\n<td>Файл з ізольованою областю видимості; публічний інтерфейс визначається через <code>export</code></td>\n</tr>\n<tr>\n<td><strong>Залежність</strong></td>\n<td>Зовнішній пакет, необхідний для роботи застосунку (<code>dependencies</code>) або розробки (<code>devDependencies</code>)</td>\n</tr>\n<tr>\n<td><strong>Stream (потік)</strong></td>\n<td>Послідовність даних, що передається частинами, без необхідності завантажувати все в пам'ять</td>\n</tr>\n<tr>\n<td><strong>Graceful shutdown</strong></td>\n<td>Коректне завершення роботи сервера з очікуванням завершення активних запитів перед виходом</td>\n</tr>\n<tr>\n<td><strong>Серіалізація</strong></td>\n<td>Перетворення структури даних у формат для передачі (наприклад, JavaScript-об'єкт → JSON-рядок)</td>\n</tr>\n</tbody></table>\n","<h1>🔤 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифрування</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>npm</strong></td>\n<td>Node Package Manager / Менеджер пакетів Node.js</td>\n</tr>\n<tr>\n<td><strong>nvm</strong></td>\n<td>Node Version Manager / Менеджер версій Node.js</td>\n</tr>\n<tr>\n<td><strong>LTS</strong></td>\n<td>Long-Term Support / Версія з тривалою підтримкою</td>\n</tr>\n<tr>\n<td><strong>REPL</strong></td>\n<td>Read-Eval-Print Loop / Інтерактивна консоль виконання коду</td>\n</tr>\n<tr>\n<td><strong>I/O</strong></td>\n<td>Input/Output / Введення та виведення даних</td>\n</tr>\n<tr>\n<td><strong>ESM</strong></td>\n<td>ECMAScript Modules / Стандартна модульна система JavaScript</td>\n</tr>\n<tr>\n<td><strong>CJS</strong></td>\n<td>CommonJS / Модульна система, розроблена для Node.js</td>\n</tr>\n<tr>\n<td><strong>JIT</strong></td>\n<td>Just-In-Time / Компіляція коду безпосередньо під час виконання</td>\n</tr>\n<tr>\n<td><strong>JSON</strong></td>\n<td>JavaScript Object Notation / Текстовий формат обміну даних</td>\n</tr>\n<tr>\n<td><strong>API</strong></td>\n<td>Application Programming Interface / Інтерфейс програмування застосунків</td>\n</tr>\n<tr>\n<td><strong>HTTP</strong></td>\n<td>HyperText Transfer Protocol / Протокол передачі гіпертексту</td>\n</tr>\n<tr>\n<td><strong>EOL</strong></td>\n<td>End of Life / Завершення підтримки версії</td>\n</tr>\n<tr>\n<td><strong>CLI</strong></td>\n<td>Command Line Interface / Інтерфейс командного рядка</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
