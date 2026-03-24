@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Nest.js: основи</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 15</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>Nest.js: основи</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🏗️ Що таке Nest.js та навіщо він потрібен</li>\n<li>🧩 Архітектура: модулі, контролери, провайдери</li>\n<li>🎨 Декоратори — основа Nest.js</li>\n<li>⚙️ Nest CLI: створення проєкту та генерація коду</li>\n<li>🎮 Контролери та маршрутизація HTTP-запитів</li>\n<li>🌐 Змінні середовища та ConfigModule</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🏗️ Що таке Nest.js</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Nest.js</strong> — це фреймворк для побудови серверних (backend) застосунків на Node.js з підтримкою TypeScript. Він надає чітку архітектуру та набір інструментів, що дозволяють створювати масштабовані та добре структуровані API.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Nest.js не замінює Node.js — він будується поверх нього та поверх HTTP-сервера (Express або Fastify), додаючи архітектуру та зручні інструменти.</p>\n<h2>🤔 Проблема без фреймворку</h2>\n<p>Уявімо, що ми пишемо API на чистому Node.js:</p>\n<pre><code class=\"language-javascript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Без фреймворку — все вручну, все в одному місці</span>\n<span class=\"hljs-keyword\">const</span> http = <span class=\"hljs-built_in\">require</span>(<span class=\"hljs-string\">\"http\"</span>);\n\n<span class=\"hljs-keyword\">const</span> server = http.<span class=\"hljs-title function_\">createServer</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">req, res</span>) =&gt;</span> {\n  <span class=\"hljs-keyword\">if</span> (req.<span class=\"hljs-property\">method</span> === <span class=\"hljs-string\">\"GET\"</span> &amp;&amp; req.<span class=\"hljs-property\">url</span> === <span class=\"hljs-string\">\"/tasks\"</span>) {\n    res.<span class=\"hljs-title function_\">writeHead</span>(<span class=\"hljs-number\">200</span>, { <span class=\"hljs-string\">\"Content-Type\"</span>: <span class=\"hljs-string\">\"application/json\"</span> });\n    res.<span class=\"hljs-title function_\">end</span>(<span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>({ <span class=\"hljs-attr\">tasks</span>: [] }));\n  } <span class=\"hljs-keyword\">else</span> <span class=\"hljs-keyword\">if</span> (req.<span class=\"hljs-property\">method</span> === <span class=\"hljs-string\">\"POST\"</span> &amp;&amp; req.<span class=\"hljs-property\">url</span> === <span class=\"hljs-string\">\"/tasks\"</span>) {\n    <span class=\"hljs-comment\">// Збір тіла запиту — потрібно вручну</span>\n    <span class=\"hljs-keyword\">let</span> body = <span class=\"hljs-string\">\"\"</span>;\n    req.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">\"data\"</span>, <span class=\"hljs-function\">(<span class=\"hljs-params\">chunk</span>) =&gt;</span> (body += chunk));\n    req.<span class=\"hljs-title function_\">on</span>(<span class=\"hljs-string\">\"end\"</span>, <span class=\"hljs-function\">() =&gt;</span> {\n      <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">parse</span>(body);\n      res.<span class=\"hljs-title function_\">writeHead</span>(<span class=\"hljs-number\">201</span>);\n      res.<span class=\"hljs-title function_\">end</span>(<span class=\"hljs-title class_\">JSON</span>.<span class=\"hljs-title function_\">stringify</span>(task));\n    });\n  } <span class=\"hljs-keyword\">else</span> {\n    res.<span class=\"hljs-title function_\">writeHead</span>(<span class=\"hljs-number\">404</span>);\n    res.<span class=\"hljs-title function_\">end</span>(<span class=\"hljs-string\">\"Not found\"</span>);\n  }\n});</code></pre><div class=\"warning\"><strong>⚠️ Проблеми чистого підходу</strong> <ul>\n<li>📁 Весь код в одному файлі → важко підтримувати</li>\n<li>🔁 Повторюваний код: парсинг тіла, обробка помилок, заголовки</li>\n<li>🧪 Важко тестувати: все тісно зв'язано</li>\n<li>👥 Складно працювати командою: немає єдиної структури</li>\n</ul>\n</div>\n\n\n\n<h2>✅ Рішення Nest.js</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// З Nest.js — кожен компонент має своє місце та відповідальність</span>\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"tasks\"</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-meta\">@Get</span>()\n  <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) {\n    <span class=\"hljs-keyword\">return</span> { <span class=\"hljs-attr\">tasks</span>: [] };\n  }\n\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() createTaskDto: CreateTaskDto</span>) {\n    <span class=\"hljs-keyword\">return</span> createTaskDto;\n  }\n}</code></pre><p>Nest.js надає <strong>чітку структуру</strong>: кожен файл має зрозумілу роль, тестування спрощено, команда одразу розуміє де що знаходиться.</p>\n","<h1>🔗 Nest.js у стеку технологій</h1>\n<p><strong>Головна ідея:</strong> Nest.js займає роль \"бекенду\" у стеку розробки — обробляє HTTP-запити від браузера або мобільного додатку, взаємодіє з базою даних і повертає дані.</p>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    CLIENT[&quot;🌐 Браузер (React)&quot;] --&gt; NEST[&quot;🏗️ Nest.js API&quot;]\n    MOBILE[&quot;📱 Мобільний додаток&quot;] --&gt; NEST\n    NEST --&gt; DB[&quot;🗄️ База даних&quot;]\n    NEST --&gt; CACHE[&quot;⚡ Кеш (Redis)&quot;]\n    NEST --&gt; EXT[&quot;🔌 Зовнішні API&quot;]\n    style CLIENT fill:#e3f2fd,stroke:#1565c0\n    style MOBILE fill:#fce4ec,stroke:#c2185b\n    style NEST fill:#fff9c4,stroke:#f9a825\n    style DB fill:#e8f5e9,stroke:#388e3c\n    style CACHE fill:#f3e5f5,stroke:#7b1fa2\n    style EXT fill:#fff3e0,stroke:#ef6c00\"><svg id=\"exp-1774377781637-3-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 653.015625px;\" viewBox=\"0 0 653.015625 260\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1774377781637-3-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1774377781637-3-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1774377781637-3-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1774377781637-3-0 .error-icon{fill:#552222;}#exp-1774377781637-3-0 .error-text{fill:#552222;stroke:#552222;}#exp-1774377781637-3-0 .edge-thickness-normal{stroke-width:1px;}#exp-1774377781637-3-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1774377781637-3-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1774377781637-3-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1774377781637-3-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1774377781637-3-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1774377781637-3-0 .marker{fill:#333333;stroke:#333333;}#exp-1774377781637-3-0 .marker.cross{stroke:#333333;}#exp-1774377781637-3-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1774377781637-3-0 p{margin:0;}#exp-1774377781637-3-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1774377781637-3-0 .cluster-label text{fill:#333;}#exp-1774377781637-3-0 .cluster-label span{color:#333;}#exp-1774377781637-3-0 .cluster-label span p{background-color:transparent;}#exp-1774377781637-3-0 .label text,#exp-1774377781637-3-0 span{fill:#333;color:#333;}#exp-1774377781637-3-0 .node rect,#exp-1774377781637-3-0 .node circle,#exp-1774377781637-3-0 .node ellipse,#exp-1774377781637-3-0 .node polygon,#exp-1774377781637-3-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1774377781637-3-0 .rough-node .label text,#exp-1774377781637-3-0 .node .label text,#exp-1774377781637-3-0 .image-shape .label,#exp-1774377781637-3-0 .icon-shape .label{text-anchor:middle;}#exp-1774377781637-3-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1774377781637-3-0 .rough-node .label,#exp-1774377781637-3-0 .node .label,#exp-1774377781637-3-0 .image-shape .label,#exp-1774377781637-3-0 .icon-shape .label{text-align:center;}#exp-1774377781637-3-0 .node.clickable{cursor:pointer;}#exp-1774377781637-3-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1774377781637-3-0 .arrowheadPath{fill:#333333;}#exp-1774377781637-3-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1774377781637-3-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1774377781637-3-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781637-3-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1774377781637-3-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781637-3-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1774377781637-3-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1774377781637-3-0 .cluster text{fill:#333;}#exp-1774377781637-3-0 .cluster span{color:#333;}#exp-1774377781637-3-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1774377781637-3-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1774377781637-3-0 rect.text{fill:none;stroke-width:0;}#exp-1774377781637-3-0 .icon-shape,#exp-1774377781637-3-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781637-3-0 .icon-shape p,#exp-1774377781637-3-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1774377781637-3-0 .icon-shape .label rect,#exp-1774377781637-3-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781637-3-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1774377781637-3-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1774377781637-3-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1774377781637-3-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781637-3-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781637-3-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781637-3-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781637-3-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781637-3-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M213.992,81L220.421,81C226.849,81,239.706,81,254.067,84.874C268.428,88.748,284.294,96.496,292.227,100.371L300.16,104.245\" id=\"L_CLIENT_NEST_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CLIENT_NEST_0\" data-points=\"W3sieCI6MjEzLjk5MjE4NzUsInkiOjgxfSx7IngiOjI1Mi41NjI1LCJ5Ijo4MX0seyJ4IjozMDMuNzU0MzA0ODQ2OTM4OCwieSI6MTA2fV0=\" marker-end=\"url(#exp-1774377781637-3-0_flowchart-v2-pointEnd)\"></path><path d=\"M227.563,179L231.729,179C235.896,179,244.229,179,256.329,175.126C268.428,171.252,284.294,163.504,292.227,159.629L300.16,155.755\" id=\"L_MOBILE_NEST_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MOBILE_NEST_0\" data-points=\"W3sieCI6MjI3LjU2MjUsInkiOjE3OX0seyJ4IjoyNTIuNTYyNSwieSI6MTc5fSx7IngiOjMwMy43NTQzMDQ4NDY5Mzg4LCJ5IjoxNTR9XQ==\" marker-end=\"url(#exp-1774377781637-3-0_flowchart-v2-pointEnd)\"></path><path d=\"M377.471,106L390.098,93.667C402.725,81.333,427.98,56.667,444.952,44.333C461.924,32,470.615,32,474.96,32L479.305,32\" id=\"L_NEST_DB_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_NEST_DB_0\" data-points=\"W3sieCI6Mzc3LjQ3MDUwMzgyNjUzMDYsInkiOjEwNn0seyJ4Ijo0NTMuMjM0Mzc1LCJ5IjozMn0seyJ4Ijo0ODMuMzA0Njg3NSwieSI6MzJ9XQ==\" marker-end=\"url(#exp-1774377781637-3-0_flowchart-v2-pointEnd)\"></path><path d=\"M428.234,130L432.401,130C436.568,130,444.901,130,453.186,130C461.471,130,469.708,130,473.827,130L477.945,130\" id=\"L_NEST_CACHE_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_NEST_CACHE_0\" data-points=\"W3sieCI6NDI4LjIzNDM3NSwieSI6MTMwfSx7IngiOjQ1My4yMzQzNzUsInkiOjEzMH0seyJ4Ijo0ODEuOTQ1MzEyNSwieSI6MTMwfV0=\" marker-end=\"url(#exp-1774377781637-3-0_flowchart-v2-pointEnd)\"></path><path d=\"M377.471,154L390.098,166.333C402.725,178.667,427.98,203.333,444.107,215.667C460.234,228,467.234,228,470.734,228L474.234,228\" id=\"L_NEST_EXT_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_NEST_EXT_0\" data-points=\"W3sieCI6Mzc3LjQ3MDUwMzgyNjUzMDYsInkiOjE1NH0seyJ4Ijo0NTMuMjM0Mzc1LCJ5IjoyMjh9LHsieCI6NDc4LjIzNDM3NSwieSI6MjI4fV0=\" marker-end=\"url(#exp-1774377781637-3-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_CLIENT_NEST_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MOBILE_NEST_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_NEST_DB_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_NEST_CACHE_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_NEST_EXT_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-CLIENT-0\" transform=\"translate(117.78125, 81)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-96.2109375\" y=\"-24\" width=\"192.421875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-72.2109375, -12)\"><rect></rect><foreignObject width=\"144.421875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🌐 Браузер (React)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-NEST-1\" transform=\"translate(352.8984375, 130)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-75.3359375\" y=\"-24\" width=\"150.671875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-51.3359375, -12)\"><rect></rect><foreignObject width=\"102.671875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🏗️ Nest.js API</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-MOBILE-2\" transform=\"translate(117.78125, 179)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-109.78125\" y=\"-24\" width=\"219.5625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-85.78125, -12)\"><rect></rect><foreignObject width=\"171.5625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📱 Мобільний додаток</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-DB-5\" transform=\"translate(561.625, 32)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-78.3203125\" y=\"-24\" width=\"156.640625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-54.3203125, -12)\"><rect></rect><foreignObject width=\"108.640625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🗄️ База даних</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-CACHE-7\" transform=\"translate(561.625, 130)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-79.6796875\" y=\"-24\" width=\"159.359375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-55.6796875, -12)\"><rect></rect><foreignObject width=\"111.359375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚡ Кеш (Redis)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-EXT-9\" transform=\"translate(561.625, 228)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-83.390625\" y=\"-24\" width=\"166.78125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-59.390625, -12)\"><rect></rect><foreignObject width=\"118.78125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔌 Зовнішні API</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<div class=\"note\"><strong>📝 Роль у повному стеку</strong> <p>У контексті курсу React-застосунок із попереднього модуля відіграє роль клієнта, що надсилає HTTP-запити до Nest.js API. Nest.js, своєю чергою, відповідає за авторизацію, бізнес-логіку та взаємодію з базою даних.</p>\n</div>\n\n","<h1>🧩 Архітектура Nest.js</h1>\n<p><strong>Головна ідея:</strong> Nest.js побудований на трьох основних будівельних блоках: <strong>модулі</strong> організовують та інкапсулюють код, <strong>контролери</strong> обробляють HTTP-запити, <strong>провайдери</strong> містять бізнес-логіку та інші залежності.</p>\n\n<div class=\"mermaid\" data-source=\"graph TD\n    APP[&quot;📦 AppModule (кореневий модуль)&quot;] --&gt; TASKS[&quot;📦 TasksModule&quot;]\n    APP --&gt; USERS[&quot;📦 UsersModule&quot;]\n    TASKS --&gt; TC[&quot;🎮 TasksController&quot;]\n    TASKS --&gt; TS[&quot;⚙️ TasksService&quot;]\n    USERS --&gt; UC[&quot;🎮 UsersController&quot;]\n    USERS --&gt; US[&quot;⚙️ UsersService&quot;]\n    TC --&gt;|&quot;використовує&quot;| TS\n    UC --&gt;|&quot;використовує&quot;| US\n    style APP fill:#fff9c4,stroke:#f9a825\n    style TASKS fill:#e3f2fd,stroke:#1565c0\n    style USERS fill:#e3f2fd,stroke:#1565c0\n    style TC fill:#e8f5e9,stroke:#388e3c\n    style TS fill:#fce4ec,stroke:#c2185b\n    style UC fill:#e8f5e9,stroke:#388e3c\n    style US fill:#fce4ec,stroke:#c2185b\"><svg id=\"exp-1774377781653-4-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 511.3828125px;\" viewBox=\"0 0 511.3828125 404\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1774377781653-4-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1774377781653-4-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1774377781653-4-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1774377781653-4-0 .error-icon{fill:#552222;}#exp-1774377781653-4-0 .error-text{fill:#552222;stroke:#552222;}#exp-1774377781653-4-0 .edge-thickness-normal{stroke-width:1px;}#exp-1774377781653-4-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1774377781653-4-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1774377781653-4-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1774377781653-4-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1774377781653-4-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1774377781653-4-0 .marker{fill:#333333;stroke:#333333;}#exp-1774377781653-4-0 .marker.cross{stroke:#333333;}#exp-1774377781653-4-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1774377781653-4-0 p{margin:0;}#exp-1774377781653-4-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1774377781653-4-0 .cluster-label text{fill:#333;}#exp-1774377781653-4-0 .cluster-label span{color:#333;}#exp-1774377781653-4-0 .cluster-label span p{background-color:transparent;}#exp-1774377781653-4-0 .label text,#exp-1774377781653-4-0 span{fill:#333;color:#333;}#exp-1774377781653-4-0 .node rect,#exp-1774377781653-4-0 .node circle,#exp-1774377781653-4-0 .node ellipse,#exp-1774377781653-4-0 .node polygon,#exp-1774377781653-4-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1774377781653-4-0 .rough-node .label text,#exp-1774377781653-4-0 .node .label text,#exp-1774377781653-4-0 .image-shape .label,#exp-1774377781653-4-0 .icon-shape .label{text-anchor:middle;}#exp-1774377781653-4-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1774377781653-4-0 .rough-node .label,#exp-1774377781653-4-0 .node .label,#exp-1774377781653-4-0 .image-shape .label,#exp-1774377781653-4-0 .icon-shape .label{text-align:center;}#exp-1774377781653-4-0 .node.clickable{cursor:pointer;}#exp-1774377781653-4-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1774377781653-4-0 .arrowheadPath{fill:#333333;}#exp-1774377781653-4-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1774377781653-4-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1774377781653-4-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781653-4-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1774377781653-4-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781653-4-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1774377781653-4-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1774377781653-4-0 .cluster text{fill:#333;}#exp-1774377781653-4-0 .cluster span{color:#333;}#exp-1774377781653-4-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1774377781653-4-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1774377781653-4-0 rect.text{fill:none;stroke-width:0;}#exp-1774377781653-4-0 .icon-shape,#exp-1774377781653-4-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781653-4-0 .icon-shape p,#exp-1774377781653-4-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1774377781653-4-0 .icon-shape .label rect,#exp-1774377781653-4-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781653-4-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1774377781653-4-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1774377781653-4-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1774377781653-4-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781653-4-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781653-4-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781653-4-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781653-4-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781653-4-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M143.866,80L135.149,84.167C126.432,88.333,108.997,96.667,100.28,104.333C91.563,112,91.563,119,91.563,122.5L91.563,126\" id=\"L_APP_TASKS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_APP_TASKS_0\" data-points=\"W3sieCI6MTQzLjg2NjIyNjk0NjcyMTMzLCJ5Ijo4MH0seyJ4Ijo5MS41NjI1LCJ5IjoxMDV9LHsieCI6OTEuNTYyNSwieSI6MTMwfV0=\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M294.328,80L303.025,84.167C311.723,88.333,329.117,96.667,337.814,104.333C346.512,112,346.512,119,346.512,122.5L346.512,126\" id=\"L_APP_USERS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_APP_USERS_0\" data-points=\"W3sieCI6Mjk0LjMyODA2MDk2MzExNDc1LCJ5Ijo4MH0seyJ4IjozNDYuNTExNzE4NzUsInkiOjEwNX0seyJ4IjozNDYuNTExNzE4NzUsInkiOjEzMH1d\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M122.745,178L128.159,182.167C133.572,186.333,144.399,194.667,149.813,202.333C155.227,210,155.227,217,155.227,220.5L155.227,224\" id=\"L_TASKS_TC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_TASKS_TC_0\" data-points=\"W3sieCI6MTIyLjc0NDg5Nzk1OTE4MzY3LCJ5IjoxNzh9LHsieCI6MTU1LjIyNjU2MjUsInkiOjIwM30seyJ4IjoxNTUuMjI2NTYyNSwieSI6MjI4fV0=\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M60.38,178L54.966,182.167C49.553,186.333,38.726,194.667,33.312,207C27.898,219.333,27.898,235.667,27.898,253.833C27.898,272,27.898,292,33.78,307.543C39.661,323.086,51.423,334.171,57.305,339.714L63.186,345.257\" id=\"L_TASKS_TS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_TASKS_TS_0\" data-points=\"W3sieCI6NjAuMzgwMTAyMDQwODE2MzI1LCJ5IjoxNzh9LHsieCI6MjcuODk4NDM3NSwieSI6MjAzfSx7IngiOjI3Ljg5ODQzNzUsInkiOjI1Mn0seyJ4IjoyNy44OTg0Mzc1LCJ5IjozMTJ9LHsieCI6NjYuMDk2ODc1LCJ5IjozNDh9XQ==\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M377.838,178L383.276,182.167C388.715,186.333,399.592,194.667,405.03,202.333C410.469,210,410.469,217,410.469,220.5L410.469,224\" id=\"L_USERS_UC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_USERS_UC_0\" data-points=\"W3sieCI6Mzc3LjgzNzYxMTYwNzE0MjgzLCJ5IjoxNzh9LHsieCI6NDEwLjQ2ODc1LCJ5IjoyMDN9LHsieCI6NDEwLjQ2ODc1LCJ5IjoyMjh9XQ==\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M315.186,178L309.747,182.167C304.309,186.333,293.432,194.667,287.993,207C282.555,219.333,282.555,235.667,282.555,253.833C282.555,272,282.555,292,288.464,307.544C294.374,323.088,306.193,334.176,312.102,339.719L318.012,345.263\" id=\"L_USERS_US_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_USERS_US_0\" data-points=\"W3sieCI6MzE1LjE4NTgyNTg5Mjg1NzE3LCJ5IjoxNzh9LHsieCI6MjgyLjU1NDY4NzUsInkiOjIwM30seyJ4IjoyODIuNTU0Njg3NSwieSI6MjUyfSx7IngiOjI4Mi41NTQ2ODc1LCJ5IjozMTJ9LHsieCI6MzIwLjkyODkwNjI1LCJ5IjozNDh9XQ==\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M155.227,276L155.227,282C155.227,288,155.227,300,149.345,311.543C143.464,323.086,131.702,334.171,125.82,339.714L119.939,345.257\" id=\"L_TC_TS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_TC_TS_0\" data-points=\"W3sieCI6MTU1LjIyNjU2MjUsInkiOjI3Nn0seyJ4IjoxNTUuMjI2NTYyNSwieSI6MzEyfSx7IngiOjExNy4wMjgxMjUsInkiOjM0OH1d\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M410.469,276L410.469,282C410.469,288,410.469,300,404.559,311.544C398.65,323.088,386.831,334.176,380.921,339.719L375.012,345.263\" id=\"L_UC_US_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_UC_US_0\" data-points=\"W3sieCI6NDEwLjQ2ODc1LCJ5IjoyNzZ9LHsieCI6NDEwLjQ2ODc1LCJ5IjozMTJ9LHsieCI6MzcyLjA5NDUzMTI1LCJ5IjozNDh9XQ==\" marker-end=\"url(#exp-1774377781653-4-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_APP_TASKS_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_APP_USERS_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_TASKS_TC_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_TASKS_TS_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_USERS_UC_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_USERS_US_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(155.2265625, 312)\"><g class=\"label\" data-id=\"L_TC_TS_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-54.1953125\" y=\"-1\" width=\"108.390625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">використовує</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(410.46875, 312)\"><g class=\"label\" data-id=\"L_UC_US_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-54.1953125\" y=\"-1\" width=\"108.390625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">використовує</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-APP-0\" transform=\"translate(219.18359375, 44)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-124\" y=\"-36\" width=\"248\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-100, -24)\"><rect></rect><foreignObject width=\"200\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;\"><span class=\"nodeLabel \"><p>📦 AppModule (кореневий модуль)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TASKS-1\" transform=\"translate(91.5625, 154)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-83.5\" y=\"-24\" width=\"167\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-59.5, -12)\"><rect></rect><foreignObject width=\"119\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 TasksModule</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-USERS-3\" transform=\"translate(346.51171875, 154)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-84.0859375\" y=\"-24\" width=\"168.171875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-60.0859375, -12)\"><rect></rect><foreignObject width=\"120.171875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 UsersModule</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TC-5\" transform=\"translate(155.2265625, 252)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-92.328125\" y=\"-24\" width=\"184.65625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-68.328125, -12)\"><rect></rect><foreignObject width=\"136.65625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎮 TasksController</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-TS-7\" transform=\"translate(91.5625, 372)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-83.5625\" y=\"-24\" width=\"167.125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-59.5625, -12)\"><rect></rect><foreignObject width=\"119.125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ TasksService</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-UC-9\" transform=\"translate(410.46875, 252)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-92.9140625\" y=\"-24\" width=\"185.828125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-68.9140625, -12)\"><rect></rect><foreignObject width=\"137.828125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎮 UsersController</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-US-11\" transform=\"translate(346.51171875, 372)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-84.1484375\" y=\"-24\" width=\"168.296875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-60.1484375, -12)\"><rect></rect><foreignObject width=\"120.296875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ UsersService</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<h2>🧱 Ролі компонентів</h2>\n<table>\n<thead>\n<tr>\n<th>Компонент</th>\n<th>Файл</th>\n<th>Роль</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Module</strong></td>\n<td><code>tasks.module.ts</code></td>\n<td>Організує та інкапсулює пов'язані компоненти</td>\n</tr>\n<tr>\n<td><strong>Controller</strong></td>\n<td><code>tasks.controller.ts</code></td>\n<td>Приймає HTTP-запити, повертає відповіді</td>\n</tr>\n<tr>\n<td><strong>Provider</strong></td>\n<td><code>tasks.service.ts</code></td>\n<td>Містить бізнес-логіку; впроваджується як залежність</td>\n</tr>\n</tbody></table>\n<div class=\"note\"><strong>📝 Принцип розподілу відповідальності</strong> <p>Розподіл на модулі, контролери та сервіси відповідає принципу <strong>Single Responsibility</strong>: кожен клас має одну чітко визначену роль. Контролер не містить бізнес-логіки, сервіс не знає про HTTP — це забезпечує незалежне тестування кожного шару.</p>\n</div>\n\n","<h1>🎨 Декоратори — основа Nest.js</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Декоратор</strong> — це спеціальний синтаксис TypeScript (<code>@НазваДекоратора</code>), що анотує клас, метод або параметр, додаючи йому нові метадані або поведінку без зміни самого коду.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Nest.js активно використовує декоратори TypeScript для декларативного опису того, як повинен поводитися кожен клас і метод.</p>\n<h2>📋 Основні декоратори</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 🏗️ Декоратор класу — позначає, що це контролер з базовим маршрутом '/tasks'</span>\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">'tasks'</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n\n  <span class=\"hljs-comment\">// 🟢 Декоратор методу — обробляє GET /tasks</span>\n  <span class=\"hljs-meta\">@Get</span>()\n  <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) { ... }\n\n  <span class=\"hljs-comment\">// 🔵 Декоратор методу — обробляє GET /tasks/:id</span>\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">':id'</span>)\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\">\n    <span class=\"hljs-comment\">// 📌 Декоратор параметра — отримує значення ':id' з URL</span>\n    <span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">'id'</span>) id: <span class=\"hljs-built_in\">string</span>\n  </span>) { ... }\n\n  <span class=\"hljs-comment\">// 🟡 Декоратор методу — обробляє POST /tasks</span>\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\">\n    <span class=\"hljs-comment\">// 📦 Декоратор параметра — отримує тіло запиту (JSON)</span>\n    <span class=\"hljs-meta\">@Body</span>() createTaskDto: CreateTaskDto\n  </span>) { ... }\n\n  <span class=\"hljs-comment\">// 🟠 Декоратор методу — обробляє PATCH /tasks/:id</span>\n  <span class=\"hljs-meta\">@Patch</span>(<span class=\"hljs-string\">':id'</span>)\n  <span class=\"hljs-title function_\">update</span>(<span class=\"hljs-params\">\n    <span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">'id'</span>) id: <span class=\"hljs-built_in\">string</span>,\n    <span class=\"hljs-meta\">@Body</span>() updateTaskDto: UpdateTaskDto\n  </span>) { ... }\n\n  <span class=\"hljs-comment\">// 🔴 Декоратор методу — обробляє DELETE /tasks/:id</span>\n  <span class=\"hljs-meta\">@Delete</span>(<span class=\"hljs-string\">':id'</span>)\n  <span class=\"hljs-title function_\">remove</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">'id'</span>) id: <span class=\"hljs-built_in\">string</span></span>) { ... }\n}</code></pre><h2>🏷️ Категорії декораторів</h2>\n<table>\n<thead>\n<tr>\n<th>Категорія</th>\n<th>Приклади</th>\n<th>Де застосовуються</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Класові</td>\n<td><code>@Controller()</code>, <code>@Module()</code>, <code>@Injectable()</code></td>\n<td>Перед класом</td>\n</tr>\n<tr>\n<td>HTTP-методи</td>\n<td><code>@Get()</code>, <code>@Post()</code>, <code>@Put()</code>, <code>@Delete()</code>, <code>@Patch()</code></td>\n<td>Перед методом</td>\n</tr>\n<tr>\n<td>Параметри запиту</td>\n<td><code>@Body()</code>, <code>@Param()</code>, <code>@Query()</code>, <code>@Headers()</code></td>\n<td>Перед параметром</td>\n</tr>\n<tr>\n<td>Відповіді</td>\n<td><code>@HttpCode()</code>, <code>@Header()</code></td>\n<td>Перед методом</td>\n</tr>\n</tbody></table>\n","<h1>⚙️ Nest CLI: перший проєкт</h1>\n<p><strong>Головна ідея:</strong> Nest CLI — це інструмент командного рядка, що автоматизує створення проєктів і генерацію файлів, позбавляючи від написання шаблонного коду вручну.</p>\n<h2>🚀 Встановлення та створення проєкту</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># 1. Встановити Nest CLI глобально</span>\nnpm install -g @nestjs/cli\n\n<span class=\"hljs-comment\"># 2. Створити новий проєкт</span>\nnest new task-manager-api\n\n<span class=\"hljs-comment\"># 3. Вибрати пакетний менеджер (npm)</span>\n<span class=\"hljs-comment\"># ✔ Installation in progress... ☕</span>\n\n<span class=\"hljs-comment\"># 4. Запустити в режимі розробки (з авто-перезавантаженням)</span>\n<span class=\"hljs-built_in\">cd</span> task-manager-api\nnpm run start:dev</code></pre><div class=\"tip\"><strong>💡 Що означає start:dev?</strong> <p>Команда <code>start:dev</code> запускає сервер з <strong>watch mode</strong>: кожного разу, коли ви зберігаєте файл — сервер автоматично перезавантажується. Це зручно під час розробки.</p>\n</div>\n\n\n\n<h2>📁 Структура нового проєкту</h2>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">task-manager-api/\n├── src/\n│   ├── app.controller.ts     ← Контролер кореневого маршруту\n│   ├── app.controller.spec.ts← Тести контролера\n│   ├── app.module.ts         ← Кореневий модуль застосунку\n│   ├── app.service.ts        ← Сервіс кореневого модуля\n│   └── main.ts               ← Точка входу, запуск сервера\n├── test/                     ← E2E тести\n├── .eslintrc.js\n├── .prettierrc\n├── nest-cli.json             ← Конфігурація CLI\n├── package.json\n└── tsconfig.json</code></pre><h2>📄 Файл main.ts — точка входу</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/main.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">NestFactory</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/core\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">AppModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./app.module\"</span>;\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">bootstrap</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-comment\">// Створити екземпляр застосунку на основі кореневого модуля</span>\n  <span class=\"hljs-keyword\">const</span> app = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title class_\">NestFactory</span>.<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-title class_\">AppModule</span>);\n\n  <span class=\"hljs-comment\">// Запустити HTTP-сервер (порт береться зі змінної середовища або 3000)</span>\n  <span class=\"hljs-keyword\">const</span> port = <span class=\"hljs-built_in\">parseInt</span>(process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">PORT</span> ?? <span class=\"hljs-string\">\"3000\"</span>, <span class=\"hljs-number\">10</span>);\n  <span class=\"hljs-keyword\">await</span> app.<span class=\"hljs-title function_\">listen</span>(port);\n\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`🚀 Server is running on http://localhost:<span class=\"hljs-subst\">${port}</span>`</span>);\n}\n\n<span class=\"hljs-title function_\">bootstrap</span>(); <span class=\"hljs-comment\">// Викликати async-функцію</span></code></pre><div class=\"note\"><strong>📝 Навіщо async/await?</strong> <p><code>NestFactory.create()</code> та <code>app.listen()</code> — це асинхронні операції (вони займають час). <code>async/await</code> дозволяє писати асинхронний код так, ніби він синхронний — без callback-пірамід.</p>\n</div>\n\n","<h1>📦 Модулі</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Модуль</strong> — це клас з декоратором <code>@Module()</code>, що об'єднує пов'язані компоненти (контролери, сервіси) в одну логічну групу. Кожен застосунок має щонайменше один модуль — кореневий.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Модулі забезпечують інкапсуляцію: компоненти одного модуля ізольовані від інших і доступні зовні лише через явний <code>exports</code>. Це запобігає неконтрольованим залежностям між частинами застосунку.</p>\n<h2>🔧 Генерація модуля через CLI</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># CLI автоматично створить файли та додасть модуль до AppModule</span>\nnest generate module tasks\n<span class=\"hljs-comment\"># або скорочено:</span>\nnest g mo tasks</code></pre><p>Після виконання команди з'явиться файл <code>src/tasks/tasks.module.ts</code>:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/tasks.module.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">imports</span>: [], <span class=\"hljs-comment\">// Інші модулі, які потрібні цьому</span>\n  <span class=\"hljs-attr\">controllers</span>: [], <span class=\"hljs-comment\">// Контролери цього модуля</span>\n  <span class=\"hljs-attr\">providers</span>: [], <span class=\"hljs-comment\">// Сервіси та провайдери</span>\n  <span class=\"hljs-attr\">exports</span>: [], <span class=\"hljs-comment\">// Що доступно іншим модулям</span>\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksModule</span> {}</code></pre><h2>🌳 Кореневий модуль</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/app.module.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks/tasks.module\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">UsersModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./users/users.module\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">imports</span>: [<span class=\"hljs-title class_\">TasksModule</span>, <span class=\"hljs-title class_\">UsersModule</span>], <span class=\"hljs-comment\">// Реєструємо всі модулі застосунку</span>\n  <span class=\"hljs-attr\">controllers</span>: [],\n  <span class=\"hljs-attr\">providers</span>: [],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">AppModule</span> {}</code></pre><div class=\"tip\"><strong>💡 Принцип єдиної відповідальності</strong> <p>Кожен модуль відповідає за одну функціональну область. <code>TasksModule</code> — лише для задач, <code>UsersModule</code> — лише для користувачів. Так легше знаходити код та тестувати його.</p>\n</div>\n\n","<h1>🎮 Контролери та маршрутизація</h1>\n<p><strong>Головна ідея:</strong> Контролер — це клас, що визначає, які HTTP-запити обробляє застосунок і що повертає у відповідь. Кожен метод контролера відповідає одному маршруту (endpoint).</p>\n<h2>🔧 Генерація контролера</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">nest generate controller tasks\n<span class=\"hljs-comment\"># або скорочено:</span>\nnest g co tasks</code></pre><h2>📝 Повний приклад контролера</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/tasks.controller.ts</span>\n<span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Controller</span>,\n  <span class=\"hljs-title class_\">Get</span>,\n  <span class=\"hljs-title class_\">Post</span>,\n  <span class=\"hljs-title class_\">Patch</span>,\n  <span class=\"hljs-title class_\">Delete</span>,\n  <span class=\"hljs-title class_\">Param</span>,\n  <span class=\"hljs-title class_\">Body</span>,\n  <span class=\"hljs-title class_\">HttpCode</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"tasks\"</span>) <span class=\"hljs-comment\">// Базовий маршрут: /tasks</span>\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-comment\">// GET /tasks → отримати всі задачі</span>\n  <span class=\"hljs-meta\">@Get</span>()\n  <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) {\n    <span class=\"hljs-keyword\">return</span> [\n      { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Вивчити Nest.js\"</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"in-progress\"</span> },\n      { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">2</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Написати API\"</span>, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"todo\"</span> },\n    ];\n  }\n\n  <span class=\"hljs-comment\">// GET /tasks/:id → отримати задачу за id</span>\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-comment\">// id завжди рядок — треба перетворити на число, якщо потрібно</span>\n    <span class=\"hljs-keyword\">return</span> { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Number</span>(id), <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Вивчити Nest.js\"</span> };\n  }\n\n  <span class=\"hljs-comment\">// POST /tasks → створити нову задачу</span>\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() body: { title: <span class=\"hljs-built_in\">string</span>; description: <span class=\"hljs-built_in\">string</span> }</span>) {\n    <span class=\"hljs-comment\">// body автоматично розпарсений з JSON</span>\n    <span class=\"hljs-keyword\">return</span> { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">3</span>, ...body, <span class=\"hljs-attr\">status</span>: <span class=\"hljs-string\">\"todo\"</span> };\n  }\n\n  <span class=\"hljs-comment\">// PATCH /tasks/:id → оновити задачу</span>\n  <span class=\"hljs-meta\">@Patch</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-title function_\">update</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-meta\">@Body</span>() body: { status: <span class=\"hljs-built_in\">string</span> }</span>) {\n    <span class=\"hljs-keyword\">return</span> { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Number</span>(id), ...body };\n  }\n\n  <span class=\"hljs-comment\">// DELETE /tasks/:id → видалити задачу</span>\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">204</span>) <span class=\"hljs-comment\">// Повернути статус 204 No Content замість 200</span>\n  <span class=\"hljs-meta\">@Delete</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-title function_\">remove</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-comment\">// Нічого не повертаємо — задача видалена</span>\n  }\n}</code></pre><h2>🔍 Query-параметри</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Query</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'@nestjs/common'</span>;\n\n<span class=\"hljs-comment\">// GET /tasks?status=todo&amp;limit=10</span>\n<span class=\"hljs-meta\">@Get</span>()\n<span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\">\n  <span class=\"hljs-meta\">@Query</span>(<span class=\"hljs-string\">'status'</span>) status: <span class=\"hljs-built_in\">string</span>,  <span class=\"hljs-comment\">// 'todo'</span>\n  <span class=\"hljs-meta\">@Query</span>(<span class=\"hljs-string\">'limit'</span>) limit: <span class=\"hljs-built_in\">string</span>     <span class=\"hljs-comment\">// '10'</span>\n</span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(status, limit);\n  <span class=\"hljs-keyword\">return</span> [];\n}</code></pre><h2>🗂️ Реєстрація в модулі та таблиця маршрутів</h2>\n<p>Щоб Nest.js знав про контролер, його необхідно зареєструвати у відповідному модулі. CLI робить це автоматично:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/tasks.module.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksController</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks.controller\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">controllers</span>: [<span class=\"hljs-title class_\">TasksController</span>], <span class=\"hljs-comment\">// ← Реєструємо контролер</span>\n  <span class=\"hljs-attr\">providers</span>: [],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksModule</span> {}</code></pre><table>\n<thead>\n<tr>\n<th>Метод</th>\n<th>URL</th>\n<th>Дія</th>\n<th>Статус</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>GET</code></td>\n<td><code>/tasks</code></td>\n<td>Отримати всі задачі</td>\n<td>200</td>\n</tr>\n<tr>\n<td><code>GET</code></td>\n<td><code>/tasks/:id</code></td>\n<td>Отримати задачу за ID</td>\n<td>200</td>\n</tr>\n<tr>\n<td><code>POST</code></td>\n<td><code>/tasks</code></td>\n<td>Створити нову задачу</td>\n<td>201</td>\n</tr>\n<tr>\n<td><code>PATCH</code></td>\n<td><code>/tasks/:id</code></td>\n<td>Часткове оновлення задачі</td>\n<td>200</td>\n</tr>\n<tr>\n<td><code>DELETE</code></td>\n<td><code>/tasks/:id</code></td>\n<td>Видалити задачу</td>\n<td>204</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Автоматичні статус-коди</strong> <p>Nest.js автоматично повертає статус <strong>200</strong> для більшості методів та <strong>201</strong> для <code>POST</code>. Щоб змінити, використовуйте <code>@HttpCode(204)</code>.</p>\n</div>\n\n","<h1>🌐 Змінні середовища та ConfigModule</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Змінна середовища</strong> — це налаштування, яке задається поза кодом програми (в операційній системі або у файлі <code>.env</code>) і може відрізнятися між середовищами: локальна розробка, тестування, production.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Чутливі дані (паролі, токени, порти, адреси баз даних) не можна вписувати прямо в код — вони потрапляють у Git і стають публічними. Для цього використовують <code>.env</code> файли.</p>\n<h2>⚠️ Проблема hardcoded-значень</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Погано — пароль бази даних прямо в коді!</span>\n<span class=\"hljs-keyword\">const</span> db = <span class=\"hljs-title function_\">connect</span>({\n  <span class=\"hljs-attr\">host</span>: <span class=\"hljs-string\">\"localhost\"</span>,\n  <span class=\"hljs-attr\">port</span>: <span class=\"hljs-number\">5432</span>,\n  <span class=\"hljs-attr\">password</span>: <span class=\"hljs-string\">\"my_super_secret_password\"</span>, <span class=\"hljs-comment\">// Це потрапить у Git!</span>\n  <span class=\"hljs-attr\">database</span>: <span class=\"hljs-string\">\"taskmanager\"</span>,\n});\n\n<span class=\"hljs-comment\">// ✅ Правильно — читаємо з середовища</span>\n<span class=\"hljs-keyword\">const</span> db = <span class=\"hljs-title function_\">connect</span>({\n  <span class=\"hljs-attr\">host</span>: process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">DB_HOST</span>,\n  <span class=\"hljs-attr\">port</span>: <span class=\"hljs-title class_\">Number</span>(process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">DB_PORT</span>),\n  <span class=\"hljs-attr\">password</span>: process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">DB_PASSWORD</span>,\n  <span class=\"hljs-attr\">database</span>: process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">DB_NAME</span>,\n});</code></pre><h2>📄 Файл .env</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># .env — зберігається локально, НІКОЛИ не додається в Git</span>\nPORT=3000\nDB_HOST=localhost\nDB_PORT=5432\nDB_NAME=taskmanager\nDB_PASSWORD=my_secret_password\nJWT_SECRET=super_secret_jwt_key</code></pre><pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># .gitignore — обов'язково додайте .env!</span>\nnode_modules/\ndist/\n.<span class=\"hljs-built_in\">env</span>          ← Цей файл ніколи не потрапить у репозиторій</code></pre><h2>🔧 Встановлення та підключення ConfigModule</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install @nestjs/config</code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/app.module.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">ConfigModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/config\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks/tasks.module\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">imports</span>: [\n    <span class=\"hljs-comment\">// isGlobal: true — ConfigModule доступний у всіх модулях без повторного імпорту</span>\n    <span class=\"hljs-title class_\">ConfigModule</span>.<span class=\"hljs-title function_\">forRoot</span>({ <span class=\"hljs-attr\">isGlobal</span>: <span class=\"hljs-literal\">true</span> }),\n    <span class=\"hljs-title class_\">TasksModule</span>,\n  ],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">AppModule</span> {}</code></pre><h2>📖 Використання ConfigService</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/main.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">NestFactory</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/core\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">AppModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./app.module\"</span>;\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">bootstrap</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> app = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title class_\">NestFactory</span>.<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-title class_\">AppModule</span>);\n\n  <span class=\"hljs-comment\">// У main.ts ConfigService ще не доступний через DI —</span>\n  <span class=\"hljs-comment\">// читаємо порт безпосередньо з process.env</span>\n  <span class=\"hljs-keyword\">const</span> port = <span class=\"hljs-built_in\">parseInt</span>(process.<span class=\"hljs-property\">env</span>.<span class=\"hljs-property\">PORT</span> ?? <span class=\"hljs-string\">\"3000\"</span>, <span class=\"hljs-number\">10</span>);\n\n  <span class=\"hljs-keyword\">await</span> app.<span class=\"hljs-title function_\">listen</span>(port);\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`🚀 Server started on port <span class=\"hljs-subst\">${port}</span>`</span>);\n}\n\n<span class=\"hljs-title function_\">bootstrap</span>();</code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// У сервісах та контролерах — через Dependency Injection</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Injectable</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">ConfigService</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/config\"</span>;\n\n<span class=\"hljs-meta\">@Injectable</span>()\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksService</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> configService: ConfigService</span>) {}\n\n  <span class=\"hljs-title function_\">getApiVersion</span>(): <span class=\"hljs-built_in\">string</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">configService</span>.<span class=\"hljs-property\">get</span>&lt;<span class=\"hljs-built_in\">string</span>&gt;(<span class=\"hljs-string\">\"API_VERSION\"</span>, <span class=\"hljs-string\">\"v1\"</span>);\n  }\n}</code></pre><div class=\"warning\"><strong>⚠️ Важливо: .env.example</strong> <p>Прийнято зберігати у репозиторії файл <code>.env.example</code> з усіма змінними без реальних значень. Це допомагає новим розробникам зрозуміти, які змінні потрібні для запуску проєкту.</p>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># .env.example — можна додавати в Git</span>\nPORT=3000\nDB_HOST=localhost\nDB_PORT=5432\nDB_NAME=\nDB_PASSWORD=\nJWT_SECRET=</code></pre></div>\n\n","<h1>🔄 Як Nest.js обробляє запит</h1>\n<p><strong>Головна ідея:</strong> Від браузера до відповіді запит проходить чітку послідовність кроків — кожен компонент відповідає за свою частину.</p>\n<div class=\"note\"><strong>📝 Огляд наперед</strong> <p>Middleware, Guards та Pipes детально розглядатимуться в наступних лекціях. Зараз важливо зрозуміти загальну картину: де знаходиться контролер у цьому ланцюжку та яку роль він відіграє.</p>\n</div>\n\n\n\n\n<div class=\"mermaid\" data-source=\"graph LR\n    CLIENT[&quot;🌐 Клієнт (браузер)&quot;]\n    MW[&quot;🔒 Middleware&quot;]\n    GUARD[&quot;🛡️ Guard&quot;]\n    PIPE[&quot;🔧 Pipe&quot;]\n    CTRL[&quot;🎮 Controller&quot;]\n    SVC[&quot;⚙️ Service&quot;]\n    RESP[&quot;📤 Відповідь&quot;]\n    CLIENT --&gt;|&quot;HTTP запит&quot;| MW\n    MW --&gt; GUARD\n    GUARD --&gt;|&quot;перевірка доступу&quot;| PIPE\n    PIPE --&gt;|&quot;валідація та трансформація&quot;| CTRL\n    CTRL --&gt;|&quot;делегує логіку&quot;| SVC\n    SVC --&gt;|&quot;повертає дані&quot;| CTRL\n    CTRL --&gt; RESP\n    style CLIENT fill:#e3f2fd,stroke:#1565c0\n    style MW fill:#fff3e0,stroke:#ef6c00\n    style GUARD fill:#fce4ec,stroke:#c2185b\n    style PIPE fill:#f3e5f5,stroke:#7b1fa2\n    style CTRL fill:#e8f5e9,stroke:#388e3c\n    style SVC fill:#fff9c4,stroke:#f9a825\n    style RESP fill:#e3f2fd,stroke:#1565c0\"><svg id=\"exp-1774377781669-10-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 1600.90625px;\" viewBox=\"0 0 1600.90625 170\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1774377781669-10-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1774377781669-10-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1774377781669-10-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1774377781669-10-0 .error-icon{fill:#552222;}#exp-1774377781669-10-0 .error-text{fill:#552222;stroke:#552222;}#exp-1774377781669-10-0 .edge-thickness-normal{stroke-width:1px;}#exp-1774377781669-10-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1774377781669-10-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1774377781669-10-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1774377781669-10-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1774377781669-10-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1774377781669-10-0 .marker{fill:#333333;stroke:#333333;}#exp-1774377781669-10-0 .marker.cross{stroke:#333333;}#exp-1774377781669-10-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1774377781669-10-0 p{margin:0;}#exp-1774377781669-10-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1774377781669-10-0 .cluster-label text{fill:#333;}#exp-1774377781669-10-0 .cluster-label span{color:#333;}#exp-1774377781669-10-0 .cluster-label span p{background-color:transparent;}#exp-1774377781669-10-0 .label text,#exp-1774377781669-10-0 span{fill:#333;color:#333;}#exp-1774377781669-10-0 .node rect,#exp-1774377781669-10-0 .node circle,#exp-1774377781669-10-0 .node ellipse,#exp-1774377781669-10-0 .node polygon,#exp-1774377781669-10-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1774377781669-10-0 .rough-node .label text,#exp-1774377781669-10-0 .node .label text,#exp-1774377781669-10-0 .image-shape .label,#exp-1774377781669-10-0 .icon-shape .label{text-anchor:middle;}#exp-1774377781669-10-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1774377781669-10-0 .rough-node .label,#exp-1774377781669-10-0 .node .label,#exp-1774377781669-10-0 .image-shape .label,#exp-1774377781669-10-0 .icon-shape .label{text-align:center;}#exp-1774377781669-10-0 .node.clickable{cursor:pointer;}#exp-1774377781669-10-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1774377781669-10-0 .arrowheadPath{fill:#333333;}#exp-1774377781669-10-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1774377781669-10-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1774377781669-10-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781669-10-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1774377781669-10-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781669-10-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1774377781669-10-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1774377781669-10-0 .cluster text{fill:#333;}#exp-1774377781669-10-0 .cluster span{color:#333;}#exp-1774377781669-10-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1774377781669-10-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1774377781669-10-0 rect.text{fill:none;stroke-width:0;}#exp-1774377781669-10-0 .icon-shape,#exp-1774377781669-10-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1774377781669-10-0 .icon-shape p,#exp-1774377781669-10-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1774377781669-10-0 .icon-shape .label rect,#exp-1774377781669-10-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1774377781669-10-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1774377781669-10-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1774377781669-10-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1774377781669-10-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781669-10-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781669-10-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781669-10-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1774377781669-10-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1774377781669-10-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M207,73.5L218.862,73.5C230.724,73.5,254.448,73.5,277.505,73.5C300.563,73.5,322.953,73.5,334.148,73.5L345.344,73.5\" id=\"L_CLIENT_MW_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CLIENT_MW_0\" data-points=\"W3sieCI6MjA3LCJ5Ijo3My41fSx7IngiOjI3OC4xNzE4NzUsInkiOjczLjV9LHsieCI6MzQ5LjM0Mzc1LCJ5Ijo3My41fV0=\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M505.172,73.5L509.339,73.5C513.505,73.5,521.839,73.5,529.505,73.5C537.172,73.5,544.172,73.5,547.672,73.5L551.172,73.5\" id=\"L_MW_GUARD_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MW_GUARD_0\" data-points=\"W3sieCI6NTA1LjE3MTg3NSwieSI6NzMuNX0seyJ4Ijo1MzAuMTcxODc1LCJ5Ijo3My41fSx7IngiOjU1NS4xNzE4NzUsInkiOjczLjV9XQ==\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M671.594,73.5L687.828,73.5C704.063,73.5,736.531,73.5,768.333,73.5C800.135,73.5,831.271,73.5,846.839,73.5L862.406,73.5\" id=\"L_GUARD_PIPE_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_GUARD_PIPE_0\" data-points=\"W3sieCI6NjcxLjU5Mzc1LCJ5Ijo3My41fSx7IngiOjc2OSwieSI6NzMuNX0seyJ4Ijo4NjYuNDA2MjUsInkiOjczLjV9XQ==\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M970.375,73.5L984.583,73.5C998.792,73.5,1027.208,73.5,1054.958,73.5C1082.708,73.5,1109.792,73.5,1123.333,73.5L1136.875,73.5\" id=\"L_PIPE_CTRL_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_PIPE_CTRL_0\" data-points=\"W3sieCI6OTcwLjM3NSwieSI6NzMuNX0seyJ4IjoxMDU1LjYyNSwieSI6NzMuNX0seyJ4IjoxMTQwLjg3NSwieSI6NzMuNX1d\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M1280.578,49.5L1294.942,44.417C1309.307,39.333,1338.036,29.167,1366.91,26.06C1395.783,22.954,1424.8,26.907,1439.309,28.884L1453.818,30.861\" id=\"L_CTRL_SVC_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CTRL_SVC_0\" data-points=\"W3sieCI6MTI4MC41Nzc3NjY2Mjg0NDAzLCJ5Ijo0OS41fSx7IngiOjEzNjYuNzY1NjI1LCJ5IjoxOX0seyJ4IjoxNDU3Ljc4MTI1LCJ5IjozMS40MDA1MjcxNDI3ODQ3MzJ9XQ==\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M1457.781,53.718L1442.612,57.015C1427.443,60.312,1397.104,66.906,1368.914,70.203C1340.724,73.5,1314.682,73.5,1301.661,73.5L1288.641,73.5\" id=\"L_SVC_CTRL_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_SVC_CTRL_0\" data-points=\"W3sieCI6MTQ1Ny43ODEyNSwieSI6NTMuNzE4MjA2NzAwNzk1Nzh9LHsieCI6MTM2Ni43NjU2MjUsInkiOjczLjV9LHsieCI6MTI4NC42NDA2MjUsInkiOjczLjV9XQ==\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path><path d=\"M1270.063,97.5L1286.18,104.25C1302.297,111,1334.531,124.5,1363.669,131.25C1392.807,138,1418.849,138,1431.87,138L1444.891,138\" id=\"L_CTRL_RESP_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CTRL_RESP_0\" data-points=\"W3sieCI6MTI3MC4wNjMwNDUwNTgxMzk2LCJ5Ijo5Ny41fSx7IngiOjEzNjYuNzY1NjI1LCJ5IjoxMzh9LHsieCI6MTQ0OC44OTA2MjUsInkiOjEzOH1d\" marker-end=\"url(#exp-1774377781669-10-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\" transform=\"translate(278.171875, 73.5)\"><g class=\"label\" data-id=\"L_CLIENT_MW_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-46.171875\" y=\"-1\" width=\"92.34375\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">HTTP</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> запит</tspan></tspan></text></g></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MW_GUARD_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(769, 73.5)\"><g class=\"label\" data-id=\"L_GUARD_PIPE_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-72.40625\" y=\"-1\" width=\"144.8125\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">перевірка</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> доступу</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(1055.625, 73.5)\"><g class=\"label\" data-id=\"L_PIPE_CTRL_0\" transform=\"translate(0, -18.799999237060547)\"><g><rect class=\"background\" style=\"\" x=\"-60.25\" y=\"-1\" width=\"120.5\" height=\"39.599998474121094\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">валідація</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> та</tspan></tspan><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">трансформація</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(1366.765625, 19)\"><g class=\"label\" data-id=\"L_CTRL_SVC_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-57.125\" y=\"-1\" width=\"114.25\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">делегує</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> логіку</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(1366.765625, 73.5)\"><g class=\"label\" data-id=\"L_SVC_CTRL_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-54.703125\" y=\"-1\" width=\"109.40625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">повертає</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> дані</tspan></tspan></text></g></g></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_CTRL_RESP_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-CLIENT-0\" transform=\"translate(107.5, 73.5)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-99.5\" y=\"-24\" width=\"199\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-75.5, -12)\"><rect></rect><foreignObject width=\"151\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🌐 Клієнт (браузер)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-MW-1\" transform=\"translate(427.2578125, 73.5)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-77.9140625\" y=\"-24\" width=\"155.828125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-53.9140625, -12)\"><rect></rect><foreignObject width=\"107.828125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔒 Middleware</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-GUARD-2\" transform=\"translate(613.3828125, 73.5)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-58.2109375\" y=\"-24\" width=\"116.421875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-34.2109375, -12)\"><rect></rect><foreignObject width=\"68.421875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🛡️ Guard</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-PIPE-3\" transform=\"translate(918.390625, 73.5)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-51.984375\" y=\"-24\" width=\"103.96875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-27.984375, -12)\"><rect></rect><foreignObject width=\"55.96875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔧 Pipe</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-CTRL-4\" transform=\"translate(1212.7578125, 73.5)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-71.8828125\" y=\"-24\" width=\"143.765625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.8828125, -12)\"><rect></rect><foreignObject width=\"95.765625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🎮 Controller</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-SVC-5\" transform=\"translate(1520.8984375, 40)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-63.1171875\" y=\"-24\" width=\"126.234375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-39.1171875, -12)\"><rect></rect><foreignObject width=\"78.234375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ Service</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-RESP-6\" transform=\"translate(1520.8984375, 138)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-72.0078125\" y=\"-24\" width=\"144.015625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-48.0078125, -12)\"><rect></rect><foreignObject width=\"96.015625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📤 Відповідь</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<table>\n<thead>\n<tr>\n<th>Крок</th>\n<th>Що відбувається</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Middleware</strong></td>\n<td>Виконується до маршрутизації (логування, cors)</td>\n</tr>\n<tr>\n<td><strong>Guard</strong></td>\n<td>Перевіряє чи має користувач право на дію</td>\n</tr>\n<tr>\n<td><strong>Pipe</strong></td>\n<td>Валідує та трансформує вхідні дані</td>\n</tr>\n<tr>\n<td><strong>Controller</strong></td>\n<td>Вибирає метод-обробник, повертає відповідь</td>\n</tr>\n<tr>\n<td><strong>Service</strong></td>\n<td>Виконує бізнес-логіку (буде в наступній лекції)</td>\n</tr>\n</tbody></table>\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Nest.js</strong> — фреймворк для Node.js з TypeScript, що надає чітку архітектуру для серверних застосунків</p>\n</li>\n<li><p><strong>Архітектурні блоки:</strong> Модуль (інкапсуляція) → Контролер (HTTP-запити) → Провайдер (бізнес-логіка) — кожен має чітко визначену відповідальність</p>\n</li>\n<li><p><strong>Декоратори</strong> — ключова концепція Nest.js: <code>@Controller()</code>, <code>@Get()</code>, <code>@Post()</code>, <code>@Body()</code>, <code>@Param()</code> описують поведінку декларативно</p>\n</li>\n<li><p><strong>Nest CLI</strong> автоматизує генерацію файлів: <code>nest g mo</code>, <code>nest g co</code> — швидке створення структури</p>\n</li>\n<li><p><strong>Кожен маршрут</strong> — це метод контролера з декоратором HTTP-методу та URL-шаблоном</p>\n</li>\n<li><p><strong>ConfigModule</strong> та <code>.env</code> файли — правильний спосіб зберігати налаштування та чутливі дані поза кодом</p>\n</li>\n<li><p><strong>Запит у Nest.js</strong> проходить ланцюжок: Middleware → Guard → Pipe → Controller → Service</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Чим Nest.js відрізняється від чистого Node.js? Яку проблему він вирішує?</p>\n</li>\n<li><p>🤔 Які три основні будівельні блоки архітектури Nest.js? Яка роль кожного з них?</p>\n</li>\n<li><p>🤔 Що таке декоратор у TypeScript? Наведіть приклад декоратора у Nest.js та поясніть, що він робить.</p>\n</li>\n<li><p>🤔 Яка різниця між <code>@Param()</code> та <code>@Query()</code> — для чого використовується кожен?</p>\n</li>\n<li><p>🤔 Навіщо використовувати <code>.env</code> файли? Чому не можна записувати паролі прямо в код?</p>\n</li>\n<li><p>🤔 Що таке <code>ConfigModule</code> і навіщо потрібен параметр <code>isGlobal: true</code>?</p>\n</li>\n<li><p>🤔 Яку послідовність кроків проходить HTTP-запит у Nest.js від отримання до відповіді?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Фреймворк</td>\n<td>Framework</td>\n<td>Готова структура та набір інструментів для розробки застосунків</td>\n</tr>\n<tr>\n<td>Модуль</td>\n<td>Module</td>\n<td>Клас-контейнер, що об'єднує пов'язані компоненти застосунку</td>\n</tr>\n<tr>\n<td>Контролер</td>\n<td>Controller</td>\n<td>Клас, що обробляє вхідні HTTP-запити та формує відповіді</td>\n</tr>\n<tr>\n<td>Провайдер</td>\n<td>Provider</td>\n<td>Клас, що може бути впроваджений як залежність (сервіс, репозиторій)</td>\n</tr>\n<tr>\n<td>Декоратор</td>\n<td>Decorator</td>\n<td>Синтаксична конструкція <code>@Назва()</code>, що додає метадані або поведінку</td>\n</tr>\n<tr>\n<td>Маршрут</td>\n<td>Route / Endpoint</td>\n<td>URL-адреса та HTTP-метод, що обробляються конкретним методом</td>\n</tr>\n<tr>\n<td>Змінна середовища</td>\n<td>Environment variable</td>\n<td>Налаштування, що зберігається поза кодом у системному оточенні</td>\n</tr>\n<tr>\n<td>Точка входу</td>\n<td>Entry point</td>\n<td>Файл, з якого починається виконання застосунку (<code>main.ts</code>)</td>\n</tr>\n<tr>\n<td>Бізнес-логіка</td>\n<td>Business logic</td>\n<td>Код, що реалізує правила роботи застосунку (не HTTP, не БД)</td>\n</tr>\n<tr>\n<td>Впровадження залежностей</td>\n<td>Dependency Injection</td>\n<td>Патерн передачі залежностей через конструктор</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>REST</td>\n<td>Representational State Transfer</td>\n<td>Архітектурний стиль для веб-сервісів</td>\n</tr>\n<tr>\n<td>HTTP</td>\n<td>HyperText Transfer Protocol</td>\n<td>Протокол передачі гіпертексту</td>\n</tr>\n<tr>\n<td>CLI</td>\n<td>Command Line Interface</td>\n<td>Інтерфейс командного рядка</td>\n</tr>\n<tr>\n<td>DI</td>\n<td>Dependency Injection</td>\n<td>Впровадження залежностей</td>\n</tr>\n<tr>\n<td>DTO</td>\n<td>Data Transfer Object</td>\n<td>Об'єкт передачі даних</td>\n</tr>\n<tr>\n<td>JSON</td>\n<td>JavaScript Object Notation</td>\n<td>Текстовий формат обміну даними</td>\n</tr>\n<tr>\n<td>ENV</td>\n<td>Environment</td>\n<td>Середовище / оточення</td>\n</tr>\n<tr>\n<td>CRUD</td>\n<td>Create, Read, Update, Delete</td>\n<td>Базові операції з даними</td>\n</tr>\n<tr>\n<td>URL</td>\n<td>Uniform Resource Locator</td>\n<td>Уніфікований локатор ресурсів</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
