@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Nest.js: валідація</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 13</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>Nest.js: валідація</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🤔 Проблема: що відбувається без валідації</li>\n<li>📦 DTO — об'єкт передачі даних</li>\n<li>🔧 Pipes — трансформація та валідація вхідних даних</li>\n<li>✅ ValidationPipe та class-validator</li>\n<li>🏷️ Основні декоратори валідації</li>\n<li>🚨 HttpException та вбудовані виключення</li>\n<li>🛡️ SQL Injection та захист</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🤔 Проблема без валідації</h1>\n<div class=\"info\"><strong>ℹ️ Контекст</strong> <p>Сервер відкритий для будь-якого клієнта в мережі — браузера, Postman, скрипта чи зловмисника. Жодних гарантій про формат або зміст вхідних даних немає. TypeScript перевіряє типи лише під час компіляції — у рантаймі через HTTP завжди приходить сирий JSON.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Навіть якщо контролер оголошує параметр як <code>number</code>, у тілі реального HTTP-запиту може прийти рядок, <code>null</code> або взагалі нічого. Відповідальність за перевірку — на бекенді.</p>\n<h2>😱 Що може надіслати клієнт</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Очікуємо:</span>\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-string\">\"Купити молоко\"</span>, <span class=\"hljs-string\">\"priority\"</span>: <span class=\"hljs-number\">1</span> }\n\n<span class=\"hljs-comment\">// Реальність — клієнт може надіслати будь-що:</span>\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-string\">\"\"</span>,   <span class=\"hljs-string\">\"priority\"</span>: <span class=\"hljs-string\">\"висока\"</span> }   <span class=\"hljs-comment\">// порожній рядок, рядок замість числа</span>\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-literal\">null</span>, <span class=\"hljs-string\">\"priority\"</span>: -<span class=\"hljs-number\">999</span>    }    <span class=\"hljs-comment\">// null, від'ємне число</span>\n{}                                         <span class=\"hljs-comment\">// взагалі порожній об'єкт</span>\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-string\">\"task\"</span>, <span class=\"hljs-string\">\"isAdmin\"</span>: <span class=\"hljs-literal\">true</span>   }    <span class=\"hljs-comment\">// зайве поле, якого не повинно бути</span>\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-string\">\"'; DROP TABLE tasks; --\"</span> }    <span class=\"hljs-comment\">// спроба SQL Injection</span></code></pre><h2>💥 Код без валідації</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Контролер без валідації — приймає все підряд</span>\n<span class=\"hljs-meta\">@Post</span>()\n<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() body: <span class=\"hljs-built_in\">any</span></span>) {\n  <span class=\"hljs-comment\">// body.title може бути undefined, null, числом або масивом</span>\n  <span class=\"hljs-comment\">// TypeScript НЕ захищає тут — тип 'any' вимикає перевірку</span>\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(body.<span class=\"hljs-property\">title</span>);\n}</code></pre><div class=\"danger\"><strong>🚫 Наслідки відсутності валідації</strong> <ul>\n<li>💾 <strong>Некоректні дані</strong> потрапляють у базу і ламають інші частини системи</li>\n<li>💥 <strong>Помилка 500</strong> замість зрозумілого повідомлення 400</li>\n<li>🔓 <strong>Уразливості</strong>: SQL Injection, зайві поля з небезпечними значеннями</li>\n<li>😤 <strong>Клієнт не розуміє</strong>, що він зробив неправильно</li>\n</ul>\n</div>\n\n","<h1>📦 DTO — об'єкт передачі даних</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>DTO (Data Transfer Object)</strong> — клас TypeScript, що описує структуру та типи даних, які очікуються на вході ендпоінту. Він є явним \"контрактом\" між клієнтом і сервером.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> DTO замінює розмитий <code>any</code> на конкретну структуру з іменами полів та типами. Завдяки цьому і ValidationPipe, і IDE, і кожен розробник команди одразу розуміє, що саме приймає ендпоінт.</p>\n<h2>🆚 До і після DTO</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ До DTO — тип 'any' нічого не гарантує</span>\n<span class=\"hljs-meta\">@Post</span>()\n<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() body: <span class=\"hljs-built_in\">any</span></span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(body.<span class=\"hljs-property\">title</span>, body.<span class=\"hljs-property\">priority</span>);\n}\n\n<span class=\"hljs-comment\">// ✅ Після DTO — явний контракт</span>\n<span class=\"hljs-meta\">@Post</span>()\n<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() createTaskDto: CreateTaskDto</span>) {\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(createTaskDto);\n}</code></pre><h2>📝 Як виглядає DTO-клас</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/dto/create-task.dto.ts</span>\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">CreateTaskDto</span> {\n  <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>; <span class=\"hljs-comment\">// Назва завдання — обов'язкова</span>\n  <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-built_in\">number</span>; <span class=\"hljs-comment\">// Пріоритет: 1 (низький) – 3 (високий)</span>\n  description?: <span class=\"hljs-built_in\">string</span>; <span class=\"hljs-comment\">// Опис — необов'язковий (знак ?)</span>\n}\n<span class=\"hljs-comment\">// ⚠️ Цей клас поки лише описує структуру — валідація ще не налаштована.</span>\n<span class=\"hljs-comment\">// Правила (@IsString, @Min тощо) додамо через class-validator далі.</span></code></pre><div class=\"note\"><strong>📝 Чому клас, а не інтерфейс?</strong> <p>TypeScript-інтерфейс існує лише під час компіляції і повністю зникає у JavaScript. Декоратори валідації (<code>@IsString()</code>, <code>@Min()</code> тощо) прикріплюються до класу як <strong>метадані в рантаймі</strong> — саме їх ValidationPipe читає під час перевірки. Інтерфейс на це не здатний.</p>\n</div>\n\n\n\n<h2>📁 Де зберігати DTO</h2>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">src/tasks/\n├── dto/\n│   ├── create-task.dto.ts    # 📥 Поля для POST /tasks\n│   └── update-task.dto.ts    # 📝 Поля для PATCH /tasks/:id\n├── tasks.controller.ts\n├── tasks.service.ts\n└── tasks.module.ts</code></pre><div class=\"tip\"><strong>💡 Угода про іменування</strong> <p>Файли DTO іменуються за шаблоном <code>&lt;дія&gt;-&lt;ресурс&gt;.dto.ts</code>. Наприклад: <code>create-task.dto.ts</code>, <code>update-task.dto.ts</code>. Суфікс <code>.dto.ts</code> одразу повідомляє про призначення файлу.</p>\n</div>\n\n","<h1>🔧 Pipes — трансформація та валідація вхідних даних</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Pipe</strong> — клас із декоратором <code>@Injectable()</code>, що реалізує інтерфейс <code>PipeTransform</code>. Він виконується <strong>після</strong> отримання запиту, але <strong>до</strong> виклику методу контролера, і виконує одну з двох ролей: <strong>трансформує</strong> вхідні дані або <strong>валідує</strong> їх.</p>\n</div>\n\n\n\n<h2>🎯 Дві ролі Pipe</h2>\n<p><strong>Трансформація</strong> — перетворює значення на потрібний тип:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Параметр URL завжди приходить як рядок — навіть /tasks/5 дає '5'</span>\n<span class=\"hljs-comment\">// ParseIntPipe перетворює рядок '5' на число 5</span>\n\n<span class=\"hljs-comment\">// ❌ Без Pipe — id є рядком, порівняння з числом може не спрацювати</span>\n<span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">':id'</span>)\n<span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">'id'</span>) id: <span class=\"hljs-built_in\">string</span></span>) { ... }  <span class=\"hljs-comment\">// id = '5' (рядок)</span>\n\n<span class=\"hljs-comment\">// ✅ З ParseIntPipe — id гарантовано число</span>\n<span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">':id'</span>)\n<span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">'id'</span>, ParseIntPipe) id: <span class=\"hljs-built_in\">number</span></span>) { ... }  <span class=\"hljs-comment\">// id = 5 (число)</span></code></pre><p><strong>Валідація</strong> — перевіряє дані за правилами і зупиняє запит із помилкою 400, якщо вони порушені:</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ValidationPipe перевіряє тіло запиту за правилами CreateTaskDto</span>\n<span class=\"hljs-comment\">// Якщо title порожній або priority &gt; 3 — запит не дійде до контролера</span>\n<span class=\"hljs-meta\">@Post</span>()\n<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() dto: CreateTaskDto</span>) { ... }</code></pre><h2>🔄 Де Pipe знаходиться в ланцюжку</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    Client[&quot;🌐 Клієнт&quot;] --&gt; MW[&quot;🔒 Middleware&quot;]\n    MW --&gt; Guard[&quot;🛡️ Guard&quot;]\n    Guard --&gt; Pipe[&quot;🔧 Pipe&quot;]\n    Pipe --&gt;|&quot;✅ трансформовано / валідно&quot;| Handler[&quot;📬 Controller&quot;]\n    Pipe --&gt;|&quot;❌ невалідно&quot;| Error[&quot;💥 400 Bad Request&quot;]\n    style Client fill:#e3f2fd,stroke:#1565c0\n    style MW fill:#fff3e0,stroke:#ef6c00\n    style Guard fill:#fce4ec,stroke:#c2185b\n    style Pipe fill:#f3e5f5,stroke:#7b1fa2\n    style Handler fill:#e8f5e9,stroke:#388e3c\n    style Error fill:#ffebee,stroke:#c62828\"><svg id=\"exp-1775065595810-4-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 1080.2890625px;\" viewBox=\"0 0 1080.2890625 162\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1775065595810-4-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1775065595810-4-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1775065595810-4-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1775065595810-4-0 .error-icon{fill:#552222;}#exp-1775065595810-4-0 .error-text{fill:#552222;stroke:#552222;}#exp-1775065595810-4-0 .edge-thickness-normal{stroke-width:1px;}#exp-1775065595810-4-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1775065595810-4-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1775065595810-4-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1775065595810-4-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1775065595810-4-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1775065595810-4-0 .marker{fill:#333333;stroke:#333333;}#exp-1775065595810-4-0 .marker.cross{stroke:#333333;}#exp-1775065595810-4-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1775065595810-4-0 p{margin:0;}#exp-1775065595810-4-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1775065595810-4-0 .cluster-label text{fill:#333;}#exp-1775065595810-4-0 .cluster-label span{color:#333;}#exp-1775065595810-4-0 .cluster-label span p{background-color:transparent;}#exp-1775065595810-4-0 .label text,#exp-1775065595810-4-0 span{fill:#333;color:#333;}#exp-1775065595810-4-0 .node rect,#exp-1775065595810-4-0 .node circle,#exp-1775065595810-4-0 .node ellipse,#exp-1775065595810-4-0 .node polygon,#exp-1775065595810-4-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1775065595810-4-0 .rough-node .label text,#exp-1775065595810-4-0 .node .label text,#exp-1775065595810-4-0 .image-shape .label,#exp-1775065595810-4-0 .icon-shape .label{text-anchor:middle;}#exp-1775065595810-4-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1775065595810-4-0 .rough-node .label,#exp-1775065595810-4-0 .node .label,#exp-1775065595810-4-0 .image-shape .label,#exp-1775065595810-4-0 .icon-shape .label{text-align:center;}#exp-1775065595810-4-0 .node.clickable{cursor:pointer;}#exp-1775065595810-4-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1775065595810-4-0 .arrowheadPath{fill:#333333;}#exp-1775065595810-4-0 .edgePath .path{stroke:#333333;stroke-width:1px;}#exp-1775065595810-4-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1775065595810-4-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065595810-4-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1775065595810-4-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065595810-4-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1775065595810-4-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1775065595810-4-0 .cluster text{fill:#333;}#exp-1775065595810-4-0 .cluster span{color:#333;}#exp-1775065595810-4-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1775065595810-4-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1775065595810-4-0 rect.text{fill:none;stroke-width:0;}#exp-1775065595810-4-0 .icon-shape,#exp-1775065595810-4-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065595810-4-0 .icon-shape p,#exp-1775065595810-4-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1775065595810-4-0 .icon-shape .label rect,#exp-1775065595810-4-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065595810-4-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1775065595810-4-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1775065595810-4-0 .node .neo-node{stroke:#667eea;}#exp-1775065595810-4-0 [data-look=\"neo\"].node rect,#exp-1775065595810-4-0 [data-look=\"neo\"].cluster rect,#exp-1775065595810-4-0 [data-look=\"neo\"].node polygon{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1775065595810-4-0 [data-look=\"neo\"].node path{stroke:#667eea;stroke-width:1px;}#exp-1775065595810-4-0 [data-look=\"neo\"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1775065595810-4-0 [data-look=\"neo\"].node .neo-line path{stroke:#667eea;filter:none;}#exp-1775065595810-4-0 [data-look=\"neo\"].node circle{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1775065595810-4-0 [data-look=\"neo\"].node circle .state-start{fill:#000000;}#exp-1775065595810-4-0 [data-look=\"neo\"].icon-shape .icon{fill:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1775065595810-4-0 [data-look=\"neo\"].icon-shape .icon-neo path{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1775065595810-4-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1775065595810-4-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-pointEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"11.5\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"10.5\" markerHeight=\"14\" orient=\"auto\"><path d=\"M 0 0 L 11.5 7 L 0 14 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-pointStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"1\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11.5\" markerHeight=\"14\" orient=\"auto\"><polygon points=\"0,7 11.5,14 11.5,0\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></polygon></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-circleEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refY=\"5\" refX=\"12.25\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-circleStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-2\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-crossEnd-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"17.7\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5;\"></path></marker><marker id=\"exp-1775065595810-4-0_flowchart-v2-crossStart-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"-3.5\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M128.797,81L132.964,81C137.13,81,145.464,81,153.13,81C160.797,81,167.797,81,171.297,81L174.797,81\" id=\"exp-1775065595810-4-0-L_Client_MW_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Client_MW_0\" data-points=\"W3sieCI6MTI4Ljc5Njg3NSwieSI6ODF9LHsieCI6MTUzLjc5Njg3NSwieSI6ODF9LHsieCI6MTc4Ljc5Njg3NSwieSI6ODF9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1775065595810-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M334.625,81L338.792,81C342.958,81,351.292,81,358.958,81C366.625,81,373.625,81,377.125,81L380.625,81\" id=\"exp-1775065595810-4-0-L_MW_Guard_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_MW_Guard_0\" data-points=\"W3sieCI6MzM0LjYyNSwieSI6ODF9LHsieCI6MzU5LjYyNSwieSI6ODF9LHsieCI6Mzg0LjYyNSwieSI6ODF9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1775065595810-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M501.047,81L505.214,81C509.38,81,517.714,81,525.38,81C533.047,81,540.047,81,543.547,81L547.047,81\" id=\"exp-1775065595810-4-0-L_Guard_Pipe_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Guard_Pipe_0\" data-points=\"W3sieCI6NTAxLjA0Njg3NSwieSI6ODF9LHsieCI6NTI2LjA0Njg3NSwieSI6ODF9LHsieCI6NTUxLjA0Njg3NSwieSI6ODF9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1775065595810-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M655.016,65.248L673.303,59.707C691.59,54.165,728.164,43.083,768.577,37.541C808.99,32,853.241,32,875.367,32L897.492,32\" id=\"exp-1775065595810-4-0-L_Pipe_Handler_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Pipe_Handler_0\" data-points=\"W3sieCI6NjU1LjAxNTYyNSwieSI6NjUuMjQ3ODQ0MDQ2NjcwMDV9LHsieCI6NzY0LjczODI4MTI1LCJ5IjozMn0seyJ4Ijo5MDEuNDkyMTg3NSwieSI6MzJ9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1775065595810-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M655.016,96.752L673.303,102.293C691.59,107.835,728.164,118.917,764.072,124.459C799.979,130,835.22,130,852.84,130L870.461,130\" id=\"exp-1775065595810-4-0-L_Pipe_Error_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Pipe_Error_0\" data-points=\"W3sieCI6NjU1LjAxNTYyNSwieSI6OTYuNzUyMTU1OTUzMzI5OTV9LHsieCI6NzY0LjczODI4MTI1LCJ5IjoxMzB9LHsieCI6ODc0LjQ2MDkzNzUsInkiOjEzMH1d\" data-look=\"classic\" marker-end=\"url(#exp-1775065595810-4-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Client_MW_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_MW_Guard_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Guard_Pipe_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(764.73828125, 32)\"><g class=\"label\" data-id=\"L_Pipe_Handler_0\" transform=\"translate(0.34765625, -17.799999237060547)\"><g><rect class=\"background\" style=\"\" x=\"-85.0703125\" y=\"-3\" width=\"169.4453125\" height=\"41.599998474121094\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">✅</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> трансформовано</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> /</tspan></tspan><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">валідно</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(764.73828125, 130)\"><g class=\"label\" data-id=\"L_Pipe_Error_0\" transform=\"translate(0.5, -10)\"><g><rect class=\"background\" style=\"\" x=\"-53.1640625\" y=\"-3\" width=\"105.328125\" height=\"26\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">❌</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> невалідно</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-Client-0\" data-look=\"classic\" transform=\"translate(68.3984375, 81)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-60.3984375\" y=\"-24\" width=\"120.796875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-36.3984375, -12)\"><rect></rect><foreignObject width=\"72.796875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🌐 Клієнт</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-MW-1\" data-look=\"classic\" transform=\"translate(256.7109375, 81)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-77.9140625\" y=\"-24\" width=\"155.828125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-53.9140625, -12)\"><rect></rect><foreignObject width=\"107.828125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔒 Middleware</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-Guard-3\" data-look=\"classic\" transform=\"translate(442.8359375, 81)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-58.2109375\" y=\"-24\" width=\"116.421875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-34.2109375, -12)\"><rect></rect><foreignObject width=\"68.421875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🛡️ Guard</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-Pipe-5\" data-look=\"classic\" transform=\"translate(603.03125, 81)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-51.984375\" y=\"-24\" width=\"103.96875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-27.984375, -12)\"><rect></rect><foreignObject width=\"55.96875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔧 Pipe</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-Handler-7\" data-look=\"classic\" transform=\"translate(973.375, 32)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-71.8828125\" y=\"-24\" width=\"143.765625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.8828125, -12)\"><rect></rect><foreignObject width=\"95.765625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📬 Controller</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1775065595810-4-0-flowchart-Error-9\" data-look=\"classic\" transform=\"translate(973.375, 130)\"><rect class=\"basic label-container\" style=\"fill:#ffebee !important;stroke:#c62828 !important\" x=\"-98.9140625\" y=\"-24\" width=\"197.828125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-74.9140625, -12)\"><rect></rect><foreignObject width=\"149.828125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>💥 400 Bad Request</p></span></div></foreignObject></g></g></g></g></g><defs><filter id=\"exp-1775065595810-4-0-drop-shadow\" height=\"130%\" width=\"130%\"><feDropShadow dx=\"4\" dy=\"4\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs><defs><filter id=\"exp-1775065595810-4-0-drop-shadow-small\" height=\"150%\" width=\"150%\"><feDropShadow dx=\"2\" dy=\"2\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs></svg></div>\n<h2>🛠️ Вбудовані Pipes Nest.js</h2>\n<table>\n<thead>\n<tr>\n<th>Pipe</th>\n<th>Роль</th>\n<th>Що робить</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>ValidationPipe</code></td>\n<td>Валідація</td>\n<td>Перевіряє DTO-клас за декораторами class-validator</td>\n</tr>\n<tr>\n<td><code>ParseIntPipe</code></td>\n<td>Трансформація</td>\n<td>Перетворює рядок <code>\"42\"</code> у число <code>42</code></td>\n</tr>\n<tr>\n<td><code>ParseBoolPipe</code></td>\n<td>Трансформація</td>\n<td>Перетворює <code>\"true\"</code> / <code>\"false\"</code> у <code>boolean</code></td>\n</tr>\n<tr>\n<td><code>ParseUUIDPipe</code></td>\n<td>Валідація</td>\n<td>Перевіряє формат UUID, повертає рядок без змін</td>\n</tr>\n<tr>\n<td><code>DefaultValuePipe</code></td>\n<td>Трансформація</td>\n<td>Підставляє значення за замовчуванням, якщо поле відсутнє</td>\n</tr>\n</tbody></table>\n","<h1>✅ ValidationPipe та class-validator</h1>\n<p><strong>Головна ідея:</strong> <code>ValidationPipe</code> разом із бібліотекою <code>class-validator</code> дозволяє описати правила прямо в DTO через декоратори — і перевіряти їх <strong>автоматично</strong>, без жодного ручного коду в контролері.</p>\n<h2>📦 Встановлення</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">npm install class-validator class-transformer</code></pre><ul>\n<li><strong><code>class-validator</code></strong> — надає декоратори правил: <code>@IsString()</code>, <code>@Min()</code>, <code>@IsEmail()</code> тощо</li>\n<li><strong><code>class-transformer</code></strong> — перетворює сирий JSON-об'єкт на екземпляр класу DTO, щоб декоратори могли прочитати метадані</li>\n</ul>\n<h2>🏷️ DTO з правилами валідації</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/dto/create-task.dto.ts</span>\n<span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">IsString</span>,\n  <span class=\"hljs-title class_\">IsNotEmpty</span>,\n  <span class=\"hljs-title class_\">IsInt</span>,\n  <span class=\"hljs-title class_\">Min</span>,\n  <span class=\"hljs-title class_\">Max</span>,\n  <span class=\"hljs-title class_\">MaxLength</span>,\n  <span class=\"hljs-title class_\">IsOptional</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"class-validator\"</span>;\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">CreateTaskDto</span> {\n  <span class=\"hljs-meta\">@IsString</span>({ <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Назва має бути рядком\"</span> })\n  <span class=\"hljs-meta\">@IsNotEmpty</span>({ <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Назва не може бути порожньою\"</span> })\n  <span class=\"hljs-meta\">@MaxLength</span>(<span class=\"hljs-number\">200</span>, { <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Назва не може перевищувати 200 символів\"</span> })\n  <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>;\n\n  <span class=\"hljs-meta\">@IsInt</span>({ <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Пріоритет має бути цілим числом\"</span> })\n  <span class=\"hljs-meta\">@Min</span>(<span class=\"hljs-number\">1</span>, { <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Мінімальний пріоритет — 1\"</span> })\n  <span class=\"hljs-meta\">@Max</span>(<span class=\"hljs-number\">3</span>, { <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">\"Максимальний пріоритет — 3\"</span> })\n  <span class=\"hljs-attr\">priority</span>: <span class=\"hljs-built_in\">number</span>;\n\n  <span class=\"hljs-meta\">@IsString</span>()\n  <span class=\"hljs-meta\">@IsOptional</span>() <span class=\"hljs-comment\">// Якщо поле відсутнє — валідація пропускається</span>\n  <span class=\"hljs-meta\">@MaxLength</span>(<span class=\"hljs-number\">1000</span>)\n  description?: <span class=\"hljs-built_in\">string</span>;\n}</code></pre><h2>🌐 Реєстрація ValidationPipe глобально</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/main.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">NestFactory</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/core\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">ValidationPipe</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">AppModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./app.module\"</span>;\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">bootstrap</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> app = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title class_\">NestFactory</span>.<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-title class_\">AppModule</span>);\n\n  app.<span class=\"hljs-title function_\">useGlobalPipes</span>(\n    <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">ValidationPipe</span>({\n      <span class=\"hljs-attr\">whitelist</span>: <span class=\"hljs-literal\">true</span>, <span class=\"hljs-comment\">// 🧹 Видаляє поля, яких немає в DTO (захист від зайвих полів)</span>\n      <span class=\"hljs-attr\">transform</span>: <span class=\"hljs-literal\">true</span>, <span class=\"hljs-comment\">// 🔄 Перетворює типи: рядок → число де оголошено number</span>\n    }),\n  );\n\n  <span class=\"hljs-keyword\">await</span> app.<span class=\"hljs-title function_\">listen</span>(<span class=\"hljs-number\">3000</span>);\n}\n<span class=\"hljs-title function_\">bootstrap</span>();</code></pre><div class=\"tip\"><strong>💡 Що робить whitelist: true?</strong> <p>Якщо клієнт надсилає <code>{ \"title\": \"Задача\", \"priority\": 1, \"isAdmin\": true }</code>, а в DTO є лише <code>title</code> та <code>priority</code> — поле <code>isAdmin</code> буде <strong>автоматично видалено</strong> до виклику контролера. Це захищає від ситуації, коли клієнт намагається встановити поля, яких не повинен торкатися.</p>\n</div>\n\n\n\n<h2>🧪 Відповідь при невалідних даних</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">POST /tasks\n{ <span class=\"hljs-string\">\"title\"</span>: <span class=\"hljs-string\">\"\"</span>, <span class=\"hljs-string\">\"priority\"</span>: 10, <span class=\"hljs-string\">\"isAdmin\"</span>: <span class=\"hljs-literal\">true</span> }</code></pre><pre><code class=\"language-json hljs\" data-highlighted=\"yes\">HTTP/<span class=\"hljs-number\">1.1</span> <span class=\"hljs-number\">400</span> Bad Request\n<span class=\"hljs-punctuation\">{</span>\n  <span class=\"hljs-attr\">\"statusCode\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-number\">400</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"message\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">[</span>\n    <span class=\"hljs-string\">\"Назва не може бути порожньою\"</span><span class=\"hljs-punctuation\">,</span>\n    <span class=\"hljs-string\">\"Максимальний пріоритет — 3\"</span>\n  <span class=\"hljs-punctuation\">]</span><span class=\"hljs-punctuation\">,</span>\n  <span class=\"hljs-attr\">\"error\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"Bad Request\"</span>\n<span class=\"hljs-punctuation\">}</span></code></pre><p>Поле <code>isAdmin</code> видалено завдяки <code>whitelist: true</code>. Метод контролера так і не був викликаний.</p>\n","<h1>🏷️ Основні декоратори валідації</h1>\n<p><strong>Головна ідея:</strong> <code>class-validator</code> надає десятки готових декораторів. Нижче — найпоширеніші, яких достатньо для більшості реальних задач.</p>\n<h2>📋 Довідник декораторів</h2>\n<table>\n<thead>\n<tr>\n<th>Декоратор</th>\n<th>Що перевіряє</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>@IsString()</code></td>\n<td>Тип — рядок; відхиляє <code>null</code>, числа, масиви</td>\n</tr>\n<tr>\n<td><code>@IsInt()</code></td>\n<td>Тип — ціле число</td>\n</tr>\n<tr>\n<td><code>@IsBoolean()</code></td>\n<td>Тип — boolean</td>\n</tr>\n<tr>\n<td><code>@IsEmail()</code></td>\n<td>Формат email-адреси</td>\n</tr>\n<tr>\n<td><code>@IsNotEmpty()</code></td>\n<td>Значення не є порожнім рядком (<code>\"\"</code>) і не <code>undefined</code></td>\n</tr>\n<tr>\n<td><code>@IsOptional()</code></td>\n<td>Пропустити перевірку, якщо поле відсутнє</td>\n</tr>\n<tr>\n<td><code>@Min(n)</code> / <code>@Max(n)</code></td>\n<td>Числове значення не менше / не більше <code>n</code></td>\n</tr>\n<tr>\n<td><code>@MinLength(n)</code> / <code>@MaxLength(n)</code></td>\n<td>Довжина рядка не менше / не більше <code>n</code> символів</td>\n</tr>\n<tr>\n<td><code>@IsEnum(MyEnum)</code></td>\n<td>Значення входить до TypeScript enum</td>\n</tr>\n<tr>\n<td><code>@Matches(regex)</code></td>\n<td>Рядок відповідає регулярному виразу</td>\n</tr>\n</tbody></table>\n<h2>💡 Приклад: UpdateTaskDto з IsEnum</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// src/tasks/dto/update-task.dto.ts</span>\n<span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">IsBoolean</span>,\n  <span class=\"hljs-title class_\">IsEnum</span>,\n  <span class=\"hljs-title class_\">IsOptional</span>,\n  <span class=\"hljs-title class_\">IsString</span>,\n  <span class=\"hljs-title class_\">MaxLength</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"class-validator\"</span>;\n\n<span class=\"hljs-comment\">// В реальному проєкті enum виносять у окремий файл (наприклад task.types.ts),</span>\n<span class=\"hljs-comment\">// щоб його можна було імпортувати і в сервісі, і в контролері</span>\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">enum</span> <span class=\"hljs-title class_\">TaskStatus</span> {\n  <span class=\"hljs-variable constant_\">OPEN</span> = <span class=\"hljs-string\">\"open\"</span>,\n  <span class=\"hljs-variable constant_\">IN_PROGRESS</span> = <span class=\"hljs-string\">\"in_progress\"</span>,\n  <span class=\"hljs-variable constant_\">DONE</span> = <span class=\"hljs-string\">\"done\"</span>,\n}\n\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">UpdateTaskDto</span> {\n  <span class=\"hljs-meta\">@IsString</span>()\n  <span class=\"hljs-meta\">@IsOptional</span>()\n  <span class=\"hljs-meta\">@MaxLength</span>(<span class=\"hljs-number\">200</span>)\n  title?: <span class=\"hljs-built_in\">string</span>;\n\n  <span class=\"hljs-meta\">@IsEnum</span>(<span class=\"hljs-title class_\">TaskStatus</span>, {\n    <span class=\"hljs-attr\">message</span>: <span class=\"hljs-string\">`Статус має бути одним із: <span class=\"hljs-subst\">${<span class=\"hljs-built_in\">Object</span>.values(TaskStatus).join(<span class=\"hljs-string\">\", \"</span>)}</span>`</span>,\n  })\n  <span class=\"hljs-meta\">@IsOptional</span>()\n  status?: <span class=\"hljs-title class_\">TaskStatus</span>;\n\n  <span class=\"hljs-meta\">@IsBoolean</span>()\n  <span class=\"hljs-meta\">@IsOptional</span>()\n  done?: <span class=\"hljs-built_in\">boolean</span>;\n}</code></pre><pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">PATCH /tasks/1  { <span class=\"hljs-string\">\"status\"</span>: <span class=\"hljs-string\">\"unknown\"</span> }\n<span class=\"hljs-comment\"># → 400: \"Статус має бути одним із: open, in_progress, done\"</span>\n\nPATCH /tasks/1  { <span class=\"hljs-string\">\"status\"</span>: <span class=\"hljs-string\">\"done\"</span> }\n<span class=\"hljs-comment\"># → 200 OK</span></code></pre>","<h1>🚨 HttpException та вбудовані виключення</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong><code>HttpException</code></strong> — базовий клас Nest.js для формування HTTP-відповідей із помилками. Коли його \"кидають\" (<code>throw</code>) у будь-якому місці застосунку — вбудований глобальний фільтр Nest.js автоматично перехоплює його і повертає клієнту правильну JSON-відповідь.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість того, щоб вручну будувати відповідь із помилкою — ми \"кидаємо\" виключення, а Nest.js сам формує відповідь клієнту з правильним статус-кодом.</p>\n<h2>🛠️ Вбудовані виключення</h2>\n<table>\n<thead>\n<tr>\n<th>Клас</th>\n<th>Код</th>\n<th>Типовий сценарій</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>BadRequestException</code></td>\n<td>400</td>\n<td>Некоректні дані від клієнта</td>\n</tr>\n<tr>\n<td><code>UnauthorizedException</code></td>\n<td>401</td>\n<td>Не автентифіковано (відсутній токен)</td>\n</tr>\n<tr>\n<td><code>ForbiddenException</code></td>\n<td>403</td>\n<td>Немає прав на цю дію</td>\n</tr>\n<tr>\n<td><code>NotFoundException</code></td>\n<td>404</td>\n<td>Ресурс не знайдено в базі даних</td>\n</tr>\n<tr>\n<td><code>ConflictException</code></td>\n<td>409</td>\n<td>Конфлікт: наприклад, email вже зареєстровано</td>\n</tr>\n<tr>\n<td><code>InternalServerErrorException</code></td>\n<td>500</td>\n<td>Непередбачена помилка на сервері</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Приклад ConflictException</strong> <pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// Якщо завдання з такою назвою вже існує — повертаємо 409</span>\n<span class=\"hljs-keyword\">if</span> (<span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">existsByTitle</span>(dto.<span class=\"hljs-property\">title</span>)) {\n  <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">ConflictException</span>(<span class=\"hljs-string\">`Завдання \"<span class=\"hljs-subst\">${dto.title}</span>\" вже існує`</span>);\n}</code></pre></div>\n\n\n\n<h2>💻 Використання у контролері</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Controller</span>,\n  <span class=\"hljs-title class_\">Get</span>,\n  <span class=\"hljs-title class_\">Post</span>,\n  <span class=\"hljs-title class_\">Delete</span>,\n  <span class=\"hljs-title class_\">Body</span>,\n  <span class=\"hljs-title class_\">Param</span>,\n  <span class=\"hljs-title class_\">HttpCode</span>,\n  <span class=\"hljs-title class_\">ParseIntPipe</span>,\n  <span class=\"hljs-title class_\">NotFoundException</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">CreateTaskDto</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./dto/create-task.dto\"</span>;\n\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"tasks\"</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> tasksService: TasksService</span>) {}\n\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>, ParseIntPipe) id: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">findOne</span>(id);\n    <span class=\"hljs-keyword\">if</span> (!task) {\n      <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n      <span class=\"hljs-comment\">// → 404: { \"statusCode\": 404, \"message\": \"Завдання #99 не знайдено\" }</span>\n    }\n    <span class=\"hljs-keyword\">return</span> task;\n  }\n\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">201</span>)\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>() dto: CreateTaskDto</span>) {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(dto);\n    <span class=\"hljs-comment\">// ValidationPipe вже перевірив dto — метод не викликається при помилці</span>\n  }\n\n  <span class=\"hljs-meta\">@Delete</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">204</span>)\n  <span class=\"hljs-title function_\">remove</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>, ParseIntPipe) id: <span class=\"hljs-built_in\">number</span></span>) {\n    <span class=\"hljs-keyword\">const</span> removed = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">remove</span>(id);\n    <span class=\"hljs-keyword\">if</span> (!removed) {\n      <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n    }\n    <span class=\"hljs-comment\">// 204 No Content — тіло відповіді порожнє</span>\n  }\n}</code></pre><div class=\"note\"><strong>📝 Де кидати виключення?</strong> <p>Рекомендується кидати HTTP-виключення у <strong>контролері</strong>: він перевіряє результат сервісу (<code>null</code>, <code>false</code>) і вирішує, яку HTTP-відповідь повернути. Сервіс не повинен знати про HTTP — він лише повертає дані або <code>null</code>.</p>\n</div>\n\n","<h1>🛡️ SQL Injection та захист</h1>\n<div class=\"danger\"><strong>🚫 Критична вразливість</strong> <p><strong>SQL Injection</strong> — атака, при якій зловмисник вставляє SQL-код у вхідні дані, щоб змінити логіку запиту до бази даних. Це одна з найпоширеніших вразливостей веб-застосунків.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Якщо підставляти вхідні дані напряму у рядок SQL-запиту — зловмисник може \"вийти\" за межі очікуваного запиту і виконати будь-який SQL.</p>\n<h2>💀 Як виглядає атака</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ ВРАЗЛИВИЙ КОД — підстановка даних рядком у SQL</span>\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-title function_\">findByTitle</span>(<span class=\"hljs-params\">title: <span class=\"hljs-built_in\">string</span></span>) {\n  <span class=\"hljs-keyword\">const</span> sql = <span class=\"hljs-string\">`SELECT * FROM tasks WHERE title = '<span class=\"hljs-subst\">${title}</span>'`</span>;\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">db</span>.<span class=\"hljs-title function_\">query</span>(sql);\n}</code></pre><pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Звичайний запит:</span>\ntitle = <span class=\"hljs-string\">\"Купити молоко\"</span>\nSQL → SELECT * FROM tasks WHERE title = <span class=\"hljs-string\">'Купити молоко'</span>  ✅\n\n<span class=\"hljs-comment\"># Атака — обхід умови:</span>\ntitle = <span class=\"hljs-string\">\"' OR '1'='1\"</span>\nSQL → SELECT * FROM tasks WHERE title = <span class=\"hljs-string\">''</span> OR <span class=\"hljs-string\">'1'</span>=<span class=\"hljs-string\">'1'</span>\n<span class=\"hljs-comment\">#                                         ^^^^^^^^^^^ завжди true → витік ВСІХ записів</span>\n\n<span class=\"hljs-comment\"># Атака — видалення таблиці:</span>\ntitle = <span class=\"hljs-string\">\"'; DROP TABLE tasks; --\"</span>\nSQL → SELECT * FROM tasks WHERE title = <span class=\"hljs-string\">''</span>; DROP TABLE tasks; --\n<span class=\"hljs-comment\">#                                           ^^^^^^^^^^^^^^^^^ ВИДАЛЯЄ ТАБЛИЦЮ</span></code></pre><h2>🔒 Захист: параметризовані запити</h2>\n<p>При параметризованому запиті значення передається до бази <strong>окремо</strong> від SQL-тексту. База обробляє <code>$1</code> як місце для даних — будь-який текст там сприймається лише як рядок, а не як SQL-команда.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ БЕЗПЕЧНО — значення передається окремо від запиту</span>\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-title function_\">findByTitle</span>(<span class=\"hljs-params\">title: <span class=\"hljs-built_in\">string</span></span>) {\n  <span class=\"hljs-keyword\">const</span> sql = <span class=\"hljs-string\">`SELECT * FROM tasks WHERE title = $1`</span>;\n  <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">db</span>.<span class=\"hljs-title function_\">query</span>(sql, [title]);\n  <span class=\"hljs-comment\">// Навіть \"'; DROP TABLE tasks; --\" — просто текстовий рядок для БД</span>\n}</code></pre><h2>🛡️ TypeORM автоматично захищає</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ✅ Безпечно — TypeORM використовує параметризовані запити під капотом</span>\n<span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksRepository</span>.<span class=\"hljs-title function_\">findOne</span>({ <span class=\"hljs-attr\">where</span>: { title } });\n\n<span class=\"hljs-comment\">// ✅ Безпечно — named parameter у QueryBuilder</span>\n<span class=\"hljs-keyword\">const</span> tasks = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksRepository</span>\n  .<span class=\"hljs-title function_\">createQueryBuilder</span>(<span class=\"hljs-string\">\"task\"</span>)\n  .<span class=\"hljs-title function_\">where</span>(<span class=\"hljs-string\">\"task.title = :title\"</span>, { title })\n  .<span class=\"hljs-title function_\">getMany</span>();\n\n<span class=\"hljs-comment\">// ❌ ВРАЗЛИВО — підстановка рядком небезпечна навіть у TypeORM</span>\n<span class=\"hljs-keyword\">const</span> tasks = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksRepository</span>\n  .<span class=\"hljs-title function_\">createQueryBuilder</span>(<span class=\"hljs-string\">\"task\"</span>)\n  .<span class=\"hljs-title function_\">where</span>(<span class=\"hljs-string\">`task.title = '<span class=\"hljs-subst\">${title}</span>'`</span>) <span class=\"hljs-comment\">// ← ніколи так не робіть</span>\n  .<span class=\"hljs-title function_\">getMany</span>();</code></pre><div class=\"success\"><strong>✅ Багатошаровий захист</strong> <ol>\n<li>🔒 <strong>ORM / параметризовані запити</strong> — основний і обов'язковий захист</li>\n<li>✅ <strong>Валідація вхідних даних</strong> — обмеження довжини та допустимих символів зменшує ризики</li>\n<li>🔑 <strong>Принцип найменших привілеїв</strong> — БД-користувач має лише права <code>SELECT/INSERT/UPDATE/DELETE</code>, але не <code>DROP TABLE</code></li>\n</ol>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Валідація — обов'язковий шар</strong> будь-якого API: TypeScript не захищає в рантаймі, клієнти можуть надсилати будь-що</p>\n</li>\n<li><p><strong>DTO</strong> — клас (не інтерфейс!), що описує структуру вхідних даних; існує в рантаймі, тому підтримує декоратори валідації; замінює <code>any</code> на явний контракт</p>\n</li>\n<li><p><strong>Pipe</strong> — виконується між запитом і контролером; <strong>трансформує</strong> дані (<code>ParseIntPipe</code>: <code>'5'</code> → <code>5</code>) або <strong>валідує</strong> їх (<code>ValidationPipe</code>: перевіряє DTO за правилами)</p>\n</li>\n<li><p><strong>class-validator</strong> — декоратори правил прямо в DTO: <code>@IsString()</code>, <code>@IsNotEmpty()</code>, <code>@Min()</code> тощо; <code>whitelist: true</code> автоматично видаляє зайві поля</p>\n</li>\n<li><p><strong>HttpException</strong> та вбудовані класи (<code>NotFoundException</code>, <code>ConflictException</code>) — явне та інформативне повідомлення клієнту; Nest.js сам формує JSON-відповідь</p>\n</li>\n<li><p><strong>SQL Injection</strong> — атака через підстановку SQL-коду у вхідні дані; основний захист — ORM та параметризовані запити; ніколи не підставляйте дані рядком у SQL</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Що таке <strong>DTO</strong> і навіщо він потрібен? Чому використовують клас, а не TypeScript-інтерфейс?</p>\n</li>\n<li><p>🤔 Що таке <strong>Pipe</strong> у Nest.js? Поясніть його дві ролі: трансформацію та валідацію.</p>\n</li>\n<li><p>🤔 Для чого потрібен <code>ParseIntPipe</code>? Що він робить і коли повертає помилку?</p>\n</li>\n<li><p>🤔 Що робить параметр <code>whitelist: true</code> у <code>ValidationPipe</code>? Яку загрозу він усуває?</p>\n</li>\n<li><p>🤔 Яка різниця між <code>HttpException</code> та <code>NotFoundException</code>? Де у коді правильніше кидати виключення?</p>\n</li>\n<li><p>🤔 Що таке <strong>SQL Injection</strong>? Наведіть приклад атаки та поясніть, чому параметризований запит захищає від неї.</p>\n</li>\n<li><p>🤔 Чи достатньо <code>ValidationPipe</code> для захисту від SQL Injection? Відповідь обґрунтуйте.</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Об'єкт передачі даних</td>\n<td>DTO</td>\n<td>Клас, що описує структуру та правила валідації вхідних або вихідних даних</td>\n</tr>\n<tr>\n<td>Конвеєр</td>\n<td>Pipe</td>\n<td>Клас Nest.js, що трансформує або валідує дані до виклику обробника</td>\n</tr>\n<tr>\n<td>Декоратор валідації</td>\n<td>Validation decorator</td>\n<td>Анотація <code>@IsString()</code>, <code>@Min()</code> тощо з <code>class-validator</code></td>\n</tr>\n<tr>\n<td>Виключення</td>\n<td>Exception</td>\n<td>Об'єкт-помилка, що перериває нормальний потік і передається у фільтр</td>\n</tr>\n<tr>\n<td>Білий список</td>\n<td>Whitelist</td>\n<td>Перелік дозволених полів; все поза переліком видаляється або відхиляється</td>\n</tr>\n<tr>\n<td>Трансформація</td>\n<td>Transformation</td>\n<td>Автоматичне перетворення типу: рядок → число, JSON → екземпляр класу</td>\n</tr>\n<tr>\n<td>Параметризований запит</td>\n<td>Parameterized query</td>\n<td>SQL-запит із плейсхолдерами, де значення передаються окремо від тексту</td>\n</tr>\n<tr>\n<td>Плейсхолдер</td>\n<td>Placeholder</td>\n<td>Позначка <code>$1</code> або <code>:name</code> у SQL, куди база підставляє значення безпечно</td>\n</tr>\n<tr>\n<td>Масове призначення</td>\n<td>Mass assignment</td>\n<td>Атака: передача зайвих полів щоб змінити дані, яких не повинен торкатися клієнт</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>DTO</td>\n<td>Data Transfer Object</td>\n<td>Об'єкт передачі даних</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>HTTP</td>\n<td>HyperText Transfer Protocol</td>\n<td>Протокол передачі гіпертексту</td>\n</tr>\n<tr>\n<td>ORM</td>\n<td>Object-Relational Mapping</td>\n<td>Об'єктно-реляційне відображення</td>\n</tr>\n<tr>\n<td>SQL</td>\n<td>Structured Query Language</td>\n<td>Мова структурованих запитів</td>\n</tr>\n<tr>\n<td>OWASP</td>\n<td>Open Worldwide Application Security Project</td>\n<td>Проєкт відкритої безпеки застосунків</td>\n</tr>\n<tr>\n<td>UUID</td>\n<td>Universally Unique Identifier</td>\n<td>Універсальний унікальний ідентифікатор</td>\n</tr>\n<tr>\n<td>CRUD</td>\n<td>Create, Read, Update, Delete</td>\n<td>Базові операції з даними</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>

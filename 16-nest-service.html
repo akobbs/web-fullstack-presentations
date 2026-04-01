@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Nest.js: сервіси</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 15</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>Nest.js: сервіси</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🔁 Повторення: архітектура Nest.js</li>\n<li>🧩 Що таке сервіс та навіщо він потрібен</li>\n<li>💉 Dependency Injection — ін'єкція залежностей</li>\n<li>🏗️ Providers — постачальники залежностей</li>\n<li>🔌 Реєстрація та використання сервісів у модулях</li>\n<li>🛡️ Interceptors — перехоплювачі запитів і відповідей</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🔁 Архітектура Nest.js: нагадування</h1>\n<div class=\"info\"><strong>ℹ️ Основні будівельні блоки</strong> <p>Nest.js організовує код за принципом <strong>розділення відповідальностей</strong>. Кожен шар відповідає за свою чітко визначену роль.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Контролер обробляє HTTP-запити, але <strong>не</strong> містить бізнес-логіки — її делегують сервісу.</p>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    Client[&quot;🌐 Клієнт&quot;] --&gt; Controller[&quot;📬 Controller&quot;]\n    Controller --&gt; Service[&quot;⚙️ Service&quot;]\n    Service --&gt; DB[&quot;🗄️ База даних&quot;]\n    Controller --&gt; |&quot;HTTP Response&quot;| Client\n    style Client fill:#e3f2fd,stroke:#1565c0\n    style Controller fill:#fff3e0,stroke:#ef6c00\n    style Service fill:#e8f5e9,stroke:#388e3c\n    style DB fill:#f3e5f5,stroke:#7b1fa2\"><svg id=\"exp-1775065611790-2-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 834.015625px;\" viewBox=\"0 0 834.015625 66.49642181396484\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1775065611790-2-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1775065611790-2-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1775065611790-2-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1775065611790-2-0 .error-icon{fill:#552222;}#exp-1775065611790-2-0 .error-text{fill:#552222;stroke:#552222;}#exp-1775065611790-2-0 .edge-thickness-normal{stroke-width:1px;}#exp-1775065611790-2-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1775065611790-2-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1775065611790-2-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1775065611790-2-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1775065611790-2-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1775065611790-2-0 .marker{fill:#333333;stroke:#333333;}#exp-1775065611790-2-0 .marker.cross{stroke:#333333;}#exp-1775065611790-2-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1775065611790-2-0 p{margin:0;}#exp-1775065611790-2-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1775065611790-2-0 .cluster-label text{fill:#333;}#exp-1775065611790-2-0 .cluster-label span{color:#333;}#exp-1775065611790-2-0 .cluster-label span p{background-color:transparent;}#exp-1775065611790-2-0 .label text,#exp-1775065611790-2-0 span{fill:#333;color:#333;}#exp-1775065611790-2-0 .node rect,#exp-1775065611790-2-0 .node circle,#exp-1775065611790-2-0 .node ellipse,#exp-1775065611790-2-0 .node polygon,#exp-1775065611790-2-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1775065611790-2-0 .rough-node .label text,#exp-1775065611790-2-0 .node .label text,#exp-1775065611790-2-0 .image-shape .label,#exp-1775065611790-2-0 .icon-shape .label{text-anchor:middle;}#exp-1775065611790-2-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1775065611790-2-0 .rough-node .label,#exp-1775065611790-2-0 .node .label,#exp-1775065611790-2-0 .image-shape .label,#exp-1775065611790-2-0 .icon-shape .label{text-align:center;}#exp-1775065611790-2-0 .node.clickable{cursor:pointer;}#exp-1775065611790-2-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1775065611790-2-0 .arrowheadPath{fill:#333333;}#exp-1775065611790-2-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1775065611790-2-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1775065611790-2-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611790-2-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1775065611790-2-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611790-2-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1775065611790-2-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1775065611790-2-0 .cluster text{fill:#333;}#exp-1775065611790-2-0 .cluster span{color:#333;}#exp-1775065611790-2-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1775065611790-2-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1775065611790-2-0 rect.text{fill:none;stroke-width:0;}#exp-1775065611790-2-0 .icon-shape,#exp-1775065611790-2-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611790-2-0 .icon-shape p,#exp-1775065611790-2-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1775065611790-2-0 .icon-shape .label rect,#exp-1775065611790-2-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611790-2-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1775065611790-2-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1775065611790-2-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1775065611790-2-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611790-2-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611790-2-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611790-2-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611790-2-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611790-2-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M128.797,25.574L143.012,24.062C157.227,22.549,185.656,19.525,213.422,19.349C241.189,19.173,268.292,21.846,281.843,23.182L295.394,24.518\" id=\"L_Client_Controller_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Client_Controller_0\" data-points=\"W3sieCI6MTI4Ljc5Njg3NSwieSI6MjUuNTc0MDgzMDExNTgzMDE0fSx7IngiOjIxNC4wODU5Mzc1LCJ5IjoxNi41fSx7IngiOjI5OS4zNzUsInkiOjI0LjkxMTA0OTgwNjE0Mzc1fV0=\" marker-end=\"url(#exp-1775065611790-2-0_flowchart-v2-pointEnd)\"></path><path d=\"M443.141,32L447.307,32C451.474,32,459.807,32,467.474,32C475.141,32,482.141,32,485.641,32L489.141,32\" id=\"L_Controller_Service_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Controller_Service_0\" data-points=\"W3sieCI6NDQzLjE0MDYyNSwieSI6MzJ9LHsieCI6NDY4LjE0MDYyNSwieSI6MzJ9LHsieCI6NDkzLjE0MDYyNSwieSI6MzJ9XQ==\" marker-end=\"url(#exp-1775065611790-2-0_flowchart-v2-pointEnd)\"></path><path d=\"M619.375,32L623.542,32C627.708,32,636.042,32,643.708,32C651.375,32,658.375,32,661.875,32L665.375,32\" id=\"L_Service_DB_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Service_DB_0\" data-points=\"W3sieCI6NjE5LjM3NSwieSI6MzJ9LHsieCI6NjQ0LjM3NSwieSI6MzJ9LHsieCI6NjY5LjM3NSwieSI6MzJ9XQ==\" marker-end=\"url(#exp-1775065611790-2-0_flowchart-v2-pointEnd)\"></path><path d=\"M299.375,39.089L285.16,40.491C270.945,41.893,242.516,44.696,214.749,44.656C186.982,44.616,159.878,41.733,146.326,40.291L132.774,38.849\" id=\"L_Controller_Client_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Controller_Client_0\" data-points=\"W3sieCI6Mjk5LjM3NSwieSI6MzkuMDg4OTUwMTkzODU2MjV9LHsieCI6MjE0LjA4NTkzNzUsInkiOjQ3LjV9LHsieCI6MTI4Ljc5Njg3NSwieSI6MzguNDI1OTE2OTg4NDE2OTg2fV0=\" marker-end=\"url(#exp-1775065611790-2-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Client_Controller_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Controller_Service_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Service_DB_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(214.05232, 47.49642)\"><g class=\"label\" data-id=\"L_Controller_Client_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-60.2890625\" y=\"-1\" width=\"120.578125\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">HTTP</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> Response</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-Client-0\" transform=\"translate(68.3984375, 32)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-60.3984375\" y=\"-24\" width=\"120.796875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-36.3984375, -12)\"><rect></rect><foreignObject width=\"72.796875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🌐 Клієнт</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Controller-1\" transform=\"translate(371.2578125, 32)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-71.8828125\" y=\"-24\" width=\"143.765625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-47.8828125, -12)\"><rect></rect><foreignObject width=\"95.765625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📬 Controller</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Service-3\" transform=\"translate(556.2578125, 32)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-63.1171875\" y=\"-24\" width=\"126.234375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-39.1171875, -12)\"><rect></rect><foreignObject width=\"78.234375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ Service</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-DB-5\" transform=\"translate(747.6953125, 32)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-78.3203125\" y=\"-24\" width=\"156.640625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-54.3203125, -12)\"><rect></rect><foreignObject width=\"108.640625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🗄️ База даних</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<table>\n<thead>\n<tr>\n<th>Шар</th>\n<th>Відповідальність</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Controller</strong></td>\n<td>Приймає HTTP-запит, повертає відповідь</td>\n</tr>\n<tr>\n<td><strong>Service</strong></td>\n<td>Бізнес-логіка, робота з даними</td>\n</tr>\n<tr>\n<td><strong>Repository</strong></td>\n<td>Взаємодія з базою даних (пізніше)</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Чому це важливо?</strong> <p>Якщо вся логіка знаходиться в контролері — змінити поведінку або протестувати її дуже складно. Сервіс робить логіку <strong>переносимою та тестованою</strong>.</p>\n</div>\n\n","<h1>🧩 Що таке сервіс</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Сервіс (Service)</strong> — клас, що містить бізнес-логіку застосунку: обробку даних, взаємодію зі сховищем, виклики зовнішніх API тощо.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Сервіс повертає дані або <code>null</code> — він нічого не знає про HTTP. Контролер перевіряє результат і вирішує, який статус повернути.</p>\n<h2>🆚 Розподіл відповідальності</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ⚙️ Сервіс — лише бізнес-логіка, нічого про HTTP</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Injectable</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Injectable</span>()\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksService</span> {\n  <span class=\"hljs-keyword\">private</span> <span class=\"hljs-attr\">tasks</span>: <span class=\"hljs-title class_\">Task</span>[] = [{ <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Вивчити Nest.js\"</span>, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-literal\">false</span> }];\n\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-title class_\">Task</span> | <span class=\"hljs-literal\">null</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span> t.<span class=\"hljs-property\">id</span> === id) ?? <span class=\"hljs-literal\">null</span>;\n    <span class=\"hljs-comment\">// повертає null — не знає, що з цим робити далі</span>\n  }\n\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-title class_\">Task</span> {\n    <span class=\"hljs-keyword\">const</span> task = { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Date</span>.<span class=\"hljs-title function_\">now</span>(), title, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-literal\">false</span> };\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">push</span>(task);\n    <span class=\"hljs-keyword\">return</span> task;\n  }\n}</code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// 📬 Контролер — перевіряє результат і формує HTTP-відповідь</span>\n<span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Controller</span>,\n  <span class=\"hljs-title class_\">Get</span>,\n  <span class=\"hljs-title class_\">Post</span>,\n  <span class=\"hljs-title class_\">Param</span>,\n  <span class=\"hljs-title class_\">Body</span>,\n  <span class=\"hljs-title class_\">HttpCode</span>,\n  <span class=\"hljs-title class_\">NotFoundException</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"tasks\"</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> tasksService: TasksService</span>) {}\n\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-title class_\">Task</span> {\n    <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">findOne</span>(+id);\n    <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n    <span class=\"hljs-comment\">// 👆 саме тут вирішуємо: null → 404</span>\n    <span class=\"hljs-keyword\">return</span> task; <span class=\"hljs-comment\">// знайдено → 200 OK</span>\n  }\n\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">201</span>) <span class=\"hljs-comment\">// 👈 явно вказуємо статус \"Created\" замість дефолтного 200</span>\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-meta\">@Body</span>(<span class=\"hljs-string\">\"title\"</span>) <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-title class_\">Task</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(title);\n  }\n}</code></pre><div class=\"tip\"><strong>💡 Чому виняток — у контролері, а не в сервісі?</strong> <p>Сервіс може використовуватись у різних контекстах: HTTP, черга завдань, CLI-команда. <code>NotFoundException</code> — це HTTP-концепція. Якщо помістити її в сервіс — він стає залежним від транспортного шару. Сервіс лише каже <em>що є</em> (<code>null</code> або дані), контролер вирішує <em>що з цим робити</em>.</p>\n</div>\n\n\n\n<h2>🛠️ Створення сервісу через CLI</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">nest generate service tasks  <span class=\"hljs-comment\"># або скорочено: nest g s tasks</span></code></pre><p>Команда створить: <code>tasks.service.ts</code> та <code>tasks.service.spec.ts</code> (файл для тестів).</p>\n","<h1>🏷️ Декоратор @Injectable</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong><code>@Injectable()</code></strong> — декоратор, що позначає клас як <strong>постачальника (provider)</strong>, яким може керувати система Dependency Injection Nest.js.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Без <code>@Injectable()</code> Nest.js не знатиме, що цей клас можна ін'єктувати в інші класи.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Injectable</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Injectable</span>() <span class=\"hljs-comment\">// 👈 Цей декоратор — обов'язковий!</span>\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksService</span> {\n  <span class=\"hljs-comment\">// Тимчасове сховище (поки немає бази даних)</span>\n  <span class=\"hljs-keyword\">private</span> <span class=\"hljs-attr\">tasks</span>: <span class=\"hljs-title class_\">Task</span>[] = [\n    { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">1</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Вивчити Nest.js\"</span>, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-literal\">false</span> },\n    { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-number\">2</span>, <span class=\"hljs-attr\">title</span>: <span class=\"hljs-string\">\"Написати API\"</span>, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-literal\">false</span> },\n  ];\n\n  <span class=\"hljs-title function_\">findAll</span>(): <span class=\"hljs-title class_\">Task</span>[] {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>;\n  }\n\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-title class_\">Task</span> | <span class=\"hljs-literal\">null</span> {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">task</span>) =&gt;</span> task.<span class=\"hljs-property\">id</span> === id) ?? <span class=\"hljs-literal\">null</span>;\n  }\n\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>): <span class=\"hljs-title class_\">Task</span> {\n    <span class=\"hljs-keyword\">const</span> <span class=\"hljs-attr\">newTask</span>: <span class=\"hljs-title class_\">Task</span> = { <span class=\"hljs-attr\">id</span>: <span class=\"hljs-title class_\">Date</span>.<span class=\"hljs-title function_\">now</span>(), title, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-literal\">false</span> };\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">push</span>(newTask);\n    <span class=\"hljs-keyword\">return</span> newTask;\n  }\n\n  <span class=\"hljs-title function_\">update</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>, <span class=\"hljs-attr\">done</span>: <span class=\"hljs-built_in\">boolean</span>): <span class=\"hljs-title class_\">Task</span> | <span class=\"hljs-literal\">null</span> {\n    <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">find</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span> t.<span class=\"hljs-property\">id</span> === id);\n    <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">null</span>;\n    task.<span class=\"hljs-property\">done</span> = done;\n    <span class=\"hljs-keyword\">return</span> task;\n  }\n\n  <span class=\"hljs-title function_\">remove</span>(<span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>): <span class=\"hljs-built_in\">boolean</span> {\n    <span class=\"hljs-keyword\">const</span> exists = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">some</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span> t.<span class=\"hljs-property\">id</span> === id);\n    <span class=\"hljs-keyword\">if</span> (!exists) <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">false</span>;\n    <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span> = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasks</span>.<span class=\"hljs-title function_\">filter</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">t</span>) =&gt;</span> t.<span class=\"hljs-property\">id</span> !== id);\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-literal\">true</span>;\n  }\n}</code></pre><div class=\"note\"><strong>📝 Що зберігаємо в сервісі?</strong> <p>У реальному застосунку <code>tasks</code> буде не масивом у пам'яті, а зверненням до бази даних. Але структура сервісу залишається <strong>такою самою</strong> — контролер не зміниться.</p>\n</div>\n\n","<h1>💉 Dependency Injection</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Dependency Injection (DI)</strong> — патерн проєктування, за якого об'єкт отримує свої залежності ззовні, а не створює їх самостійно.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Замість <code>new TasksService()</code> всередині контролера — ми просто <strong>оголошуємо, що потребуємо сервіс</strong>, а Nest.js сам його надасть.</p>\n<h2>🔍 Без DI vs З DI</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// ❌ Без DI — контролер сам створює залежність</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-keyword\">private</span> service = <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">TasksService</span>(); <span class=\"hljs-comment\">// 👈 Жорстка прив'язка!</span>\n  <span class=\"hljs-comment\">// Якщо TasksService зміниться — треба змінювати й контролер</span>\n}\n\n<span class=\"hljs-comment\">// ✅ З DI — залежність передається ззовні</span>\n<span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> service: TasksService</span>) {}\n  <span class=\"hljs-comment\">// Nest.js сам вирішить, який об'єкт передати</span>\n}</code></pre><h2>⚙️ Як це працює в Nest.js</h2>\n\n<div class=\"mermaid\" data-source=\"graph TD\n    Module[&quot;📦 Module&lt;br/&gt;реєструє providers&quot;] --&gt; NestDI[&quot;🔧 IoC Container&lt;br/&gt;Nest.js&quot;]\n    NestDI --&gt; |&quot;створює екземпляр&quot;| Service[&quot;⚙️ TasksService&quot;]\n    NestDI --&gt; |&quot;ін'єктує&quot;| Controller[&quot;📬 TasksController&quot;]\n    Controller --&gt; |&quot;використовує&quot;| Service\n    style Module fill:#e3f2fd,stroke:#1565c0\n    style NestDI fill:#fff9c4,stroke:#f9a825\n    style Service fill:#e8f5e9,stroke:#388e3c\n    style Controller fill:#fff3e0,stroke:#ef6c00\"><svg id=\"exp-1775065611809-5-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 390.140625px;\" viewBox=\"0 0 390.140625 450\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1775065611809-5-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1775065611809-5-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1775065611809-5-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1775065611809-5-0 .error-icon{fill:#552222;}#exp-1775065611809-5-0 .error-text{fill:#552222;stroke:#552222;}#exp-1775065611809-5-0 .edge-thickness-normal{stroke-width:1px;}#exp-1775065611809-5-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1775065611809-5-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1775065611809-5-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1775065611809-5-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1775065611809-5-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1775065611809-5-0 .marker{fill:#333333;stroke:#333333;}#exp-1775065611809-5-0 .marker.cross{stroke:#333333;}#exp-1775065611809-5-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1775065611809-5-0 p{margin:0;}#exp-1775065611809-5-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1775065611809-5-0 .cluster-label text{fill:#333;}#exp-1775065611809-5-0 .cluster-label span{color:#333;}#exp-1775065611809-5-0 .cluster-label span p{background-color:transparent;}#exp-1775065611809-5-0 .label text,#exp-1775065611809-5-0 span{fill:#333;color:#333;}#exp-1775065611809-5-0 .node rect,#exp-1775065611809-5-0 .node circle,#exp-1775065611809-5-0 .node ellipse,#exp-1775065611809-5-0 .node polygon,#exp-1775065611809-5-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1775065611809-5-0 .rough-node .label text,#exp-1775065611809-5-0 .node .label text,#exp-1775065611809-5-0 .image-shape .label,#exp-1775065611809-5-0 .icon-shape .label{text-anchor:middle;}#exp-1775065611809-5-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1775065611809-5-0 .rough-node .label,#exp-1775065611809-5-0 .node .label,#exp-1775065611809-5-0 .image-shape .label,#exp-1775065611809-5-0 .icon-shape .label{text-align:center;}#exp-1775065611809-5-0 .node.clickable{cursor:pointer;}#exp-1775065611809-5-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1775065611809-5-0 .arrowheadPath{fill:#333333;}#exp-1775065611809-5-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1775065611809-5-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1775065611809-5-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611809-5-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1775065611809-5-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611809-5-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1775065611809-5-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1775065611809-5-0 .cluster text{fill:#333;}#exp-1775065611809-5-0 .cluster span{color:#333;}#exp-1775065611809-5-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1775065611809-5-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1775065611809-5-0 rect.text{fill:none;stroke-width:0;}#exp-1775065611809-5-0 .icon-shape,#exp-1775065611809-5-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611809-5-0 .icon-shape p,#exp-1775065611809-5-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1775065611809-5-0 .icon-shape .label rect,#exp-1775065611809-5-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611809-5-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1775065611809-5-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1775065611809-5-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1775065611809-5-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611809-5-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611809-5-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611809-5-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611809-5-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611809-5-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M187.527,80L187.527,84.167C187.527,88.333,187.527,96.667,187.527,104.333C187.527,112,187.527,119,187.527,122.5L187.527,126\" id=\"L_Module_NestDI_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Module_NestDI_0\" data-points=\"W3sieCI6MTg3LjUyNzM0Mzc1LCJ5Ijo4MH0seyJ4IjoxODcuNTI3MzQzNzUsInkiOjEwNX0seyJ4IjoxODcuNTI3MzQzNzUsInkiOjEzMH1d\" marker-end=\"url(#exp-1775065611809-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M136.385,202L127.861,208C119.337,214,102.29,226,93.766,242C85.242,258,85.242,278,85.242,298C85.242,318,85.242,338,94.896,353.663C104.549,369.325,123.856,380.651,133.51,386.313L143.163,391.976\" id=\"L_NestDI_Service_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_NestDI_Service_0\" data-points=\"W3sieCI6MTM2LjM4NDc2NTYyNSwieSI6MjAyfSx7IngiOjg1LjI0MjE4NzUsInkiOjIzOH0seyJ4Ijo4NS4yNDIxODc1LCJ5IjoyOTh9LHsieCI6ODUuMjQyMTg3NSwieSI6MzU4fSx7IngiOjE0Ni42MTMyODEyNSwieSI6Mzk0fV0=\" marker-end=\"url(#exp-1775065611809-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M238.67,202L247.194,208C255.717,214,272.765,226,281.289,237.333C289.813,248.667,289.813,259.333,289.813,264.667L289.813,270\" id=\"L_NestDI_Controller_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_NestDI_Controller_0\" data-points=\"W3sieCI6MjM4LjY2OTkyMTg3NSwieSI6MjAyfSx7IngiOjI4OS44MTI1LCJ5IjoyMzh9LHsieCI6Mjg5LjgxMjUsInkiOjI3NH1d\" marker-end=\"url(#exp-1775065611809-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M289.813,322L289.813,328C289.813,334,289.813,346,280.159,357.663C270.506,369.325,251.199,380.651,241.545,386.313L231.892,391.976\" id=\"L_Controller_Service_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Controller_Service_0\" data-points=\"W3sieCI6Mjg5LjgxMjUsInkiOjMyMn0seyJ4IjoyODkuODEyNSwieSI6MzU4fSx7IngiOjIyOC40NDE0MDYyNSwieSI6Mzk0fV0=\" marker-end=\"url(#exp-1775065611809-5-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Module_NestDI_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\" transform=\"translate(85.2421875, 298)\"><g class=\"label\" data-id=\"L_NestDI_Service_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-77.2421875\" y=\"-1\" width=\"154.484375\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">створює</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> екземпляр</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(289.8125, 238)\"><g class=\"label\" data-id=\"L_NestDI_Controller_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-31.5234375\" y=\"-1\" width=\"63.046875\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">ін'єктує</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(289.8125, 358)\"><g class=\"label\" data-id=\"L_Controller_Service_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-54.1953125\" y=\"-1\" width=\"108.390625\" height=\"22\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">використовує</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-Module-0\" transform=\"translate(187.52734375, 44)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-94.953125\" y=\"-36\" width=\"189.90625\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-70.953125, -24)\"><rect></rect><foreignObject width=\"141.90625\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Module<br>реєструє providers</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-NestDI-1\" transform=\"translate(187.52734375, 166)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-85.609375\" y=\"-36\" width=\"171.21875\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-61.609375, -24)\"><rect></rect><foreignObject width=\"123.21875\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🔧 IoC Container<br>Nest.js</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Service-3\" transform=\"translate(187.52734375, 418)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-83.5625\" y=\"-24\" width=\"167.125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-59.5625, -12)\"><rect></rect><foreignObject width=\"119.125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ TasksService</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Controller-5\" transform=\"translate(289.8125, 298)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-92.328125\" y=\"-24\" width=\"184.65625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-68.328125, -12)\"><rect></rect><foreignObject width=\"136.65625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📬 TasksController</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<div class=\"tip\"><strong>💡 Чому DI — це добре?</strong> <ol>\n<li><strong>Слабка зв'язність</strong> — контролер не залежить від конкретної реалізації сервісу</li>\n<li><strong>Тестованість</strong> — у тестах легко підставити \"підроблений\" сервіс (mock)</li>\n<li><strong>Єдиний екземпляр</strong> — Nest.js за замовчуванням створює сервіс один раз (Singleton)</li>\n</ol>\n</div>\n\n","<h1>🏗️ Providers — постачальники</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Provider</strong> — будь-який клас або значення, яким керує IoC-контейнер Nest.js і яке може бути ін'єктовано в інші класи. Сервіси — найпоширеніший вид провайдерів.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Провайдером може бути не лише сервіс — існує чотири способи зареєструвати залежність залежно від того, що саме треба надати.</p>\n<h2>🔑 useClass — клас як провайдер</h2>\n<p>Найпоширеніший варіант. Nest.js створює екземпляр класу та ін'єктує його.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">providers</span>: [\n    <span class=\"hljs-title class_\">TasksService</span>, <span class=\"hljs-comment\">// скорочений запис</span>\n    { <span class=\"hljs-attr\">provide</span>: <span class=\"hljs-title class_\">TasksService</span>, <span class=\"hljs-attr\">useClass</span>: <span class=\"hljs-title class_\">TasksService</span> }, <span class=\"hljs-comment\">// повний еквівалент</span>\n  ],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksModule</span> {}</code></pre><h2>📌 useValue — готове значення</h2>\n<p>Передає вже існуючий об'єкт або константу — Nest.js не створює нічого нового.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">providers</span>: [\n    {\n      <span class=\"hljs-attr\">provide</span>: <span class=\"hljs-string\">\"APP_CONFIG\"</span>,\n      <span class=\"hljs-attr\">useValue</span>: { <span class=\"hljs-attr\">maxTasksPerUser</span>: <span class=\"hljs-number\">100</span>, <span class=\"hljs-attr\">appName</span>: <span class=\"hljs-string\">\"Task Manager\"</span> },\n    },\n  ],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">AppModule</span> {}\n\n<span class=\"hljs-comment\">// Ін'єкція за рядковим токеном — потрібен @Inject</span>\n<span class=\"hljs-meta\">@Injectable</span>()\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksService</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\">\n    <span class=\"hljs-meta\">@Inject</span>(<span class=\"hljs-string\">\"APP_CONFIG\"</span>) <span class=\"hljs-keyword\">private</span> config: { maxTasksPerUser: <span class=\"hljs-built_in\">number</span> },\n  </span>) {}\n}</code></pre><h2>🏭 useFactory — фабрична функція</h2>\n<p>Провайдер створюється через функцію, яка може отримувати інші залежності та виконувати асинхронну логіку.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">providers</span>: [\n    {\n      <span class=\"hljs-attr\">provide</span>: <span class=\"hljs-string\">\"DB_CONNECTION\"</span>,\n      <span class=\"hljs-attr\">useFactory</span>: <span class=\"hljs-keyword\">async</span> (<span class=\"hljs-attr\">config</span>: <span class=\"hljs-title class_\">ConfigService</span>) =&gt; {\n        <span class=\"hljs-comment\">// підключення до БД з конфігурації — розглянемо детальніше пізніше</span>\n        <span class=\"hljs-keyword\">return</span> <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title function_\">createConnection</span>(config.<span class=\"hljs-title function_\">get</span>(<span class=\"hljs-string\">\"DATABASE_URL\"</span>));\n      },\n      <span class=\"hljs-attr\">inject</span>: [<span class=\"hljs-title class_\">ConfigService</span>], <span class=\"hljs-comment\">// залежності для фабрики</span>\n    },\n  ],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">DatabaseModule</span> {}</code></pre><h2>🔀 useExisting — аліас для існуючого провайдера</h2>\n<p>Дозволяє звертатись до одного й того самого екземпляра під різними токенами.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">providers</span>: [\n    <span class=\"hljs-title class_\">TasksService</span>,\n    { <span class=\"hljs-attr\">provide</span>: <span class=\"hljs-string\">\"TASKS\"</span>, <span class=\"hljs-attr\">useExisting</span>: <span class=\"hljs-title class_\">TasksService</span> },\n    <span class=\"hljs-comment\">// TasksService і 'TASKS' — один і той самий об'єкт</span>\n  ],\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksModule</span> {}</code></pre><div class=\"note\"><strong>📝 Singleton за замовчуванням</strong> <p>Nest.js створює <strong>один екземпляр</strong> кожного провайдера на весь застосунок. Якщо два контролери ін'єктують один сервіс — вони отримують <strong>той самий об'єкт</strong>. Це стосується всіх типів провайдерів.</p>\n</div>\n\n","<h1>🔌 Реєстрація у модулі</h1>\n<div class=\"info\"><strong>ℹ️ Як Nest.js дізнається про сервіс?</strong> <p>Кожен сервіс має бути зареєстрований у <code>providers</code> того модуля, якому він належить. Щоб використовувати сервіс з <strong>іншого</strong> модуля — його треба додати до <code>exports</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Модуль — це межі видимості. Провайдери доступні лише всередині свого модуля, якщо не експортовані явно.</p>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks/tasks.module.ts</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksController</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks.controller\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksService</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks.service\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">controllers</span>: [<span class=\"hljs-title class_\">TasksController</span>], <span class=\"hljs-comment\">// 👈 Контролери модуля</span>\n  <span class=\"hljs-attr\">providers</span>: [<span class=\"hljs-title class_\">TasksService</span>], <span class=\"hljs-comment\">// 👈 Сервіси (провайдери) модуля</span>\n  <span class=\"hljs-attr\">exports</span>: [<span class=\"hljs-title class_\">TasksService</span>], <span class=\"hljs-comment\">// 👈 Сервіси, доступні іншим модулям</span>\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksModule</span> {}</code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// tasks/tasks.controller.ts</span>\n<span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Controller</span>,\n  <span class=\"hljs-title class_\">Get</span>,\n  <span class=\"hljs-title class_\">Post</span>,\n  <span class=\"hljs-title class_\">Patch</span>,\n  <span class=\"hljs-title class_\">Delete</span>,\n  <span class=\"hljs-title class_\">Param</span>,\n  <span class=\"hljs-title class_\">Body</span>,\n  <span class=\"hljs-title class_\">HttpCode</span>,\n  <span class=\"hljs-title class_\">NotFoundException</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">\"tasks\"</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-title function_\">constructor</span>(<span class=\"hljs-params\"><span class=\"hljs-keyword\">private</span> <span class=\"hljs-keyword\">readonly</span> tasksService: TasksService</span>) {}\n\n  <span class=\"hljs-meta\">@Get</span>() <span class=\"hljs-comment\">// GET /tasks → 200 OK</span>\n  <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">findAll</span>();\n  }\n\n  <span class=\"hljs-meta\">@Get</span>(<span class=\"hljs-string\">\":id\"</span>) <span class=\"hljs-comment\">// GET /tasks/1 → 200 OK або 404</span>\n  <span class=\"hljs-title function_\">findOne</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">findOne</span>(+id);\n    <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n    <span class=\"hljs-keyword\">return</span> task;\n  }\n\n  <span class=\"hljs-meta\">@Post</span>()\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">201</span>) <span class=\"hljs-comment\">// POST /tasks → 201 Created</span>\n  <span class=\"hljs-title function_\">create</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Body</span>(<span class=\"hljs-string\">\"title\"</span>) title: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">create</span>(title);\n  }\n\n  <span class=\"hljs-meta\">@Patch</span>(<span class=\"hljs-string\">\":id\"</span>) <span class=\"hljs-comment\">// PATCH /tasks/1 → 200 OK або 404</span>\n  <span class=\"hljs-title function_\">update</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span>, <span class=\"hljs-meta\">@Body</span>(<span class=\"hljs-string\">\"done\"</span>) done: <span class=\"hljs-built_in\">boolean</span></span>) {\n    <span class=\"hljs-keyword\">const</span> task = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">update</span>(+id, done);\n    <span class=\"hljs-keyword\">if</span> (!task) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n    <span class=\"hljs-keyword\">return</span> task;\n  }\n\n  <span class=\"hljs-meta\">@Delete</span>(<span class=\"hljs-string\">\":id\"</span>)\n  <span class=\"hljs-meta\">@HttpCode</span>(<span class=\"hljs-number\">204</span>) <span class=\"hljs-comment\">// DELETE /tasks/1 → 204 No Content</span>\n  <span class=\"hljs-title function_\">remove</span>(<span class=\"hljs-params\"><span class=\"hljs-meta\">@Param</span>(<span class=\"hljs-string\">\"id\"</span>) id: <span class=\"hljs-built_in\">string</span></span>) {\n    <span class=\"hljs-keyword\">const</span> removed = <span class=\"hljs-variable language_\">this</span>.<span class=\"hljs-property\">tasksService</span>.<span class=\"hljs-title function_\">remove</span>(+id);\n    <span class=\"hljs-keyword\">if</span> (!removed) <span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">NotFoundException</span>(<span class=\"hljs-string\">`Завдання #<span class=\"hljs-subst\">${id}</span> не знайдено`</span>);\n  }\n}</code></pre><div class=\"note\"><strong>📝 Роль контролера у HTTP-деталях</strong> <p>Сервіс повертає дані або <code>null</code> — він нічого не знає про HTTP. Контролер перевіряє результат: <code>null</code> → <code>NotFoundException</code> → Nest.js формує <code>404</code>. Контролер також визначає \"позитивні\" статуси: <code>201</code> при створенні, <code>204</code> при видаленні.</p>\n</div>\n\n","<h1>🛡️ Interceptors — перехоплювачі</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Interceptor (перехоплювач)</strong> — клас із декоратором <code>@Injectable()</code>, що реалізує інтерфейс <code>NestInterceptor</code>. Він виконується <strong>до або після</strong> обробника маршруту, дозволяючи трансформувати запит чи відповідь.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> Interceptor — це \"обгортка\" навколо обробника. Він може виміряти час, залогувати дані або змінити формат відповіді — <strong>не змінюючи код контролера</strong>.</p>\n<h2>🔄 Як працює Interceptor</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    Request[&quot;📨 HTTP Request&quot;] --&gt; Interceptor[&quot;🛡️ Interceptor&lt;br/&gt;(before)&quot;]\n    Interceptor --&gt; Handler[&quot;📬 Route Handler&quot;]\n    Handler --&gt; InterceptorAfter[&quot;🛡️ Interceptor&lt;br/&gt;(after)&quot;]\n    InterceptorAfter --&gt; Response[&quot;📤 HTTP Response&quot;]\n    style Request fill:#e3f2fd,stroke:#1565c0\n    style Interceptor fill:#fce4ec,stroke:#c2185b\n    style Handler fill:#e8f5e9,stroke:#388e3c\n    style InterceptorAfter fill:#fce4ec,stroke:#c2185b\n    style Response fill:#fff3e0,stroke:#ef6c00\"><svg id=\"exp-1775065611822-8-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 1061.671875px;\" viewBox=\"0 0 1061.671875 88\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1775065611822-8-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1775065611822-8-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1775065611822-8-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1775065611822-8-0 .error-icon{fill:#552222;}#exp-1775065611822-8-0 .error-text{fill:#552222;stroke:#552222;}#exp-1775065611822-8-0 .edge-thickness-normal{stroke-width:1px;}#exp-1775065611822-8-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1775065611822-8-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1775065611822-8-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1775065611822-8-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1775065611822-8-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1775065611822-8-0 .marker{fill:#333333;stroke:#333333;}#exp-1775065611822-8-0 .marker.cross{stroke:#333333;}#exp-1775065611822-8-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1775065611822-8-0 p{margin:0;}#exp-1775065611822-8-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1775065611822-8-0 .cluster-label text{fill:#333;}#exp-1775065611822-8-0 .cluster-label span{color:#333;}#exp-1775065611822-8-0 .cluster-label span p{background-color:transparent;}#exp-1775065611822-8-0 .label text,#exp-1775065611822-8-0 span{fill:#333;color:#333;}#exp-1775065611822-8-0 .node rect,#exp-1775065611822-8-0 .node circle,#exp-1775065611822-8-0 .node ellipse,#exp-1775065611822-8-0 .node polygon,#exp-1775065611822-8-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1775065611822-8-0 .rough-node .label text,#exp-1775065611822-8-0 .node .label text,#exp-1775065611822-8-0 .image-shape .label,#exp-1775065611822-8-0 .icon-shape .label{text-anchor:middle;}#exp-1775065611822-8-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1775065611822-8-0 .rough-node .label,#exp-1775065611822-8-0 .node .label,#exp-1775065611822-8-0 .image-shape .label,#exp-1775065611822-8-0 .icon-shape .label{text-align:center;}#exp-1775065611822-8-0 .node.clickable{cursor:pointer;}#exp-1775065611822-8-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1775065611822-8-0 .arrowheadPath{fill:#333333;}#exp-1775065611822-8-0 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#exp-1775065611822-8-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1775065611822-8-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611822-8-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1775065611822-8-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611822-8-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1775065611822-8-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1775065611822-8-0 .cluster text{fill:#333;}#exp-1775065611822-8-0 .cluster span{color:#333;}#exp-1775065611822-8-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1775065611822-8-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1775065611822-8-0 rect.text{fill:none;stroke-width:0;}#exp-1775065611822-8-0 .icon-shape,#exp-1775065611822-8-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1775065611822-8-0 .icon-shape p,#exp-1775065611822-8-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1775065611822-8-0 .icon-shape .label rect,#exp-1775065611822-8-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1775065611822-8-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1775065611822-8-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1775065611822-8-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1775065611822-8-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611822-8-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611822-8-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611822-8-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1775065611822-8-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1775065611822-8-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M184.953,44L189.12,44C193.286,44,201.62,44,209.286,44C216.953,44,223.953,44,227.453,44L230.953,44\" id=\"L_Request_Interceptor_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Request_Interceptor_0\" data-points=\"W3sieCI6MTg0Ljk1MzEyNSwieSI6NDR9LHsieCI6MjA5Ljk1MzEyNSwieSI6NDR9LHsieCI6MjM0Ljk1MzEyNSwieSI6NDR9XQ==\" marker-end=\"url(#exp-1775065611822-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M387.125,44L391.292,44C395.458,44,403.792,44,411.458,44C419.125,44,426.125,44,429.625,44L433.125,44\" id=\"L_Interceptor_Handler_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Interceptor_Handler_0\" data-points=\"W3sieCI6Mzg3LjEyNSwieSI6NDR9LHsieCI6NDEyLjEyNSwieSI6NDR9LHsieCI6NDM3LjEyNSwieSI6NDR9XQ==\" marker-end=\"url(#exp-1775065611822-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M612.75,44L616.917,44C621.083,44,629.417,44,637.083,44C644.75,44,651.75,44,655.25,44L658.75,44\" id=\"L_Handler_InterceptorAfter_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_Handler_InterceptorAfter_0\" data-points=\"W3sieCI6NjEyLjc1LCJ5Ijo0NH0seyJ4Ijo2MzcuNzUsInkiOjQ0fSx7IngiOjY2Mi43NSwieSI6NDR9XQ==\" marker-end=\"url(#exp-1775065611822-8-0_flowchart-v2-pointEnd)\"></path><path d=\"M814.922,44L819.089,44C823.255,44,831.589,44,839.255,44C846.922,44,853.922,44,857.422,44L860.922,44\" id=\"L_InterceptorAfter_Response_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_InterceptorAfter_Response_0\" data-points=\"W3sieCI6ODE0LjkyMTg3NSwieSI6NDR9LHsieCI6ODM5LjkyMTg3NSwieSI6NDR9LHsieCI6ODY0LjkyMTg3NSwieSI6NDR9XQ==\" marker-end=\"url(#exp-1775065611822-8-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Request_Interceptor_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Interceptor_Handler_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_Handler_InterceptorAfter_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_InterceptorAfter_Response_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"flowchart-Request-0\" transform=\"translate(96.4765625, 44)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-88.4765625\" y=\"-24\" width=\"176.953125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-64.4765625, -12)\"><rect></rect><foreignObject width=\"128.953125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📨 HTTP Request</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Interceptor-1\" transform=\"translate(311.0390625, 44)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-76.0859375\" y=\"-36\" width=\"152.171875\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-52.0859375, -24)\"><rect></rect><foreignObject width=\"104.171875\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🛡️ Interceptor<br>(before)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Handler-3\" transform=\"translate(524.9375, 44)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-87.8125\" y=\"-24\" width=\"175.625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-63.8125, -12)\"><rect></rect><foreignObject width=\"127.625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📬 Route Handler</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-InterceptorAfter-5\" transform=\"translate(738.8359375, 44)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-76.0859375\" y=\"-36\" width=\"152.171875\" height=\"72\"></rect><g class=\"label\" style=\"\" transform=\"translate(-52.0859375, -24)\"><rect></rect><foreignObject width=\"104.171875\" height=\"48\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🛡️ Interceptor<br>(after)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"flowchart-Response-7\" transform=\"translate(959.296875, 44)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-94.375\" y=\"-24\" width=\"188.75\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-70.375, -12)\"><rect></rect><foreignObject width=\"140.75\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📤 HTTP Response</p></span></div></foreignObject></g></g></g></g></g></svg></div>\n<h2>📝 Структура Interceptor</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Injectable</span>,\n  <span class=\"hljs-title class_\">NestInterceptor</span>,\n  <span class=\"hljs-title class_\">ExecutionContext</span>,\n  <span class=\"hljs-title class_\">CallHandler</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Observable</span>, tap } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"rxjs\"</span>;\n\n<span class=\"hljs-meta\">@Injectable</span>()\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">LoggingInterceptor</span> <span class=\"hljs-keyword\">implements</span> <span class=\"hljs-title class_\">NestInterceptor</span> {\n  <span class=\"hljs-comment\">//                              ┌── контекст запиту (метод, URL, заголовки...)</span>\n  <span class=\"hljs-comment\">//                              │         ┌── \"наступний крок\" — виклик обробника</span>\n  <span class=\"hljs-title function_\">intercept</span>(<span class=\"hljs-attr\">context</span>: <span class=\"hljs-title class_\">ExecutionContext</span>, <span class=\"hljs-attr\">next</span>: <span class=\"hljs-title class_\">CallHandler</span>): <span class=\"hljs-title class_\">Observable</span>&lt;<span class=\"hljs-built_in\">any</span>&gt; {\n    <span class=\"hljs-keyword\">const</span> req = context.<span class=\"hljs-title function_\">switchToHttp</span>().<span class=\"hljs-title function_\">getRequest</span>();\n    <span class=\"hljs-keyword\">const</span> start = <span class=\"hljs-title class_\">Date</span>.<span class=\"hljs-title function_\">now</span>();\n\n    <span class=\"hljs-comment\">// 👇 Код ДО обробника — виконується синхронно перед маршрутом</span>\n    <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`➡️  <span class=\"hljs-subst\">${req.method}</span> <span class=\"hljs-subst\">${req.url}</span>`</span>);\n\n    <span class=\"hljs-comment\">// next.handle() — запускає обробник маршруту та повертає Observable з відповіддю.</span>\n    <span class=\"hljs-comment\">// pipe(tap(...)) — виконує callback ПІСЛЯ того, як обробник завершився,</span>\n    <span class=\"hljs-comment\">// не змінюючи саму відповідь.</span>\n    <span class=\"hljs-keyword\">return</span> next\n      .<span class=\"hljs-title function_\">handle</span>()\n      .<span class=\"hljs-title function_\">pipe</span>(\n        <span class=\"hljs-title function_\">tap</span>(<span class=\"hljs-function\">() =&gt;</span>\n          <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">`✅ <span class=\"hljs-subst\">${req.method}</span> <span class=\"hljs-subst\">${req.url}</span> — <span class=\"hljs-subst\">${<span class=\"hljs-built_in\">Date</span>.now() - start}</span>ms`</span>),\n        ),\n      );\n  }\n}</code></pre><div class=\"note\"><strong>📝 Що таке Observable та RxJS?</strong> <p>Nest.js побудований на бібліотеці <strong>RxJS</strong>, де <code>Observable</code> описує асинхронний потік даних. <code>next.handle()</code> повертає Observable, який \"видає\" відповідь контролера. Для базового використання Interceptors достатньо знати: <code>tap</code> — виконати дію не змінюючи відповідь, <code>map</code> — трансформувати відповідь.</p>\n</div>\n\n","<h1>🔧 Застосування Interceptors</h1>\n<p><strong>Головна ідея:</strong> Interceptor можна застосовувати на рівні окремого маршруту, всього контролера або глобально для всього застосунку.</p>\n<h2>📍 Рівні застосування</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Controller</span>, <span class=\"hljs-title class_\">Get</span>, <span class=\"hljs-title class_\">UseInterceptors</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'@nestjs/common'</span>;\n\n<span class=\"hljs-comment\">// 1️⃣ На рівні одного маршруту</span>\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">'tasks'</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> {\n  <span class=\"hljs-meta\">@Get</span>()\n  <span class=\"hljs-meta\">@UseInterceptors</span>(<span class=\"hljs-title class_\">LoggingInterceptor</span>)\n  <span class=\"hljs-title function_\">findAll</span>(<span class=\"hljs-params\"></span>) { ... }\n}\n\n<span class=\"hljs-comment\">// 2️⃣ На рівні контролера (всі маршрути)</span>\n<span class=\"hljs-meta\">@UseInterceptors</span>(<span class=\"hljs-title class_\">LoggingInterceptor</span>)\n<span class=\"hljs-meta\">@Controller</span>(<span class=\"hljs-string\">'tasks'</span>)\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TasksController</span> { ... }\n\n<span class=\"hljs-comment\">// 3️⃣ Глобально — у main.ts (всі маршрути застосунку)</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">NestFactory</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">'@nestjs/core'</span>;\n\n<span class=\"hljs-keyword\">async</span> <span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">bootstrap</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-keyword\">const</span> app = <span class=\"hljs-keyword\">await</span> <span class=\"hljs-title class_\">NestFactory</span>.<span class=\"hljs-title function_\">create</span>(<span class=\"hljs-title class_\">AppModule</span>);\n  app.<span class=\"hljs-title function_\">useGlobalInterceptors</span>(<span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">LoggingInterceptor</span>());\n  <span class=\"hljs-keyword\">await</span> app.<span class=\"hljs-title function_\">listen</span>(<span class=\"hljs-number\">3000</span>);\n}</code></pre><h2>🔄 Приклад: трансформація відповіді</h2>\n<pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-keyword\">import</span> {\n  <span class=\"hljs-title class_\">Injectable</span>,\n  <span class=\"hljs-title class_\">NestInterceptor</span>,\n  <span class=\"hljs-title class_\">ExecutionContext</span>,\n  <span class=\"hljs-title class_\">CallHandler</span>,\n} <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Observable</span>, map } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"rxjs\"</span>;\n\n<span class=\"hljs-comment\">// Огортає будь-яку відповідь у стандартну структуру { data: ... }</span>\n<span class=\"hljs-meta\">@Injectable</span>()\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">TransformInterceptor</span> <span class=\"hljs-keyword\">implements</span> <span class=\"hljs-title class_\">NestInterceptor</span> {\n  <span class=\"hljs-title function_\">intercept</span>(<span class=\"hljs-attr\">context</span>: <span class=\"hljs-title class_\">ExecutionContext</span>, <span class=\"hljs-attr\">next</span>: <span class=\"hljs-title class_\">CallHandler</span>): <span class=\"hljs-title class_\">Observable</span>&lt;<span class=\"hljs-built_in\">any</span>&gt; {\n    <span class=\"hljs-keyword\">return</span> next.<span class=\"hljs-title function_\">handle</span>().<span class=\"hljs-title function_\">pipe</span>(\n      <span class=\"hljs-title function_\">map</span>(<span class=\"hljs-function\">(<span class=\"hljs-params\">data</span>) =&gt;</span> ({ data })), <span class=\"hljs-comment\">// 👈 { data: [...] } замість просто [...]</span>\n    );\n  }\n}</code></pre><pre><code class=\"language-json hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// До трансформації:</span>\n<span class=\"hljs-punctuation\">[</span><span class=\"hljs-punctuation\">{</span> <span class=\"hljs-attr\">\"id\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-number\">1</span><span class=\"hljs-punctuation\">,</span> <span class=\"hljs-attr\">\"title\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"Вивчити Nest.js\"</span> <span class=\"hljs-punctuation\">}</span><span class=\"hljs-punctuation\">]</span>\n\n<span class=\"hljs-comment\">// Після трансформації:</span>\n<span class=\"hljs-punctuation\">{</span> <span class=\"hljs-attr\">\"data\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-punctuation\">[</span><span class=\"hljs-punctuation\">{</span> <span class=\"hljs-attr\">\"id\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-number\">1</span><span class=\"hljs-punctuation\">,</span> <span class=\"hljs-attr\">\"title\"</span><span class=\"hljs-punctuation\">:</span> <span class=\"hljs-string\">\"Вивчити Nest.js\"</span> <span class=\"hljs-punctuation\">}</span><span class=\"hljs-punctuation\">]</span> <span class=\"hljs-punctuation\">}</span></code></pre><div class=\"tip\"><strong>💡 Коли використовувати Interceptors?</strong> <ul>\n<li>📊 <strong>Логування</strong> запитів та часу відповіді</li>\n<li>🔄 <strong>Стандартизація</strong> формату відповіді</li>\n<li>⏱️ <strong>Вимірювання</strong> продуктивності</li>\n<li>💾 <strong>Кешування</strong> результатів</li>\n</ul>\n</div>\n\n","<h1>🗂️ Повна структура модуля</h1>\n<p><strong>Головна ідея:</strong> Усі файли модуля групуються в одну директорію. Такий підхід полегшує навігацію та масштабування проєкту.</p>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">src/\n├── tasks/\n│   ├── tasks.module.ts       # 📦 Модуль — реєструє все\n│   ├── tasks.controller.ts   # 📬 Контролер — маршрути\n│   ├── tasks.service.ts      # ⚙️ Сервіс — бізнес-логіка\n│   └── task.interface.ts     # 🏷️ Інтерфейс Task\n├── app.module.ts             # 🌐 Кореневий модуль\n└── main.ts                   # 🚀 Точка входу</code></pre><pre><code class=\"language-typescript hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\">// task.interface.ts — визначення типу</span>\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">interface</span> <span class=\"hljs-title class_\">Task</span> {\n  <span class=\"hljs-attr\">id</span>: <span class=\"hljs-built_in\">number</span>;\n  <span class=\"hljs-attr\">title</span>: <span class=\"hljs-built_in\">string</span>;\n  <span class=\"hljs-attr\">done</span>: <span class=\"hljs-built_in\">boolean</span>;\n}\n\n<span class=\"hljs-comment\">// app.module.ts — підключення модуля завдань</span>\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">Module</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"@nestjs/common\"</span>;\n<span class=\"hljs-keyword\">import</span> { <span class=\"hljs-title class_\">TasksModule</span> } <span class=\"hljs-keyword\">from</span> <span class=\"hljs-string\">\"./tasks/tasks.module\"</span>;\n\n<span class=\"hljs-meta\">@Module</span>({\n  <span class=\"hljs-attr\">imports</span>: [<span class=\"hljs-title class_\">TasksModule</span>], <span class=\"hljs-comment\">// 👈 Підключаємо модуль</span>\n})\n<span class=\"hljs-keyword\">export</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">AppModule</span> {}</code></pre><div class=\"success\"><strong>✅ Все разом</strong> <p>Такий поділ дозволяє легко <strong>додавати нові модулі</strong> (наприклад, <code>UsersModule</code>, <code>ProjectsModule</code>) — кожен буде самодостатнім і незалежним.</p>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <p><strong>📌 Що ми вивчили:</strong></p>\n<ol>\n<li><p><strong>Service</strong> — клас із <code>@Injectable()</code>, що містить бізнес-логіку; повертає дані або <code>null</code>, але нічого не знає про HTTP</p>\n</li>\n<li><p><strong>Розподіл відповідальностей</strong> — сервіс каже <em>що є</em>, контролер вирішує <em>що з цим робити</em>: перевіряє <code>null</code>, кидає <code>NotFoundException</code>, встановлює статус-коди</p>\n</li>\n<li><p><strong>Dependency Injection</strong> — Nest.js сам створює та передає залежності; ми лише оголошуємо їх у конструкторі</p>\n</li>\n<li><p><strong>Provider</strong> — узагальнене поняття для будь-якої ін'єктованої залежності (сервіс, репозиторій, значення); реєструється у <code>providers</code> модуля</p>\n</li>\n<li><p><strong>Singleton</strong> — за замовчуванням Nest.js створює <strong>один екземпляр</strong> провайдера; всі споживачі отримують той самий об'єкт</p>\n</li>\n<li><p><strong>Exports</strong> — щоб сервіс одного модуля був доступний в іншому — додайте його до <code>exports</code></p>\n</li>\n<li><p><strong>Interceptor</strong> — виконується до і після обробника; застосовується для логування, трансформації відповіді, кешування</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Яка різниця між <strong>контролером</strong> і <strong>сервісом</strong>? Яку логіку розміщують у кожному?</p>\n</li>\n<li><p>🤔 Що означає декоратор <code>@Injectable()</code>? Що станеться, якщо його не вказати?</p>\n</li>\n<li><p>🤔 Поясніть принцип <strong>Dependency Injection</strong>: чим він кращий за <code>new Service()</code> всередині класу?</p>\n</li>\n<li><p>🤔 Що таке <strong>Provider</strong> у Nest.js? Чим провайдер відрізняється від сервісу?</p>\n</li>\n<li><p>🤔 Як зробити сервіс одного модуля доступним в іншому модулі?</p>\n</li>\n<li><p>🤔 Що таке <strong>Interceptor</strong>? Наведіть два приклади задач, які він вирішує.</p>\n</li>\n<li><p>🤔 На яких рівнях можна застосувати Interceptor? Як це зробити глобально?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Сервіс</td>\n<td>Service</td>\n<td>Клас із бізнес-логікою, позначений <code>@Injectable()</code></td>\n</tr>\n<tr>\n<td>Провайдер</td>\n<td>Provider</td>\n<td>Будь-яка залежність, якою керує IoC-контейнер</td>\n</tr>\n<tr>\n<td>Ін'єкція залежностей</td>\n<td>Dependency Injection</td>\n<td>Патерн передачі залежностей ззовні, а не їх самостійного створення</td>\n</tr>\n<tr>\n<td>Перехоплювач</td>\n<td>Interceptor</td>\n<td>Клас, що виконується до або після обробника маршруту</td>\n</tr>\n<tr>\n<td>Одинак</td>\n<td>Singleton</td>\n<td>Патерн, за якого існує лише один екземпляр об'єкта</td>\n</tr>\n<tr>\n<td>Декоратор</td>\n<td>Decorator</td>\n<td>Функція, що додає метадані або поведінку до класу чи методу</td>\n</tr>\n<tr>\n<td>Слабка зв'язність</td>\n<td>Loose Coupling</td>\n<td>Принцип мінімальної залежності між компонентами</td>\n</tr>\n<tr>\n<td>Токен</td>\n<td>Token</td>\n<td>Унікальний ідентифікатор провайдера в IoC-контейнері</td>\n</tr>\n<tr>\n<td>Аліас</td>\n<td>Alias</td>\n<td>Альтернативне ім'я для існуючого провайдера (useExisting)</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>DI</td>\n<td>Dependency Injection</td>\n<td>Ін'єкція залежностей</td>\n</tr>\n<tr>\n<td>IoC</td>\n<td>Inversion of Control</td>\n<td>Інверсія управління</td>\n</tr>\n<tr>\n<td>CLI</td>\n<td>Command Line Interface</td>\n<td>Інтерфейс командного рядка</td>\n</tr>\n<tr>\n<td>RxJS</td>\n<td>Reactive Extensions for JavaScript</td>\n<td>Реактивні розширення для JavaScript</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>HTTP</td>\n<td>HyperText Transfer Protocol</td>\n<td>Протокол передачі гіпертексту</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
