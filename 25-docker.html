@@ -1,0 +1,621 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Docker: основи</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><style>* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-container.hidden {
+            display: none;
+        }
+
+        #editor-header {
+            background: #2d3748;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        #editor-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        #markdown-input {
+            flex: 1;
+            padding: 2rem;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        .slide-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .slide h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .slide h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .slide p {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul, .slide ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide li {
+            color: #2d3748;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide pre {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .slide pre code {
+            background: transparent;
+            color: #abb2bf;
+        }
+
+        .slide code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .slide h1 code, .slide h2 code, .slide h3 code {
+            font-size: 0.85em;
+            background: rgba(237, 242, 247, 0.5);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .slide p code {
+            background: #edf2f7;
+            color: #e53e3e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .slide blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .slide img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .slide th, .slide td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .slide th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .note {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .note strong {
+            color: #c53030;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #c05621;
+        }
+
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .info strong {
+            color: #2c5282;
+        }
+
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success strong {
+            color: #22543d;
+        }
+
+        .danger {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .danger strong {
+            color: #742a2a;
+        }
+
+        .tip {
+            background: #fefcbf;
+            border-left: 4px solid #ecc94b;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #744210;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        #sidebar-header h3 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        #sidebar-close:hover {
+            color: #667eea;
+        }
+
+        .slide-thumbnail {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #667eea;
+            background: #f7faff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-thumbnail-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-thumbnail-content {
+            font-size: 0.85rem;
+            color: #2d3748;
+            line-height: 1.4;
+            max-height: 4.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-thumbnail-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 1.4rem;
+            background: linear-gradient(to right, transparent, white);
+        }
+
+        .slide-thumbnail.active .slide-thumbnail-content::after {
+            background: linear-gradient(to right, transparent, #f7faff);
+        }
+
+        .slide-thumbnail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 150;
+        }
+
+        #sidebar-toggle:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mermaid {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: visible; /* щоб не обрізати тіні / розширені ноди */
+        }
+
+        /* Запобігаємо обрізанню останньої літери в нодах Mermaid через зміну font-weight після розрахунку розміру */
+        .mermaid svg { overflow: visible !important; }
+        /* перестраховка проти обрізання foreignObject (на випадок інших діаграм) */
+        .mermaid svg foreignObject { overflow: visible !important; }
+
+        .plantuml-diagram {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+            display: block;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        #help-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #help-overlay kbd {
+            background: #2d3748;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .mermaid-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #742a2a;
+            margin: 1.5rem 0;
+        }
+
+        .mermaid-error pre {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        /* Повноекранний режим - зберігаємо оригінальний фон */
+        #presentation-container:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-webkit-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-moz-full-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #presentation-container:-ms-fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+#presentation-container:fullscreen,#presentation-container:-webkit-full-screen,#presentation-container:-moz-full-screen,#presentation-container:-ms-fullscreen{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;}</style></head><body><div id="presentation-container"><div class="progress"><div class="progress-bar" id="progress-bar"></div></div><button id="sidebar-toggle" onclick="toggleSidebar()" title="Навігація слайдами (S)">☰</button><div id="sidebar"><div id="sidebar-header"><h3>📑 Слайди</h3><button id="sidebar-close" onclick="toggleSidebar()">✕</button></div><div id="sidebar-content"></div></div><div class="slide-container"><div class="slide" id="current-slide"></div></div><div class="controls"><button class="control-btn" onclick="previousSlide()" title="Попередній (←)">←</button><button class="control-btn" onclick="nextSlide()" title="Наступний (→)">→</button><button class="control-btn" onclick="toggleFullscreen()" title="Повноекранний режим (F)">⛶</button><button class="control-btn" onclick="toggleHelp()" title="Допомога (?)">?</button></div><div class="slide-number" id="slide-number">1 / 20</div><div id="help-overlay" class="hidden"><strong>Гарячі клавіші:</strong><br><kbd>←</kbd> <kbd>→</kbd> Навігація<br><kbd>F</kbd> Повноекранний режим<br><kbd>S</kbd> Sidebar<br><kbd>?</kbd> Допомога<br><kbd>Esc</kbd> Закрити</div></div><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script><script>const slides=["<h1>Docker: основи</h1>\n<p><strong>Сучасні технології Internet-програмування</strong></p>\n<p>Лектор: Кобилянський Антон</p>\n","<h1>📋 План лекції</h1>\n<ol>\n<li>🤔 Проблема середовищ та навіщо потрібна контейнеризація</li>\n<li>📦 Що таке Docker та контейнери</li>\n<li>⚖️ Контейнери проти віртуальних машин</li>\n<li>🏗️ Архітектура Docker та ключові поняття</li>\n<li>🖼️ Образи та контейнери: команди керування</li>\n<li>📝 Dockerfile: збірка власних образів</li>\n<li>💾 Volumes, мережі та Docker Compose</li>\n<li>✅ Ключові висновки та контрольні питання</li>\n</ol>\n","<h1>🤔 Проблема: \"у мене працює\"</h1>\n<p><strong>Головна ідея:</strong> один і той самий код може поводитися по-різному на різних комп'ютерах через відмінності в оточенні.</p>\n<h2>⚠️ Типові причини збоїв</h2>\n<table>\n<thead>\n<tr>\n<th>Джерело відмінностей</th>\n<th>Приклад проблеми</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Версія середовища</td>\n<td>Node.js 18 локально, Node.js 22 на сервері</td>\n</tr>\n<tr>\n<td>Системні залежності</td>\n<td>Відсутня бібліотека або інша версія PostgreSQL</td>\n</tr>\n<tr>\n<td>Змінні середовища</td>\n<td>Шлях чи ключ, який існує лише на одній машині</td>\n</tr>\n<tr>\n<td>Операційна система</td>\n<td>Різниця між Windows, macOS та Linux</td>\n</tr>\n</tbody></table>\n<div class=\"danger\"><strong>🚫 Наслідок</strong> <p>Класична фраза \"але ж у мене все працює\" виникає тоді, коли застосунок залежить від стану конкретної машини, а не лише від власного коду. Це робить розгортання непередбачуваним.</p>\n</div>\n\n\n\n\n\n<div class=\"tip\"><strong>💡 Рішення</strong> <p>Потрібен спосіб запакувати застосунок разом з усім його оточенням: середовищем виконання, залежностями та конфігурацією, щоб він працював однаково всюди. Саме це забезпечує контейнеризація.</p>\n</div>\n\n","<h1>📦 Що таке Docker та контейнери</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Контейнеризація</strong> : це спосіб упакування застосунку разом з усіма його залежностями в ізольований, переносний пакунок, який запускається однаково на будь-якій системі з підтримкою контейнерів.</p>\n</div>\n\n\n\n\n\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Docker</strong> : це платформа для створення, запуску та керування контейнерами. Вона стала фактичним стандартом контейнеризації.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> контейнер містить усе необхідне для роботи застосунку, тому результат не залежить від машини, на якій він запущений.</p>\n<h2>🎯 Що дає контейнеризація</h2>\n<ul>\n<li>🔁 <strong>Відтворюваність:</strong> однакова поведінка на машині розробника, тестовому та промисловому серверах</li>\n<li>🧳 <strong>Переносність:</strong> контейнер запускається там, де є Docker, без ручного налаштування</li>\n<li>🧩 <strong>Ізоляція:</strong> кожен контейнер має власне оточення, що не впливає на інші</li>\n<li>⚡ <strong>Швидкість запуску:</strong> контейнер стартує за секунди</li>\n</ul>\n<div class=\"note\"><strong>📝 Аналогія</strong> <p>Контейнер можна порівняти з морським вантажним контейнером: незалежно від вмісту, він має стандартну форму, тому будь-який кран, корабель чи вантажівка можуть з ним працювати однаково.</p>\n</div>\n\n","<h1>⚖️ Контейнери проти віртуальних машин</h1>\n<p><strong>Головна ідея:</strong> контейнери та віртуальні машини вирішують схожу задачу ізоляції, але роблять це на різних рівнях, тому суттєво відрізняються за вагою.</p>\n<h2>🔍 Ключова відмінність</h2>\n\n<div class=\"mermaid\" data-source=\"graph TB\n    subgraph VM[&quot;Віртуальні машини&quot;]\n        HW1[&quot;Апаратне забезпечення&quot;] --&gt; HOST1[&quot;Хостова ОС&quot;]\n        HOST1 --&gt; HYP[&quot;Гіпервізор&quot;]\n        HYP --&gt; GOS1[&quot;Гостьова ОС 1&quot;]\n        HYP --&gt; GOS2[&quot;Гостьова ОС 2&quot;]\n        GOS1 --&gt; APP1[&quot;Застосунок A&quot;]\n        GOS2 --&gt; APP2[&quot;Застосунок B&quot;]\n    end\n    subgraph CT[&quot;Контейнери&quot;]\n        HW2[&quot;Апаратне забезпечення&quot;] --&gt; HOST2[&quot;Хостова ОС&quot;]\n        HOST2 --&gt; ENG[&quot;Docker Engine&quot;]\n        ENG --&gt; C1[&quot;Контейнер A&quot;]\n        ENG --&gt; C2[&quot;Контейнер B&quot;]\n    end\n    style HYP fill:#fff3e0,stroke:#ef6c00\n    style ENG fill:#e3f2fd,stroke:#1565c0\n    style GOS1 fill:#fce4ec,stroke:#c2185b\n    style GOS2 fill:#fce4ec,stroke:#c2185b\"><svg id=\"exp-1780982954781-4-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 2208.421875px;\" viewBox=\"0 0 2208.421875 232\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1780982954781-4-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1780982954781-4-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1780982954781-4-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1780982954781-4-0 .error-icon{fill:#552222;}#exp-1780982954781-4-0 .error-text{fill:#552222;stroke:#552222;}#exp-1780982954781-4-0 .edge-thickness-normal{stroke-width:1px;}#exp-1780982954781-4-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1780982954781-4-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1780982954781-4-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1780982954781-4-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1780982954781-4-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1780982954781-4-0 .marker{fill:#333333;stroke:#333333;}#exp-1780982954781-4-0 .marker.cross{stroke:#333333;}#exp-1780982954781-4-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1780982954781-4-0 p{margin:0;}#exp-1780982954781-4-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1780982954781-4-0 .cluster-label text{fill:#333;}#exp-1780982954781-4-0 .cluster-label span{color:#333;}#exp-1780982954781-4-0 .cluster-label span p{background-color:transparent;}#exp-1780982954781-4-0 .label text,#exp-1780982954781-4-0 span{fill:#333;color:#333;}#exp-1780982954781-4-0 .node rect,#exp-1780982954781-4-0 .node circle,#exp-1780982954781-4-0 .node ellipse,#exp-1780982954781-4-0 .node polygon,#exp-1780982954781-4-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1780982954781-4-0 .rough-node .label text,#exp-1780982954781-4-0 .node .label text,#exp-1780982954781-4-0 .image-shape .label,#exp-1780982954781-4-0 .icon-shape .label{text-anchor:middle;}#exp-1780982954781-4-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1780982954781-4-0 .rough-node .label,#exp-1780982954781-4-0 .node .label,#exp-1780982954781-4-0 .image-shape .label,#exp-1780982954781-4-0 .icon-shape .label{text-align:center;}#exp-1780982954781-4-0 .node.clickable{cursor:pointer;}#exp-1780982954781-4-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1780982954781-4-0 .arrowheadPath{fill:#333333;}#exp-1780982954781-4-0 .edgePath .path{stroke:#333333;stroke-width:1px;}#exp-1780982954781-4-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1780982954781-4-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954781-4-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1780982954781-4-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954781-4-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1780982954781-4-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1780982954781-4-0 .cluster text{fill:#333;}#exp-1780982954781-4-0 .cluster span{color:#333;}#exp-1780982954781-4-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1780982954781-4-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1780982954781-4-0 rect.text{fill:none;stroke-width:0;}#exp-1780982954781-4-0 .icon-shape,#exp-1780982954781-4-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954781-4-0 .icon-shape p,#exp-1780982954781-4-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1780982954781-4-0 .icon-shape .label rect,#exp-1780982954781-4-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954781-4-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1780982954781-4-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1780982954781-4-0 .node .neo-node{stroke:#667eea;}#exp-1780982954781-4-0 [data-look=\"neo\"].node rect,#exp-1780982954781-4-0 [data-look=\"neo\"].cluster rect,#exp-1780982954781-4-0 [data-look=\"neo\"].node polygon{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954781-4-0 [data-look=\"neo\"].node path{stroke:#667eea;stroke-width:1px;}#exp-1780982954781-4-0 [data-look=\"neo\"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954781-4-0 [data-look=\"neo\"].node .neo-line path{stroke:#667eea;filter:none;}#exp-1780982954781-4-0 [data-look=\"neo\"].node circle{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954781-4-0 [data-look=\"neo\"].node circle .state-start{fill:#000000;}#exp-1780982954781-4-0 [data-look=\"neo\"].icon-shape .icon{fill:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954781-4-0 [data-look=\"neo\"].icon-shape .icon-neo path{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954781-4-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1780982954781-4-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-pointEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"11.5\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"10.5\" markerHeight=\"14\" orient=\"auto\"><path d=\"M 0 0 L 11.5 7 L 0 14 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-pointStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"1\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11.5\" markerHeight=\"14\" orient=\"auto\"><polygon points=\"0,7 11.5,14 11.5,0\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></polygon></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-circleEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refY=\"5\" refX=\"12.25\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-circleStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-2\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-crossEnd-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"17.7\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5;\"></path></marker><marker id=\"exp-1780982954781-4-0_flowchart-v2-crossStart-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"-3.5\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"></g><g class=\"edgeLabels\"></g><g class=\"nodes\"><g class=\"root\" transform=\"translate(0, 0)\"><g class=\"clusters\"><g class=\"cluster \" id=\"exp-1780982954781-4-0-CT\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"965.59375\" height=\"216\"></rect><g class=\"cluster-label \" transform=\"translate(445.18359375, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Контейнери</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"><path d=\"M276.063,116L282.313,116C288.563,116,301.063,116,312.896,116C324.729,116,335.896,116,341.479,116L347.063,116\" id=\"exp-1780982954781-4-0-L_HW2_HOST2_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HW2_HOST2_0\" data-points=\"W3sieCI6Mjc2LjA2MjUsInkiOjExNn0seyJ4IjozMTMuNTYyNSwieSI6MTE2fSx7IngiOjM1MS4wNjI1LCJ5IjoxMTZ9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M488.531,116L494.781,116C501.031,116,513.531,116,525.365,116C537.198,116,548.365,116,553.948,116L559.531,116\" id=\"exp-1780982954781-4-0-L_HOST2_ENG_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HOST2_ENG_0\" data-points=\"W3sieCI6NDg4LjUzMTI1LCJ5IjoxMTZ9LHsieCI6NTI2LjAzMTI1LCJ5IjoxMTZ9LHsieCI6NTYzLjUzMTI1LCJ5IjoxMTZ9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M695.903,92L705.599,87.833C715.295,83.667,734.686,75.333,749.966,71.167C765.245,67,776.411,67,781.995,67L787.578,67\" id=\"exp-1780982954781-4-0-L_ENG_C1_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_ENG_C1_0\" data-points=\"W3sieCI6Njk1LjkwMjkwMTc4NTcxNDMsInkiOjkyfSx7IngiOjc1NC4wNzgxMjUsInkiOjY3fSx7IngiOjc5MS41NzgxMjUsInkiOjY3fV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M695.903,140L705.599,144.167C715.295,148.333,734.686,156.667,749.988,160.833C765.289,165,776.5,165,782.105,165L787.711,165\" id=\"exp-1780982954781-4-0-L_ENG_C2_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_ENG_C2_0\" data-points=\"W3sieCI6Njk1LjkwMjkwMTc4NTcxNDMsInkiOjE0MH0seyJ4Ijo3NTQuMDc4MTI1LCJ5IjoxNjV9LHsieCI6NzkxLjcxMDkzNzUsInkiOjE2NX1d\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HW2_HOST2_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HOST2_ENG_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_ENG_C1_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_ENG_C2_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-HW2-12\" data-look=\"classic\" transform=\"translate(160.78125, 116)\"><rect class=\"basic label-container\" style=\"\" x=\"-115.28125\" y=\"-24\" width=\"230.5625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-91.28125, -12)\"><rect></rect><foreignObject width=\"182.5625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Апаратне забезпечення</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-HOST2-13\" data-look=\"classic\" transform=\"translate(419.796875, 116)\"><rect class=\"basic label-container\" style=\"\" x=\"-68.734375\" y=\"-24\" width=\"137.46875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-44.734375, -12)\"><rect></rect><foreignObject width=\"89.46875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Хостова ОС</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-ENG-15\" data-look=\"classic\" transform=\"translate(640.0546875, 116)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-76.5234375\" y=\"-24\" width=\"153.046875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-52.5234375, -12)\"><rect></rect><foreignObject width=\"105.046875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Docker Engine</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-C1-17\" data-look=\"classic\" transform=\"translate(863.8359375, 67)\"><rect class=\"basic label-container\" style=\"\" x=\"-72.2578125\" y=\"-24\" width=\"144.515625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-48.2578125, -12)\"><rect></rect><foreignObject width=\"96.515625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Контейнер A</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-C2-19\" data-look=\"classic\" transform=\"translate(863.8359375, 165)\"><rect class=\"basic label-container\" style=\"\" x=\"-72.125\" y=\"-24\" width=\"144.25\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-48.125, -12)\"><rect></rect><foreignObject width=\"96.25\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Контейнер B</p></span></div></foreignObject></g></g></g></g><g class=\"root\" transform=\"translate(1015.59375, 0)\"><g class=\"clusters\"><g class=\"cluster \" id=\"exp-1780982954781-4-0-VM\" data-look=\"classic\"><rect style=\"\" x=\"8\" y=\"8\" width=\"1176.828125\" height=\"216\"></rect><g class=\"cluster-label \" transform=\"translate(524.84765625, 8)\"><g><rect class=\"background\" style=\"stroke: none\"></rect><text y=\"-10.1\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">Віртуальні</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> машини</tspan></tspan></text></g></g></g></g><g class=\"edgePaths\"><path d=\"M276.063,116L282.313,116C288.563,116,301.063,116,312.896,116C324.729,116,335.896,116,341.479,116L347.063,116\" id=\"exp-1780982954781-4-0-L_HW1_HOST1_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HW1_HOST1_0\" data-points=\"W3sieCI6Mjc2LjA2MjUsInkiOjExNn0seyJ4IjozMTMuNTYyNSwieSI6MTE2fSx7IngiOjM1MS4wNjI1LCJ5IjoxMTZ9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M488.531,116L494.781,116C501.031,116,513.531,116,525.365,116C537.198,116,548.365,116,553.948,116L559.531,116\" id=\"exp-1780982954781-4-0-L_HOST1_HYP_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HOST1_HYP_0\" data-points=\"W3sieCI6NDg4LjUzMTI1LCJ5IjoxMTZ9LHsieCI6NTI2LjAzMTI1LCJ5IjoxMTZ9LHsieCI6NTYzLjUzMTI1LCJ5IjoxMTZ9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M676.763,92L685.366,87.833C693.969,83.667,711.176,75.333,725.549,71.167C739.922,67,751.461,67,757.23,67L763,67\" id=\"exp-1780982954781-4-0-L_HYP_GOS1_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HYP_GOS1_0\" data-points=\"W3sieCI6Njc2Ljc2MjUxNTk0Mzg3NzYsInkiOjkyfSx7IngiOjcyOC4zODI4MTI1LCJ5Ijo2N30seyJ4Ijo3NjcsInkiOjY3fV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M676.763,140L685.366,144.167C693.969,148.333,711.176,156.667,725.363,160.833C739.549,165,750.716,165,756.299,165L761.883,165\" id=\"exp-1780982954781-4-0-L_HYP_GOS2_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_HYP_GOS2_0\" data-points=\"W3sieCI6Njc2Ljc2MjUxNTk0Mzg3NzYsInkiOjE0MH0seyJ4Ijo3MjguMzgyODEyNSwieSI6MTY1fSx7IngiOjc2NS44ODI4MTI1LCJ5IjoxNjV9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M921.219,67L927.655,67C934.091,67,946.964,67,958.983,67C971.003,67,982.169,67,987.753,67L993.336,67\" id=\"exp-1780982954781-4-0-L_GOS1_APP1_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_GOS1_APP1_0\" data-points=\"W3sieCI6OTIxLjIxODc1LCJ5Ijo2N30seyJ4Ijo5NTkuODM1OTM3NSwieSI6Njd9LHsieCI6OTk3LjMzNTkzNzUsInkiOjY3fV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path><path d=\"M922.336,165L928.586,165C934.836,165,947.336,165,959.191,165C971.047,165,982.258,165,987.863,165L993.469,165\" id=\"exp-1780982954781-4-0-L_GOS2_APP2_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_GOS2_APP2_0\" data-points=\"W3sieCI6OTIyLjMzNTkzNzUsInkiOjE2NX0seyJ4Ijo5NTkuODM1OTM3NSwieSI6MTY1fSx7IngiOjk5Ny40Njg3NSwieSI6MTY1fV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954781-4-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HW1_HOST1_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HOST1_HYP_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HYP_GOS1_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_HYP_GOS2_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_GOS1_APP1_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_GOS2_APP2_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-HW1-0\" data-look=\"classic\" transform=\"translate(160.78125, 116)\"><rect class=\"basic label-container\" style=\"\" x=\"-115.28125\" y=\"-24\" width=\"230.5625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-91.28125, -12)\"><rect></rect><foreignObject width=\"182.5625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Апаратне забезпечення</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-HOST1-1\" data-look=\"classic\" transform=\"translate(419.796875, 116)\"><rect class=\"basic label-container\" style=\"\" x=\"-68.734375\" y=\"-24\" width=\"137.46875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-44.734375, -12)\"><rect></rect><foreignObject width=\"89.46875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Хостова ОС</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-HYP-3\" data-look=\"classic\" transform=\"translate(627.20703125, 116)\"><rect class=\"basic label-container\" style=\"fill:#fff3e0 !important;stroke:#ef6c00 !important\" x=\"-63.67578125\" y=\"-24\" width=\"127.3515625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-39.67578125, -12)\"><rect></rect><foreignObject width=\"79.3515625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Гіпервізор</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-GOS1-5\" data-look=\"classic\" transform=\"translate(844.109375, 67)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-77.109375\" y=\"-24\" width=\"154.21875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-53.109375, -12)\"><rect></rect><foreignObject width=\"106.21875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Гостьова ОС 1</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-GOS2-7\" data-look=\"classic\" transform=\"translate(844.109375, 165)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-78.2265625\" y=\"-24\" width=\"156.453125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-54.2265625, -12)\"><rect></rect><foreignObject width=\"108.453125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Гостьова ОС 2</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-APP1-9\" data-look=\"classic\" transform=\"translate(1072.33203125, 67)\"><rect class=\"basic label-container\" style=\"\" x=\"-74.99609375\" y=\"-24\" width=\"149.9921875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-50.99609375, -12)\"><rect></rect><foreignObject width=\"101.9921875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Застосунок A</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954781-4-0-flowchart-APP2-11\" data-look=\"classic\" transform=\"translate(1072.33203125, 165)\"><rect class=\"basic label-container\" style=\"\" x=\"-74.86328125\" y=\"-24\" width=\"149.7265625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-50.86328125, -12)\"><rect></rect><foreignObject width=\"101.7265625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>Застосунок B</p></span></div></foreignObject></g></g></g></g></g></g></g><defs><filter id=\"exp-1780982954781-4-0-drop-shadow\" height=\"130%\" width=\"130%\"><feDropShadow dx=\"4\" dy=\"4\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs><defs><filter id=\"exp-1780982954781-4-0-drop-shadow-small\" height=\"150%\" width=\"150%\"><feDropShadow dx=\"2\" dy=\"2\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs></svg></div>\n<table>\n<thead>\n<tr>\n<th>Характеристика</th>\n<th>Віртуальна машина</th>\n<th>Контейнер</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Що віртуалізується</td>\n<td>Апаратне забезпечення</td>\n<td>Операційна система</td>\n</tr>\n<tr>\n<td>Гостьова ОС</td>\n<td>Власна повна ОС</td>\n<td>Спільне ядро хоста</td>\n</tr>\n<tr>\n<td>Розмір</td>\n<td>Гігабайти</td>\n<td>Мегабайти</td>\n</tr>\n<tr>\n<td>Час запуску</td>\n<td>Хвилини</td>\n<td>Секунди</td>\n</tr>\n<tr>\n<td>Ізоляція</td>\n<td>Сильніша</td>\n<td>Достатня для більшості задач</td>\n</tr>\n</tbody></table>\n<div class=\"note\"><strong>📝 Важливе уточнення</strong> <p>Контейнери використовують спільне ядро операційної системи хоста, тому вони легші за віртуальні машини. На Windows та macOS Docker запускає легку віртуальну машину з Linux у фоні, оскільки контейнери Linux потребують ядра Linux.</p>\n</div>\n\n","<h1>🏗️ Архітектура Docker</h1>\n<p><strong>Головна ідея:</strong> Docker складається з кількох компонентів, які взаємодіють через клієнт-серверну модель.</p>\n<h2>🧱 Основні компоненти</h2>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    CLIENT[&quot;💻 Docker Client (CLI)&quot;] --&gt;|&quot;команди&quot;| DAEMON[&quot;⚙️ Docker Daemon&quot;]\n    DAEMON --&gt;|&quot;завантаження образів&quot;| REGISTRY[&quot;☁️ Registry (Docker Hub)&quot;]\n    DAEMON --&gt;|&quot;створює&quot;| IMAGES[&quot;🖼️ Образи&quot;]\n    DAEMON --&gt;|&quot;запускає&quot;| CONTAINERS[&quot;📦 Контейнери&quot;]\n    style CLIENT fill:#e3f2fd,stroke:#1565c0\n    style DAEMON fill:#fff9c4,stroke:#f9a825\n    style REGISTRY fill:#f3e5f5,stroke:#7b1fa2\n    style IMAGES fill:#e8f5e9,stroke:#388e3c\n    style CONTAINERS fill:#fce4ec,stroke:#c2185b\"><svg id=\"exp-1780982954834-5-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 978.0234375px;\" viewBox=\"0 0 978.0234375 260\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1780982954834-5-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1780982954834-5-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1780982954834-5-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1780982954834-5-0 .error-icon{fill:#552222;}#exp-1780982954834-5-0 .error-text{fill:#552222;stroke:#552222;}#exp-1780982954834-5-0 .edge-thickness-normal{stroke-width:1px;}#exp-1780982954834-5-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1780982954834-5-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1780982954834-5-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1780982954834-5-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1780982954834-5-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1780982954834-5-0 .marker{fill:#333333;stroke:#333333;}#exp-1780982954834-5-0 .marker.cross{stroke:#333333;}#exp-1780982954834-5-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1780982954834-5-0 p{margin:0;}#exp-1780982954834-5-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1780982954834-5-0 .cluster-label text{fill:#333;}#exp-1780982954834-5-0 .cluster-label span{color:#333;}#exp-1780982954834-5-0 .cluster-label span p{background-color:transparent;}#exp-1780982954834-5-0 .label text,#exp-1780982954834-5-0 span{fill:#333;color:#333;}#exp-1780982954834-5-0 .node rect,#exp-1780982954834-5-0 .node circle,#exp-1780982954834-5-0 .node ellipse,#exp-1780982954834-5-0 .node polygon,#exp-1780982954834-5-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1780982954834-5-0 .rough-node .label text,#exp-1780982954834-5-0 .node .label text,#exp-1780982954834-5-0 .image-shape .label,#exp-1780982954834-5-0 .icon-shape .label{text-anchor:middle;}#exp-1780982954834-5-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1780982954834-5-0 .rough-node .label,#exp-1780982954834-5-0 .node .label,#exp-1780982954834-5-0 .image-shape .label,#exp-1780982954834-5-0 .icon-shape .label{text-align:center;}#exp-1780982954834-5-0 .node.clickable{cursor:pointer;}#exp-1780982954834-5-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1780982954834-5-0 .arrowheadPath{fill:#333333;}#exp-1780982954834-5-0 .edgePath .path{stroke:#333333;stroke-width:1px;}#exp-1780982954834-5-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1780982954834-5-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954834-5-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1780982954834-5-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954834-5-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1780982954834-5-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1780982954834-5-0 .cluster text{fill:#333;}#exp-1780982954834-5-0 .cluster span{color:#333;}#exp-1780982954834-5-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1780982954834-5-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1780982954834-5-0 rect.text{fill:none;stroke-width:0;}#exp-1780982954834-5-0 .icon-shape,#exp-1780982954834-5-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954834-5-0 .icon-shape p,#exp-1780982954834-5-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1780982954834-5-0 .icon-shape .label rect,#exp-1780982954834-5-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954834-5-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1780982954834-5-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1780982954834-5-0 .node .neo-node{stroke:#667eea;}#exp-1780982954834-5-0 [data-look=\"neo\"].node rect,#exp-1780982954834-5-0 [data-look=\"neo\"].cluster rect,#exp-1780982954834-5-0 [data-look=\"neo\"].node polygon{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954834-5-0 [data-look=\"neo\"].node path{stroke:#667eea;stroke-width:1px;}#exp-1780982954834-5-0 [data-look=\"neo\"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954834-5-0 [data-look=\"neo\"].node .neo-line path{stroke:#667eea;filter:none;}#exp-1780982954834-5-0 [data-look=\"neo\"].node circle{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954834-5-0 [data-look=\"neo\"].node circle .state-start{fill:#000000;}#exp-1780982954834-5-0 [data-look=\"neo\"].icon-shape .icon{fill:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954834-5-0 [data-look=\"neo\"].icon-shape .icon-neo path{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954834-5-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1780982954834-5-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-pointEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"11.5\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"10.5\" markerHeight=\"14\" orient=\"auto\"><path d=\"M 0 0 L 11.5 7 L 0 14 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-pointStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"1\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11.5\" markerHeight=\"14\" orient=\"auto\"><polygon points=\"0,7 11.5,14 11.5,0\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></polygon></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-circleEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refY=\"5\" refX=\"12.25\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-circleStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-2\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-crossEnd-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"17.7\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5;\"></path></marker><marker id=\"exp-1780982954834-5-0_flowchart-v2-crossStart-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"-3.5\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M213.594,130L223.577,130C233.561,130,253.529,130,272.829,130C292.13,130,310.764,130,320.081,130L329.398,130\" id=\"exp-1780982954834-5-0-L_CLIENT_DAEMON_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_CLIENT_DAEMON_0\" data-points=\"W3sieCI6MjEzLjU5Mzc1LCJ5IjoxMzB9LHsieCI6MjczLjQ5NjA5Mzc1LCJ5IjoxMzB9LHsieCI6MzMzLjM5ODQzNzUsInkiOjEzMH1d\" data-look=\"classic\" marker-end=\"url(#exp-1780982954834-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M475.499,106L501.119,93.667C526.739,81.333,577.979,56.667,621.487,44.333C664.995,32,700.771,32,718.659,32L736.547,32\" id=\"exp-1780982954834-5-0-L_DAEMON_REGISTRY_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_DAEMON_REGISTRY_0\" data-points=\"W3sieCI6NDc1LjQ5OTQ0MTk2NDI4NTcsInkiOjEwNn0seyJ4Ijo2MjkuMjE4NzUsInkiOjMyfSx7IngiOjc0MC41NDY4NzUsInkiOjMyfV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954834-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M517.891,130L536.445,130C555,130,592.109,130,637.215,130C682.322,130,735.424,130,761.976,130L788.527,130\" id=\"exp-1780982954834-5-0-L_DAEMON_IMAGES_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_DAEMON_IMAGES_0\" data-points=\"W3sieCI6NTE3Ljg5MDYyNSwieSI6MTMwfSx7IngiOjYyOS4yMTg3NSwieSI6MTMwfSx7IngiOjc5Mi41MjczNDM3NSwieSI6MTMwfV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954834-5-0_flowchart-v2-pointEnd)\"></path><path d=\"M475.499,154L501.119,166.333C526.739,178.667,577.979,203.333,627.325,215.667C676.672,228,724.125,228,747.852,228L771.578,228\" id=\"exp-1780982954834-5-0-L_DAEMON_CONTAINERS_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_DAEMON_CONTAINERS_0\" data-points=\"W3sieCI6NDc1LjQ5OTQ0MTk2NDI4NTcsInkiOjE1NH0seyJ4Ijo2MjkuMjE4NzUsInkiOjIyOH0seyJ4Ijo3NzUuNTc4MTI1LCJ5IjoyMjh9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954834-5-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\" transform=\"translate(273.49609375, 130)\"><g class=\"label\" data-id=\"L_CLIENT_DAEMON_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-34.90234375\" y=\"-1.5\" width=\"69.8046875\" height=\"23\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">команди</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(629.21875, 32)\"><g class=\"label\" data-id=\"L_DAEMON_REGISTRY_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-86.328125\" y=\"-1.5\" width=\"172.65625\" height=\"23\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">завантаження</tspan><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\"> образів</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(629.21875, 130)\"><g class=\"label\" data-id=\"L_DAEMON_IMAGES_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-34.328125\" y=\"-1.5\" width=\"68.65625\" height=\"23\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">створює</tspan></tspan></text></g></g></g><g class=\"edgeLabel\" transform=\"translate(629.21875, 228)\"><g class=\"label\" data-id=\"L_DAEMON_CONTAINERS_0\" transform=\"translate(0, -10)\"><g><rect class=\"background\" style=\"\" x=\"-36.296875\" y=\"-1.5\" width=\"72.59375\" height=\"23\"></rect><text y=\"-10.1\" text-anchor=\"middle\" style=\"\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"><tspan font-style=\"normal\" class=\"text-inner-tspan\" font-weight=\"normal\">запускає</tspan></tspan></text></g></g></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"exp-1780982954834-5-0-flowchart-CLIENT-0\" data-look=\"classic\" transform=\"translate(110.796875, 130)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-102.796875\" y=\"-24\" width=\"205.59375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-78.796875, -12)\"><rect></rect><foreignObject width=\"157.59375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>💻 Docker Client (CLI)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954834-5-0-flowchart-DAEMON-1\" data-look=\"classic\" transform=\"translate(425.64453125, 130)\"><rect class=\"basic label-container\" style=\"fill:#fff9c4 !important;stroke:#f9a825 !important\" x=\"-92.24609375\" y=\"-24\" width=\"184.4921875\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-68.24609375, -12)\"><rect></rect><foreignObject width=\"136.4921875\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>⚙️ Docker Daemon</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954834-5-0-flowchart-REGISTRY-3\" data-look=\"classic\" transform=\"translate(855.28515625, 32)\"><rect class=\"basic label-container\" style=\"fill:#f3e5f5 !important;stroke:#7b1fa2 !important\" x=\"-114.73828125\" y=\"-24\" width=\"229.4765625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-90.73828125, -12)\"><rect></rect><foreignObject width=\"181.4765625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>☁️ Registry (Docker Hub)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954834-5-0-flowchart-IMAGES-5\" data-look=\"classic\" transform=\"translate(855.28515625, 130)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-62.7578125\" y=\"-24\" width=\"125.515625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-38.7578125, -12)\"><rect></rect><foreignObject width=\"77.515625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🖼️ Образи</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954834-5-0-flowchart-CONTAINERS-7\" data-look=\"classic\" transform=\"translate(855.28515625, 228)\"><rect class=\"basic label-container\" style=\"fill:#fce4ec !important;stroke:#c2185b !important\" x=\"-79.70703125\" y=\"-24\" width=\"159.4140625\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-55.70703125, -12)\"><rect></rect><foreignObject width=\"111.4140625\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Контейнери</p></span></div></foreignObject></g></g></g></g></g><defs><filter id=\"exp-1780982954834-5-0-drop-shadow\" height=\"130%\" width=\"130%\"><feDropShadow dx=\"4\" dy=\"4\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs><defs><filter id=\"exp-1780982954834-5-0-drop-shadow-small\" height=\"150%\" width=\"150%\"><feDropShadow dx=\"2\" dy=\"2\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs></svg></div>\n<table>\n<thead>\n<tr>\n<th>Компонент</th>\n<th>Роль</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Docker Client</td>\n<td>Інтерфейс командного рядка, через який користувач надсилає команди</td>\n</tr>\n<tr>\n<td>Docker Daemon</td>\n<td>Фоновий процес, що виконує команди: будує образи та керує контейнерами</td>\n</tr>\n<tr>\n<td>Образ (image)</td>\n<td>Шаблон лише для читання, з якого створюються контейнери</td>\n</tr>\n<tr>\n<td>Контейнер</td>\n<td>Запущений екземпляр образу</td>\n</tr>\n<tr>\n<td>Registry</td>\n<td>Сховище образів, наприклад публічний Docker Hub</td>\n</tr>\n</tbody></table>\n<div class=\"info\"><strong>ℹ️ Як це працює разом</strong> <p>Користувач вводить команду в клієнті. Клієнт передає її демону. Демон завантажує потрібний образ зі сховища, якщо його ще немає локально, та запускає на його основі контейнер.</p>\n</div>\n\n","<h1>🖼️ Образи та контейнери</h1>\n<div class=\"info\"><strong>ℹ️ Ключова відмінність</strong> <p><strong>Образ</strong> : це незмінний шаблон з кодом застосунку, середовищем виконання та залежностями. <strong>Контейнер</strong> : це запущений екземпляр образу.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> співвідношення між образом та контейнером схоже на співвідношення між класом та об'єктом: з одного образу можна створити багато контейнерів.</p>\n\n<div class=\"mermaid\" data-source=\"graph LR\n    IMG[&quot;🖼️ Образ (шаблон)&quot;] --&gt; C1[&quot;📦 Контейнер 1&quot;]\n    IMG --&gt; C2[&quot;📦 Контейнер 2&quot;]\n    IMG --&gt; C3[&quot;📦 Контейнер 3&quot;]\n    style IMG fill:#e8f5e9,stroke:#388e3c\n    style C1 fill:#e3f2fd,stroke:#1565c0\n    style C2 fill:#e3f2fd,stroke:#1565c0\n    style C3 fill:#e3f2fd,stroke:#1565c0\"><svg id=\"exp-1780982954848-6-0\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" class=\"flowchart\" style=\"max-width: 420.1015625px;\" viewBox=\"0 0 420.1015625 260\" role=\"graphics-document document\" aria-roledescription=\"flowchart-v2\"><style>#exp-1780982954848-6-0{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#exp-1780982954848-6-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#exp-1780982954848-6-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#exp-1780982954848-6-0 .error-icon{fill:#552222;}#exp-1780982954848-6-0 .error-text{fill:#552222;stroke:#552222;}#exp-1780982954848-6-0 .edge-thickness-normal{stroke-width:1px;}#exp-1780982954848-6-0 .edge-thickness-thick{stroke-width:3.5px;}#exp-1780982954848-6-0 .edge-pattern-solid{stroke-dasharray:0;}#exp-1780982954848-6-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#exp-1780982954848-6-0 .edge-pattern-dashed{stroke-dasharray:3;}#exp-1780982954848-6-0 .edge-pattern-dotted{stroke-dasharray:2;}#exp-1780982954848-6-0 .marker{fill:#333333;stroke:#333333;}#exp-1780982954848-6-0 .marker.cross{stroke:#333333;}#exp-1780982954848-6-0 svg{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:16px;}#exp-1780982954848-6-0 p{margin:0;}#exp-1780982954848-6-0 .label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#333;}#exp-1780982954848-6-0 .cluster-label text{fill:#333;}#exp-1780982954848-6-0 .cluster-label span{color:#333;}#exp-1780982954848-6-0 .cluster-label span p{background-color:transparent;}#exp-1780982954848-6-0 .label text,#exp-1780982954848-6-0 span{fill:#333;color:#333;}#exp-1780982954848-6-0 .node rect,#exp-1780982954848-6-0 .node circle,#exp-1780982954848-6-0 .node ellipse,#exp-1780982954848-6-0 .node polygon,#exp-1780982954848-6-0 .node path{fill:#ECECFF;stroke:#667eea;stroke-width:1px;}#exp-1780982954848-6-0 .rough-node .label text,#exp-1780982954848-6-0 .node .label text,#exp-1780982954848-6-0 .image-shape .label,#exp-1780982954848-6-0 .icon-shape .label{text-anchor:middle;}#exp-1780982954848-6-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#exp-1780982954848-6-0 .rough-node .label,#exp-1780982954848-6-0 .node .label,#exp-1780982954848-6-0 .image-shape .label,#exp-1780982954848-6-0 .icon-shape .label{text-align:center;}#exp-1780982954848-6-0 .node.clickable{cursor:pointer;}#exp-1780982954848-6-0 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#exp-1780982954848-6-0 .arrowheadPath{fill:#333333;}#exp-1780982954848-6-0 .edgePath .path{stroke:#333333;stroke-width:1px;}#exp-1780982954848-6-0 .flowchart-link{stroke:#333333;fill:none;}#exp-1780982954848-6-0 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954848-6-0 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#exp-1780982954848-6-0 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954848-6-0 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#exp-1780982954848-6-0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#exp-1780982954848-6-0 .cluster text{fill:#333;}#exp-1780982954848-6-0 .cluster span{color:#333;}#exp-1780982954848-6-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#exp-1780982954848-6-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#exp-1780982954848-6-0 rect.text{fill:none;stroke-width:0;}#exp-1780982954848-6-0 .icon-shape,#exp-1780982954848-6-0 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#exp-1780982954848-6-0 .icon-shape p,#exp-1780982954848-6-0 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#exp-1780982954848-6-0 .icon-shape .label rect,#exp-1780982954848-6-0 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#exp-1780982954848-6-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#exp-1780982954848-6-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#exp-1780982954848-6-0 .node .neo-node{stroke:#667eea;}#exp-1780982954848-6-0 [data-look=\"neo\"].node rect,#exp-1780982954848-6-0 [data-look=\"neo\"].cluster rect,#exp-1780982954848-6-0 [data-look=\"neo\"].node polygon{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954848-6-0 [data-look=\"neo\"].node path{stroke:#667eea;stroke-width:1px;}#exp-1780982954848-6-0 [data-look=\"neo\"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954848-6-0 [data-look=\"neo\"].node .neo-line path{stroke:#667eea;filter:none;}#exp-1780982954848-6-0 [data-look=\"neo\"].node circle{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954848-6-0 [data-look=\"neo\"].node circle .state-start{fill:#000000;}#exp-1780982954848-6-0 [data-look=\"neo\"].icon-shape .icon{fill:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954848-6-0 [data-look=\"neo\"].icon-shape .icon-neo path{stroke:#667eea;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#exp-1780982954848-6-0 :root{--mermaid-font-family:\"trebuchet ms\",verdana,arial,sans-serif;}</style><g><marker id=\"exp-1780982954848-6-0_flowchart-v2-pointEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-pointStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"4.5\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\"><path d=\"M 0 5 L 10 10 L 10 0 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-pointEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"11.5\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"10.5\" markerHeight=\"14\" orient=\"auto\"><path d=\"M 0 0 L 11.5 7 L 0 14 z\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-pointStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 11.5 14\" refX=\"1\" refY=\"7\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11.5\" markerHeight=\"14\" orient=\"auto\"><polygon points=\"0,7 11.5,14 11.5,0\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></polygon></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-circleEnd\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"11\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-circleStart\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-1\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 1; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-circleEnd-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refY=\"5\" refX=\"12.25\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-circleStart-margin\" class=\"marker flowchart-v2\" viewBox=\"0 0 10 10\" refX=\"-2\" refY=\"5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"14\" markerHeight=\"14\" orient=\"auto\"><circle cx=\"5\" cy=\"5\" r=\"5\" class=\"arrowMarkerPath\" style=\"stroke-width: 0; stroke-dasharray: 1, 0;\"></circle></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-crossEnd\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"12\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-crossStart\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 11 11\" refX=\"-1\" refY=\"5.2\" markerUnits=\"userSpaceOnUse\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path d=\"M 1,1 l 9,9 M 10,1 l -9,9\" class=\"arrowMarkerPath\" style=\"stroke-width: 2; stroke-dasharray: 1, 0;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-crossEnd-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"17.7\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5;\"></path></marker><marker id=\"exp-1780982954848-6-0_flowchart-v2-crossStart-margin\" class=\"marker cross flowchart-v2\" viewBox=\"0 0 15 15\" refX=\"-3.5\" refY=\"7.5\" markerUnits=\"userSpaceOnUse\" markerWidth=\"12\" markerHeight=\"12\" orient=\"auto\"><path d=\"M 1,1 L 14,14 M 1,14 L 14,1\" class=\"arrowMarkerPath\" style=\"stroke-width: 2.5; stroke-dasharray: 1, 0;\"></path></marker><g class=\"root\"><g class=\"clusters\"></g><g class=\"edgePaths\"><path d=\"M132.48,106L147.592,93.667C162.703,81.333,192.926,56.667,211.755,44.333C230.583,32,238.018,32,241.736,32L245.453,32\" id=\"exp-1780982954848-6-0-L_IMG_C1_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_IMG_C1_0\" data-points=\"W3sieCI6MTMyLjQ4MDE0OTg3MjQ0ODk4LCJ5IjoxMDZ9LHsieCI6MjIzLjE0ODQzNzUsInkiOjMyfSx7IngiOjI0OS40NTMxMjUsInkiOjMyfV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954848-6-0_flowchart-v2-pointEnd)\"></path><path d=\"M198.148,130L202.315,130C206.482,130,214.815,130,222.513,130C230.211,130,237.273,130,240.805,130L244.336,130\" id=\"exp-1780982954848-6-0-L_IMG_C2_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_IMG_C2_0\" data-points=\"W3sieCI6MTk4LjE0ODQzNzUsInkiOjEzMH0seyJ4IjoyMjMuMTQ4NDM3NSwieSI6MTMwfSx7IngiOjI0OC4zMzU5Mzc1LCJ5IjoxMzB9XQ==\" data-look=\"classic\" marker-end=\"url(#exp-1780982954848-6-0_flowchart-v2-pointEnd)\"></path><path d=\"M132.48,154L147.592,166.333C162.703,178.667,192.926,203.333,211.537,215.667C230.148,228,237.148,228,240.648,228L244.148,228\" id=\"exp-1780982954848-6-0-L_IMG_C3_0\" class=\" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link\" style=\";\" data-edge=\"true\" data-et=\"edge\" data-id=\"L_IMG_C3_0\" data-points=\"W3sieCI6MTMyLjQ4MDE0OTg3MjQ0ODk4LCJ5IjoxNTR9LHsieCI6MjIzLjE0ODQzNzUsInkiOjIyOH0seyJ4IjoyNDguMTQ4NDM3NSwieSI6MjI4fV0=\" data-look=\"classic\" marker-end=\"url(#exp-1780982954848-6-0_flowchart-v2-pointEnd)\"></path></g><g class=\"edgeLabels\"><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_IMG_C1_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_IMG_C2_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g><g class=\"edgeLabel\"><g class=\"label\" data-id=\"L_IMG_C3_0\" transform=\"translate(0, 0)\"><text y=\"-10.1\" text-anchor=\"middle\"><tspan class=\"text-outer-tspan row\" x=\"0\" y=\"-0.1em\" dy=\"1.1em\" text-anchor=\"middle\"></tspan></text></g></g><g><rect class=\"background\" style=\"stroke: none\"></rect></g></g><g class=\"nodes\"><g class=\"node default  \" id=\"exp-1780982954848-6-0-flowchart-IMG-0\" data-look=\"classic\" transform=\"translate(103.07421875, 130)\"><rect class=\"basic label-container\" style=\"fill:#e8f5e9 !important;stroke:#388e3c !important\" x=\"-95.07421875\" y=\"-24\" width=\"190.1484375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-71.07421875, -12)\"><rect></rect><foreignObject width=\"142.1484375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>🖼️ Образ (шаблон)</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954848-6-0-flowchart-C1-1\" data-look=\"classic\" transform=\"translate(330.125, 32)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-80.671875\" y=\"-24\" width=\"161.34375\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-56.671875, -12)\"><rect></rect><foreignObject width=\"113.34375\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Контейнер 1</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954848-6-0-flowchart-C2-3\" data-look=\"classic\" transform=\"translate(330.125, 130)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-81.7890625\" y=\"-24\" width=\"163.578125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-57.7890625, -12)\"><rect></rect><foreignObject width=\"115.578125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Контейнер 2</p></span></div></foreignObject></g></g><g class=\"node default  \" id=\"exp-1780982954848-6-0-flowchart-C3-5\" data-look=\"classic\" transform=\"translate(330.125, 228)\"><rect class=\"basic label-container\" style=\"fill:#e3f2fd !important;stroke:#1565c0 !important\" x=\"-81.9765625\" y=\"-24\" width=\"163.953125\" height=\"48\"></rect><g class=\"label\" style=\"\" transform=\"translate(-57.9765625, -12)\"><rect></rect><foreignObject width=\"115.953125\" height=\"24\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;\"><span class=\"nodeLabel \"><p>📦 Контейнер 3</p></span></div></foreignObject></g></g></g></g></g><defs><filter id=\"exp-1780982954848-6-0-drop-shadow\" height=\"130%\" width=\"130%\"><feDropShadow dx=\"4\" dy=\"4\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs><defs><filter id=\"exp-1780982954848-6-0-drop-shadow-small\" height=\"150%\" width=\"150%\"><feDropShadow dx=\"2\" dy=\"2\" stdDeviation=\"0\" flood-opacity=\"0.06\" flood-color=\"#000000\"></feDropShadow></filter></defs></svg></div>\n<h2>🏷️ Назва та тег образу</h2>\n<p>Образ має ім'я та тег у форматі <code>назва:тег</code>. Тег зазвичай позначає версію.</p>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\">node:20-alpine    <span class=\"hljs-comment\"># образ Node.js версії 20 на базі легкого Alpine Linux</span>\npostgres:16       <span class=\"hljs-comment\"># образ PostgreSQL версії 16</span>\nnginx:latest      <span class=\"hljs-comment\"># latest: тег за замовчуванням, якщо версію не вказано</span></code></pre><div class=\"warning\"><strong>⚠️ Застереження</strong> <p>Тег <code>latest</code> не означає \"завжди найновіша версія на момент запуску\". Це лише тег за замовчуванням, значення якого може змінитися з часом. Для передбачуваності у промислових середовищах краще явно вказувати конкретну версію.</p>\n</div>\n\n","<h1>🛠️ Команди для роботи з образами</h1>\n<p><strong>Головна ідея:</strong> базовий набір команд дозволяє завантажувати, переглядати та видаляти образи.</p>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Завантажити образ зі сховища</span>\ndocker pull node:20-alpine\n\n<span class=\"hljs-comment\"># Переглянути локальні образи</span>\ndocker images\n\n<span class=\"hljs-comment\"># Видалити локальний образ</span>\ndocker rmi node:20-alpine</code></pre><h2>📦 Робота з контейнерами</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Запустити контейнер у фоновому режимі (-d), зіставивши порт хоста</span>\n<span class=\"hljs-comment\"># з портом контейнера (-p) та задавши ім'я. Образ nginx містить</span>\n<span class=\"hljs-comment\"># готовий веб-сервер, що слухає порт 80 всередині контейнера</span>\ndocker run -d -p 8080:80 --name web nginx\n\n<span class=\"hljs-comment\"># Переглянути запущені контейнери</span>\ndocker ps\n\n<span class=\"hljs-comment\"># Переглянути всі контейнери, зокрема зупинені</span>\ndocker ps -a\n\n<span class=\"hljs-comment\"># Зупинити та видалити контейнер</span>\ndocker stop web\ndocker <span class=\"hljs-built_in\">rm</span> web</code></pre><div class=\"tip\"><strong>💡 Діагностика</strong> <p>Дві команди корисні щодня:<br><code>docker logs web</code> : показує вивід застосунку всередині контейнера.<br><code>docker exec -it web sh</code> : відкриває інтерактивну оболонку всередині запущеного контейнера для перевірки його стану.</p>\n</div>\n\n","<h1>📝 Dockerfile: основи</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Dockerfile</strong> : це текстовий файл з послідовністю інструкцій, на основі яких Docker автоматично будує образ.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> кожна інструкція описує один крок підготовки образу, від вибору базового середовища до команди запуску застосунку.</p>\n<h2>🧩 Основні інструкції</h2>\n<table>\n<thead>\n<tr>\n<th>Інструкція</th>\n<th>Призначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>FROM</code></td>\n<td>Задає базовий образ, на якому будується новий</td>\n</tr>\n<tr>\n<td><code>WORKDIR</code></td>\n<td>Встановлює робочу директорію всередині образу</td>\n</tr>\n<tr>\n<td><code>COPY</code></td>\n<td>Копіює файли з машини збірки в образ</td>\n</tr>\n<tr>\n<td><code>RUN</code></td>\n<td>Виконує команду під час збірки, наприклад встановлення залежностей</td>\n</tr>\n<tr>\n<td><code>ENV</code></td>\n<td>Задає змінну середовища</td>\n</tr>\n<tr>\n<td><code>EXPOSE</code></td>\n<td>Документує порт, який слухає застосунок</td>\n</tr>\n<tr>\n<td><code>CMD</code></td>\n<td>Задає команду, що виконується під час запуску контейнера</td>\n</tr>\n</tbody></table>\n<div class=\"note\"><strong>📝 CMD проти RUN</strong> <p><code>RUN</code> виконується один раз під час збірки образу, а <code>CMD</code> визначає, що запускається щоразу під час старту контейнера. Це різні етапи життєвого циклу.</p>\n</div>\n\n","<h1>🏭 Dockerfile та шари образу</h1>\n<p><strong>Головна ідея:</strong> образ складається з шарів, де кожна інструкція Dockerfile додає новий шар. Docker кешує шари, тому правильний порядок інструкцій пришвидшує повторні збірки.</p>\n<h2>💻 Приклад для серверного застосунку</h2>\n<pre><code class=\"language-dockerfile\"># Базовий образ із середовищем виконання Node.js\nFROM node:20-alpine\n\n# Робоча директорія всередині образу\nWORKDIR /app\n\n# Спочатку копіюємо лише описи залежностей\nCOPY package*.json ./\n\n# Встановлюємо залежності суворо за lock-файлом\nRUN npm ci\n\n# Тепер копіюємо решту коду\nCOPY . .\n\n# Збираємо застосунок\nRUN npm run build\n\n# Документуємо порт застосунку\nEXPOSE 3000\n\n# Команда запуску контейнера\nCMD [\"node\", \"dist/main.js\"]</code></pre><pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Зібрати образ із Dockerfile у поточній директорії (.) та призначити ім'я</span>\ndocker build -t my-api .\n\n<span class=\"hljs-comment\"># Запустити контейнер на основі зібраного образу</span>\ndocker run -d -p 3000:3000 --name my-api my-api</code></pre><div class=\"tip\"><strong>💡 Чому копіюємо package.json окремо</strong> <p>Залежності змінюються рідше за код. Якщо спочатку скопіювати лише <code>package*.json</code> та встановити залежності, цей шар кешується. Тоді під час зміни лише вихідного коду повторне встановлення залежностей не виконується, і збірка значно пришвидшується.</p>\n</div>\n\n","<h1>🧹 .dockerignore та багатоетапна збірка</h1>\n<p><strong>Головна ідея:</strong> до образу слід включати лише потрібне. Це зменшує розмір образу, пришвидшує збірку та підвищує безпеку.</p>\n<h2>📄 Файл .dockerignore</h2>\n<p>Файл <code>.dockerignore</code> вказує, які файли не копіювати в образ. Він працює аналогічно до <code>.gitignore</code>.</p>\n<pre><code class=\"language-plaintext hljs\" data-highlighted=\"yes\">node_modules\ndist\n.git\n.env</code></pre><div class=\"warning\"><strong>⚠️ Безпека</strong> <p>Не варто копіювати в образ файли із секретами, наприклад <code>.env</code> з паролями чи ключами. Секрети передають через змінні середовища під час запуску контейнера, а не вшивають в образ.</p>\n</div>\n\n\n\n<h2>🏗️ Багатоетапна збірка (multi-stage build)</h2>\n<p>Багатоетапна збірка дозволяє використати один етап для збірки, а до фінального образу включити лише результат. Це різко зменшує розмір.</p>\n<pre><code class=\"language-dockerfile\"># Етап збірки\nFROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\n# Фінальний образ містить лише потрібне для запуску\nFROM node:20-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --omit=dev\nCOPY --from=builder /app/dist ./dist\nEXPOSE 3000\nCMD [\"node\", \"dist/main.js\"]</code></pre><div class=\"success\"><strong>✅ Результат</strong> <p>Інструменти збірки та проміжні файли залишаються на першому етапі та не потрапляють до фінального образу. Це робить образ меншим та безпечнішим.</p>\n</div>\n\n","<h1>💾 Volumes: зберігання даних</h1>\n<div class=\"info\"><strong>ℹ️ Проблема</strong> <p>Контейнери є тимчасовими: коли контейнер видаляють, усі зміни в його файловій системі зникають. Це неприйнятно для даних, які мають зберігатися, наприклад вмісту бази даних.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> <strong>volume</strong> (том) : це механізм збереження даних поза життєвим циклом контейнера. Дані у volume переживають перестворення контейнера.</p>\n<h2>🗂️ Типи зберігання</h2>\n<table>\n<thead>\n<tr>\n<th>Тип</th>\n<th>Опис</th>\n<th>Типове застосування</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Named volume</td>\n<td>Том з іменем, яким керує Docker</td>\n<td>Дані бази даних</td>\n</tr>\n<tr>\n<td>Bind mount</td>\n<td>Пряме зіставлення директорії хоста з директорією контейнера</td>\n<td>Розробка, гаряче оновлення</td>\n</tr>\n</tbody></table>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Створити том та переглянути список томів</span>\ndocker volume create app-data\ndocker volume <span class=\"hljs-built_in\">ls</span>\n\n<span class=\"hljs-comment\"># Запустити контейнер із підключеним томом</span>\ndocker run -d -e POSTGRES_PASSWORD=secret -v app-data:/var/lib/postgresql/data postgres:16\n\n<span class=\"hljs-comment\"># Bind mount: підключити поточну директорію хоста до /app у контейнері</span>\ndocker run -d -v <span class=\"hljs-string\">\"<span class=\"hljs-subst\">$(pwd)</span>\"</span>:/app node:20-alpine</code></pre><div class=\"note\"><strong>📝 Named volume проти bind mount</strong> <p>Named volume підходить для постійних даних, бо ним повністю керує Docker. Bind mount зручний під час розробки, оскільки зміни файлів на машині одразу видно всередині контейнера.</p>\n</div>\n\n","<h1>🌐 Мережі та порти</h1>\n<p><strong>Головна ідея:</strong> контейнери ізольовані одне від одного та від хоста. Щоб застосунок був доступний ззовні, його порт зіставляють з портом хоста. Щоб контейнери спілкувалися між собою, їх об'єднують у спільну мережу.</p>\n<h2>🔌 Зіставлення портів (port mapping)</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Формат: -p порт_хоста:порт_контейнера</span>\ndocker run -d -p 8080:3000 my-api</code></pre><p>У цьому прикладі застосунок слухає порт <code>3000</code> всередині контейнера, а звертатися до нього ззовні можна через порт <code>8080</code> на хості.</p>\n<h2>🕸️ Мережі контейнерів</h2>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Створити мережу</span>\ndocker network create app-network\n\n<span class=\"hljs-comment\"># Запустити контейнери в одній мережі</span>\ndocker run -d --name db --network app-network -e POSTGRES_PASSWORD=secret postgres:16\ndocker run -d --name api --network app-network my-api</code></pre><div class=\"tip\"><strong>💡 Звернення за іменем</strong> <p>Контейнери в одній мережі можуть звертатися одне до одного за іменем сервісу замість IP-адреси. Так контейнер <code>api</code> може підключитися до бази даних за хостом <code>db</code>. Це ключовий принцип взаємодії сервісів.</p>\n</div>\n\n","<h1>🧩 Docker Compose: основи</h1>\n<div class=\"info\"><strong>ℹ️ Визначення</strong> <p><strong>Docker Compose</strong> : це інструмент для опису та запуску застосунків з кількох контейнерів за допомогою одного конфігураційного файлу <code>docker-compose.yml</code>.</p>\n</div>\n\n\n\n<p><strong>Головна ідея:</strong> замість ручного запуску кожного контейнера окремими командами, Compose описує всі сервіси, їхні зв'язки, томи та мережі в одному файлі та запускає їх однією командою.</p>\n<h2>🎯 Навіщо Compose</h2>\n<ul>\n<li>📜 <strong>Декларативність:</strong> уся конфігурація зібрана в одному файлі під контролем версій</li>\n<li>🔗 <strong>Зв'язки:</strong> Compose автоматично створює спільну мережу для всіх сервісів</li>\n<li>⚡ <strong>Одна команда:</strong> весь набір сервісів запускається та зупиняється разом</li>\n</ul>\n<pre><code class=\"language-bash hljs\" data-highlighted=\"yes\"><span class=\"hljs-comment\"># Запустити всі сервіси у фоновому режимі</span>\ndocker compose up -d\n\n<span class=\"hljs-comment\"># Переглянути стан сервісів та їхні логи</span>\ndocker compose ps\ndocker compose logs\n\n<span class=\"hljs-comment\"># Зупинити та прибрати сервіси</span>\ndocker compose down</code></pre><div class=\"note\"><strong>📝 Окремі контейнери проти Compose</strong> <p>Поодинокі команди <code>docker run</code> зручні для одного контейнера. Реальний застосунок зазвичай складається з кількох сервісів, наприклад серверного застосунку та бази даних, тому Compose значно спрощує керування ними.</p>\n</div>\n\n","<h1>📦 Docker Compose: приклад</h1>\n<p><strong>Головна ідея:</strong> файл <code>docker-compose.yml</code> описує сервіси у форматі YAML. Розглянемо типову конфігурацію серверного застосунку разом з базою даних PostgreSQL.</p>\n<pre><code class=\"language-yaml hljs\" data-highlighted=\"yes\"><span class=\"hljs-attr\">services:</span>\n  <span class=\"hljs-attr\">api:</span>\n    <span class=\"hljs-attr\">build:</span> <span class=\"hljs-string\">.</span>\n    <span class=\"hljs-attr\">ports:</span>\n      <span class=\"hljs-bullet\">-</span> <span class=\"hljs-string\">\"3000:3000\"</span>\n    <span class=\"hljs-attr\">environment:</span>\n      <span class=\"hljs-attr\">DATABASE_HOST:</span> <span class=\"hljs-string\">db</span>\n      <span class=\"hljs-attr\">DATABASE_PORT:</span> <span class=\"hljs-number\">5432</span>\n    <span class=\"hljs-attr\">depends_on:</span>\n      <span class=\"hljs-bullet\">-</span> <span class=\"hljs-string\">db</span>\n\n  <span class=\"hljs-attr\">db:</span>\n    <span class=\"hljs-attr\">image:</span> <span class=\"hljs-string\">postgres:16-alpine</span>\n    <span class=\"hljs-attr\">environment:</span>\n      <span class=\"hljs-attr\">POSTGRES_USER:</span> <span class=\"hljs-string\">app</span>\n      <span class=\"hljs-attr\">POSTGRES_PASSWORD:</span> <span class=\"hljs-string\">secret</span>\n      <span class=\"hljs-attr\">POSTGRES_DB:</span> <span class=\"hljs-string\">app_db</span>\n    <span class=\"hljs-attr\">volumes:</span>\n      <span class=\"hljs-bullet\">-</span> <span class=\"hljs-string\">pgdata:/var/lib/postgresql/data</span>\n\n<span class=\"hljs-attr\">volumes:</span>\n  <span class=\"hljs-attr\">pgdata:</span></code></pre><table>\n<thead>\n<tr>\n<th>Ключ</th>\n<th>Значення в прикладі</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>build</code></td>\n<td>Образ сервісу <code>api</code> будується з локального Dockerfile</td>\n</tr>\n<tr>\n<td><code>image</code></td>\n<td>Сервіс <code>db</code> використовує готовий образ PostgreSQL</td>\n</tr>\n<tr>\n<td><code>ports</code></td>\n<td>Порт <code>3000</code> контейнера доступний на тому самому порту хоста</td>\n</tr>\n<tr>\n<td><code>environment</code></td>\n<td>Передає змінні середовища, наприклад дані для підключення</td>\n</tr>\n<tr>\n<td><code>depends_on</code></td>\n<td>Визначає порядок запуску: спочатку <code>db</code>, потім <code>api</code></td>\n</tr>\n<tr>\n<td><code>volumes</code></td>\n<td>Том <code>pgdata</code> зберігає дані бази між перезапусками</td>\n</tr>\n</tbody></table>\n<div class=\"tip\"><strong>💡 Звернення між сервісами</strong> <p>Сервіс <code>api</code> підключається до бази даних за хостом <code>db</code>, що збігається з іменем сервісу. Compose автоматично створює спільну мережу, у якій сервіси доступні одне одному за іменами.</p>\n</div>\n\n","<h1>⭐ Найкращі практики</h1>\n<p><strong>Головна ідея:</strong> дотримання кількох принципів робить образи меншими, швидшими та безпечнішими.</p>\n<div class=\"success\"><strong>✅ Рекомендації</strong> <ol>\n<li><p>🪶 <strong>Легкі базові образи:</strong> обирайте варіанти на базі Alpine, де це доречно, щоб зменшити розмір</p>\n</li>\n<li><p>🧹 <strong>Файл .dockerignore:</strong> виключайте зайве, наприклад <code>node_modules</code> та файли із секретами</p>\n</li>\n<li><p>🏗️ <strong>Багатоетапна збірка:</strong> включайте у фінальний образ лише результат, без інструментів збірки</p>\n</li>\n<li><p>🗂️ <strong>Порядок інструкцій:</strong> копіюйте описи залежностей раніше за код, щоб ефективно використовувати кеш шарів</p>\n</li>\n<li><p>🏷️ <strong>Фіксовані версії:</strong> вказуйте конкретні версії образів замість тега <code>latest</code> для передбачуваності</p>\n</li>\n<li><p>🔐 <strong>Без секретів в образі:</strong> передавайте паролі та ключі через змінні середовища під час запуску</p>\n</li>\n<li><p>🎯 <strong>Один процес на контейнер:</strong> кожен контейнер відповідає за один сервіс, що спрощує масштабування та діагностику</p>\n</li>\n</ol>\n</div>\n\n","<h1>✅ Ключові висновки</h1>\n<div class=\"success\"><strong>✅ Підсумок лекції</strong> <ol>\n<li><p><strong>Контейнеризація</strong> вирішує проблему відмінностей середовищ, пакуючи застосунок разом із залежностями</p>\n</li>\n<li><p><strong>Контейнери</strong> легші за віртуальні машини, бо використовують спільне ядро хостової операційної системи</p>\n</li>\n<li><p><strong>Образ</strong> є незмінним шаблоном, а <strong>контейнер</strong> є його запущеним екземпляром: з одного образу можна створити багато контейнерів</p>\n</li>\n<li><p><strong>Dockerfile</strong> описує збірку образу інструкція за інструкцією, а образ складається з кешованих шарів</p>\n</li>\n<li><p><strong>Volumes</strong> зберігають дані поза життєвим циклом контейнера, що критично для баз даних</p>\n</li>\n<li><p><strong>Мережі та зіставлення портів</strong> забезпечують доступ до застосунку та взаємодію контейнерів за іменами сервісів</p>\n</li>\n<li><p><strong>Docker Compose</strong> описує застосунок з кількох сервісів в одному файлі та керує ними однією командою</p>\n</li>\n</ol>\n</div>\n\n","<h1>❓ Контрольні питання</h1>\n<ol>\n<li><p>🤔 Яку проблему вирішує контейнеризація та чому виникає ситуація \"у мене працює\"?</p>\n</li>\n<li><p>🤔 Чим контейнер відрізняється від віртуальної машини та чому контейнери легші?</p>\n</li>\n<li><p>🤔 Яка різниця між образом та контейнером? Наведіть аналогію.</p>\n</li>\n<li><p>🤔 Що таке Dockerfile? Назвіть основні інструкції та поясніть різницю між <code>RUN</code> та <code>CMD</code>.</p>\n</li>\n<li><p>🤔 Чому в Dockerfile файли <code>package.json</code> зазвичай копіюють раніше за вихідний код?</p>\n</li>\n<li><p>🤔 Навіщо потрібні volumes та чим named volume відрізняється від bind mount?</p>\n</li>\n<li><p>🤔 Яку задачу вирішує Docker Compose і як сервіси в ньому звертаються одне до одного?</p>\n</li>\n</ol>\n","<h1>📖 Глосарій термінів</h1>\n<table>\n<thead>\n<tr>\n<th>Термін</th>\n<th>English</th>\n<th>Визначення</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Контейнеризація</td>\n<td>Containerization</td>\n<td>Упакування застосунку із залежностями в ізольований пакунок</td>\n</tr>\n<tr>\n<td>Контейнер</td>\n<td>Container</td>\n<td>Запущений екземпляр образу</td>\n</tr>\n<tr>\n<td>Образ</td>\n<td>Image</td>\n<td>Незмінний шаблон для створення контейнерів</td>\n</tr>\n<tr>\n<td>Шар</td>\n<td>Layer</td>\n<td>Окремий рівень образу, що відповідає інструкції Dockerfile</td>\n</tr>\n<tr>\n<td>Том</td>\n<td>Volume</td>\n<td>Механізм збереження даних поза життєвим циклом контейнера</td>\n</tr>\n<tr>\n<td>Зіставлення портів</td>\n<td>Port mapping</td>\n<td>Зв'язування порту контейнера з портом хоста</td>\n</tr>\n<tr>\n<td>Реєстр</td>\n<td>Registry</td>\n<td>Сховище образів, наприклад Docker Hub</td>\n</tr>\n<tr>\n<td>Базовий образ</td>\n<td>Base image</td>\n<td>Образ, на якому будується новий образ</td>\n</tr>\n<tr>\n<td>Багатоетапна збірка</td>\n<td>Multi-stage build</td>\n<td>Збірка з кількома етапами для зменшення фінального образу</td>\n</tr>\n</tbody></table>\n","<h1>📖 Глосарій абревіатур</h1>\n<table>\n<thead>\n<tr>\n<th>Абревіатура</th>\n<th>Розшифровка</th>\n<th>Переклад</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>OS</td>\n<td>Operating System</td>\n<td>Операційна система</td>\n</tr>\n<tr>\n<td>VM</td>\n<td>Virtual Machine</td>\n<td>Віртуальна машина</td>\n</tr>\n<tr>\n<td>CLI</td>\n<td>Command Line Interface</td>\n<td>Інтерфейс командного рядка</td>\n</tr>\n<tr>\n<td>CPU</td>\n<td>Central Processing Unit</td>\n<td>Центральний процесор</td>\n</tr>\n<tr>\n<td>IP</td>\n<td>Internet Protocol</td>\n<td>Інтернет-протокол</td>\n</tr>\n<tr>\n<td>YAML</td>\n<td>YAML Ain't Markup Language</td>\n<td>Формат серіалізації даних</td>\n</tr>\n<tr>\n<td>API</td>\n<td>Application Programming Interface</td>\n<td>Програмний інтерфейс застосунку</td>\n</tr>\n<tr>\n<td>ENV</td>\n<td>Environment</td>\n<td>Середовище, змінні середовища</td>\n</tr>\n</tbody></table>\n"];let currentSlideIndex=0;
+function renderMath(root){if(typeof renderMathInElement!=="function"||!root)return;try{renderMathInElement(root,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:"ignore",ignoredTags:["script","noscript","style","textarea","pre","code"]});}catch(e){console.warn("Math render error:",e);}}
+function showSlide(i){if(i<0||i>=slides.length)return;currentSlideIndex=i;const el=document.getElementById("current-slide");el.innerHTML=slides[i];el.scrollTop=0;renderMath(el);document.getElementById("progress-bar").style.width=((i+1)/slides.length*100)+"%";document.getElementById("slide-number").textContent=(i+1)+" / "+slides.length;updateSidebarActive();}
+function nextSlide(){if(currentSlideIndex<slides.length-1)showSlide(currentSlideIndex+1);}
+function previousSlide(){if(currentSlideIndex>0)showSlide(currentSlideIndex-1);}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleHelp(){document.getElementById("help-overlay").classList.toggle("hidden");}
+function toggleFullscreen(){if(!document.fullscreenElement){const pc=document.getElementById("presentation-container");if(pc.requestFullscreen)pc.requestFullscreen();else if(pc.webkitRequestFullscreen)pc.webkitRequestFullscreen();else if(pc.msRequestFullscreen)pc.msRequestFullscreen();else if(pc.mozRequestFullScreen)pc.mozRequestFullScreen();}else{if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();else if(document.msExitFullscreen)document.msExitFullscreen();else if(document.mozCancelFullScreen)document.mozCancelFullScreen();}}
+function generateSidebar(){const sc=document.getElementById("sidebar-content");sc.innerHTML="";slides.forEach((html,idx)=>{const t=document.createElement("div");t.className="slide-thumbnail";if(idx===0)t.classList.add("active");const tmp=document.createElement("div");tmp.innerHTML=html;const title=tmp.querySelector("h1,h2");const titleText=title?title.textContent:("Слайд "+(idx+1));const textContent=tmp.textContent.replace(/s+/g," ").trim();const preview=textContent.substring(0,100)+(textContent.length>100?"...":"");t.innerHTML="<div class=\"slide-thumbnail-number\">"+(idx+1)+"</div><div class=\"slide-thumbnail-title\">"+titleText+"</div><div class=\"slide-thumbnail-content\">"+preview+"</div>";t.onclick=()=>{showSlide(idx);if(window.innerWidth<1024)toggleSidebar();};sc.appendChild(t);});}
+function updateSidebarActive(){document.querySelectorAll(".slide-thumbnail").forEach((th,idx)=>{if(idx===currentSlideIndex){th.classList.add("active");th.scrollIntoView({behavior:"smooth",block:"nearest"});}else th.classList.remove("active");});}
+document.addEventListener("keydown",e=>{switch(e.key){case"ArrowLeft":previousSlide();break;case"ArrowRight":case" ":e.preventDefault();nextSlide();break;case"f":case"F":toggleFullscreen();break;case"s":case"S":toggleSidebar();break;case"?":toggleHelp();break;case"Escape":const sb=document.getElementById("sidebar");const ho=document.getElementById("help-overlay");if(sb.classList.contains("open"))toggleSidebar();else if(!ho.classList.contains("hidden"))ho.classList.add("hidden");break;}});
+generateSidebar();showSlide(0);</script></body></html>
